@@ -470,11 +470,36 @@ populateBrush();
 
 /* Boards */
 $('addBoard').onclick=()=>$('boardFile').click();
-$('boardFile').onchange=(ev)=>{
+$('boardFile').onchange = async (ev) => {
   const f=ev.target.files?.[0]; if(!f) return;
-  const img=new Image(); const url=URL.createObjectURL(f);
-  img.onload=()=>{ M.boards.push({name:f.name, src:url, x:0, y:0, rot:0, img}); activeBoardIndex=M.boards.length-1; drawMap(); refreshBoardList(); loadBoardEditor(); };
-  img.src=url;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = async () => {
+    M.boards.push({name:f.name, src:url, x:0, y:0, rot:0, img});
+    activeBoardIndex = M.boards.length-1;
+    drawMap(); refreshBoardList(); loadBoardEditor();
+    
+    if (editorPassword) {
+      const reader = new FileReader();
+      reader.onload = async function() {
+        try {
+          const res = await fetch('https://taktikspel.onrender.com/api/spara-karta', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            alert('Kartbild uppladdad till servern: ' + f.name);
+          }
+        } catch(e) {
+          console.warn('Kunde inte ladda upp kartbild:', e);
+        }
+      };
+      reader.readAsDataURL(f);
+    }
+  };
+  img.src = url;
 };
 function refreshBoardList(){
   const list=document.querySelectorAll('#view-map #boardList')[0]; if(!list) return;
@@ -800,8 +825,53 @@ $('uDel').addEventListener('click',()=>{ if(activeUnitIndex<0) return; if(!confi
 $('uSave').addEventListener('click',()=>{ const u=formToUnit(true); if(activeUnitIndex<0){ UNITS.units.push(u); activeUnitIndex=UNITS.units.length-1; } else { UNITS.units[activeUnitIndex]=u; } refreshUnitList(); alert('Enhet sparad.'); });
 $('uClear').addEventListener('click',()=>{ if(!confirm('Rensa hela listan?')) return; UNITS={schema:'taktik.units.v3',units:[]}; activeUnitIndex=-1; clearForm(); refreshUnitList(); });
 $('uType').addEventListener('change',()=>{ showTypePanels(); buildTerrainMatrix(); applyTypeDefaults(); updatePreview(); });
-$('pickFull').addEventListener('click',()=>$('fileFull').click());
-$('pickRed').addEventListener('click',()=>$('fileRed').click());
+$('fileFull').addEventListener('change', async ev => {
+  const f = ev.target.files?.[0]; if (!f) return;
+  if (editorPassword) {
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const res = await fetch('https://taktikspel.onrender.com/api/spara-ikon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        $('uIconFull').value = 'assets/units/' + f.name;
+        updatePreview();
+        alert('Ikon uppladdad: ' + f.name);
+      }
+    };
+    reader.readAsDataURL(f);
+  } else {
+    $('uIconFull').value = 'assets/units/' + f.name;
+    updatePreview();
+  }
+});
+
+$('fileRed').addEventListener('change', async ev => {
+  const f = ev.target.files?.[0]; if (!f) return;
+  if (editorPassword) {
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const res = await fetch('https://taktikspel.onrender.com/api/spara-ikon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        $('uIconReduced').value = 'assets/units/' + f.name;
+        updatePreview();
+        alert('Ikon uppladdad: ' + f.name);
+      }
+    };
+    reader.readAsDataURL(f);
+  } else {
+    $('uIconReduced').value = 'assets/units/' + f.name;
+    updatePreview();
+  }
+});
 $('fileFull').addEventListener('change',ev=>{ const f=ev.target.files?.[0]; if(!f) return; $('uIconFull').value='assets/units/'+f.name; updatePreview(); });
 $('fileRed').addEventListener('change',ev=>{ const f=ev.target.files?.[0]; if(!f) return; $('uIconReduced').value='assets/units/'+f.name; updatePreview(); });
 $('uImport').addEventListener('click',()=>$('uFile').click());
