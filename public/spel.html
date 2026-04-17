@@ -5100,21 +5100,30 @@ function setSideReady(side, val) {
   const redBtn  = document.getElementById('redReadyBtn');
   const autoChk = document.getElementById('autoAdvanceChk');
 
-  if (blueBtn) {
+if (blueBtn) {
     blueBtn.addEventListener('click', () => {
-      // Beror på roll – bara BLUE själv ska kunna toggla sin READY
-      const role = document.getElementById('roleSel')?.value;
-      if (role === 'blue' || role === 'gm') {
-        setSideReady('blue', !readyBlue);
+      const role = getCurrentRole();
+      if (role === 'blue') {
+        gameChannel.postMessage({ type: 'ready', side: 'blue', ready: !blueReady });
+        blueReady = !blueReady;
+        updateReadyUI();
+      } else if (role === 'gm') {
+        setBlueReady(!blueReady);
+        if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
       }
     });
   }
 
   if (redBtn) {
     redBtn.addEventListener('click', () => {
-      const role = document.getElementById('roleSel')?.value;
-      if (role === 'red' || role === 'gm') {
-        setSideReady('red', !readyRed);
+      const role = getCurrentRole();
+      if (role === 'red') {
+        gameChannel.postMessage({ type: 'ready', side: 'red', ready: !redReady });
+        redReady = !redReady;
+        updateReadyUI();
+      } else if (role === 'gm') {
+        setRedReady(!redReady);
+        if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
       }
     });
   }
