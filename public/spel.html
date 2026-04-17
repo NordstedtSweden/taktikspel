@@ -1894,18 +1894,15 @@ if (gameChannel) {
     // ======================================================
     // 3) READY — klient skickar → GM uppdaterar → broadcastar
     // ======================================================
-  if (msg.type === 'ready') {
-  if (role === 'gm') {
-    if (msg.side === 'blue') blueReady = msg.ready;
-    if (msg.side === 'red')  redReady  = msg.ready;
-    updateReadyUI();
-    maybeAutoAdvanceRound();
-    broadcastStateFromGM();
-  } else {
-    if (msg.side === 'blue') blueReady = msg.ready;
-    if (msg.side === 'red')  redReady  = msg.ready;
-    updateReadyUI();
-  }
+if (msg.type === 'ready') {
+  if (role !== 'gm') return;
+
+  if (msg.side === 'blue') blueReady = msg.ready;
+  if (msg.side === 'red')  redReady  = msg.ready;
+
+  updateReadyUI();
+  maybeAutoAdvanceRound();
+  broadcastStateFromGM();
   return;
 }
 
