@@ -5033,7 +5033,17 @@ cv.addEventListener('click', e => {
     }
   }
 });
-
+cv.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (e.changedTouches.length !== 1) return;
+  const touch = e.changedTouches[0];
+  const simulerad = new MouseEvent('click', {
+    clientX: touch.clientX,
+    clientY: touch.clientY,
+    bubbles: true
+  });
+  cv.dispatchEvent(simulerad);
+}, { passive: false });
 
 /* ===== JSON & boards ===== */
 function readJSON(file,cb){ if(!file) return; const r=new FileReader(); r.onload=()=>{ try{ cb(JSON.parse(r.result)); }catch(e){ alert('Fel i JSON: '+e.message); } }; r.readAsText(file); }
