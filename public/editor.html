@@ -848,11 +848,16 @@ $('fileFull').addEventListener('change', async ev => {
         body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
       });
       const data = await res.json();
-      if (data.ok) {
-        $('uIconFull').value = 'assets/units/' + f.name;
-        updatePreview();
-        alert('Ikon uppladdad: ' + f.name);
-      }
+    if (data.ok) {
+  $('uIconFull').value = 'assets/units/' + f.name;
+  const previewImg = URL.createObjectURL(f);
+  const box = $('prevIcon');
+  box.innerHTML = '';
+  const img = new Image();
+  img.onload = () => box.appendChild(img);
+  img.src = previewImg;
+  alert('Ikon uppladdad: ' + f.name);
+}
     };
     reader.readAsDataURL(f);
   } else {
@@ -872,11 +877,16 @@ $('fileRed').addEventListener('change', async ev => {
         body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
       });
       const data = await res.json();
-      if (data.ok) {
-        $('uIconReduced').value = 'assets/units/' + f.name;
-        updatePreview();
-        alert('Ikon uppladdad: ' + f.name);
-      }
+   if (data.ok) {
+  $('uIconReduced').value = 'assets/units/' + f.name;
+  const previewImg = URL.createObjectURL(f);
+  const box = $('prevIcon');
+  box.innerHTML = '';
+  const img = new Image();
+  img.onload = () => box.appendChild(img);
+  img.src = previewImg;
+  alert('Ikon uppladdad: ' + f.name);
+}
     };
     reader.readAsDataURL(f);
   } else {
