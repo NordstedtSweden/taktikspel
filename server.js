@@ -11,6 +11,47 @@ const io = new Server(server, {
 });
 
 const EDITOR_PASSWORD = process.env.EDITOR_PASSWORD || 'Gamer1337';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = 'NordstedtSweden/taktikspel';
+const GITHUB_BRANCH = 'main';
+
+async function sparaTillGitHub(filsökväg, base64data, meddelande) {
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filsökväg}`;
+  
+  // Kolla om filen redan finns (för att få SHA)
+  let sha = null;
+  try {
+    const check = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (check.ok) {
+      const existing = await check.json();
+      sha = existing.sha;
+    }
+  } catch(e) {}
+
+  // Spara filen
+  const body = {
+    message: meddelande || 'Uppladdad från editor',
+    content: base64data,
+    branch: GITHUB_BRANCH
+  };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  return res.ok;
+}
 
 app.use(express.json({ limit: '50mb' }));
 app.use('/kartor', express.static(path.join(__dirname, 'public/kartor')));
@@ -28,16 +69,18 @@ app.post('/api/login', (req, res) => {
 });
 
 // Spara spelpaket
-app.post('/api/spara-paket', (req, res) => {
+app.post('/api/spara-paket', async (req, res) => {
   const { password, filnamn, data } = req.body;
   if (password !== EDITOR_PASSWORD) {
     return res.status(401).json({ ok: false, error: 'Ej behörig' });
   }
-  const dir = path.join(__dirname, 'public/paket');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const fil = path.join(dir, filnamn.replace(/[^a-zA-Z0-9_\-\.]/g, '_'));
-  fs.writeFileSync(fil, JSON.stringify(data, null, 2));
-  res.json({ ok: true, filnamn });
+  try {
+    const base64 = Buffer.from(JSON.stringify(data, null, 2)).toString('base64');
+    const ok = await sparaTillGitHub(`public/paket/${filnamn}`, base64, 'Nytt spelpaket: ' + filnamn);
+    res.json({ ok });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // Lista tillgängliga spelpaket
@@ -49,31 +92,33 @@ app.get('/api/paket', (req, res) => {
 });
 
 // Spara kartbild
-app.post('/api/spara-karta', (req, res) => {
+app.post('/api/spara-karta', async (req, res) => {
   const { password, filnamn, data } = req.body;
   if (password !== EDITOR_PASSWORD) {
     return res.status(401).json({ ok: false, error: 'Ej behörig' });
   }
-  const dir = path.join(__dirname, 'public/kartor');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const fil = path.join(dir, filnamn.replace(/[^a-zA-Z0-9_\-\.]/g, '_'));
-  const base64 = data.replace(/^data:image\/\w+;base64,/, '');
-  fs.writeFileSync(fil, Buffer.from(base64, 'base64'));
-  res.json({ ok: true, filnamn });
+  try {
+    const base64 = data.replace(/^data:image\/\w+;base64,/, '');
+    const ok = await sparaTillGitHub(`public/kartor/${filnamn}`, base64, 'Ny kartbild: ' + filnamn);
+    res.json({ ok });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // Spara enhetsikon
-app.post('/api/spara-ikon', (req, res) => {
+app.post('/api/spara-ikon', async (req, res) => {
   const { password, filnamn, data } = req.body;
   if (password !== EDITOR_PASSWORD) {
     return res.status(401).json({ ok: false, error: 'Ej behörig' });
   }
-  const dir = path.join(__dirname, 'public/assets/units');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const fil = path.join(dir, filnamn.replace(/[^a-zA-Z0-9_\-\.]/g, '_'));
-  const base64 = data.replace(/^data:image\/\w+;base64,/, '');
-  fs.writeFileSync(fil, Buffer.from(base64, 'base64'));
-  res.json({ ok: true, filnamn });
+  try {
+    const base64 = data.replace(/^data:image\/\w+;base64,/, '');
+    const ok = await sparaTillGitHub(`public/assets/units/${filnamn}`, base64, 'Ny enhetsikon: ' + filnamn);
+    res.json({ ok });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 const spel = {};
