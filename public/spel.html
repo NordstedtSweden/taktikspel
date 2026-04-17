@@ -5070,6 +5070,31 @@ document.getElementById('gmLosToggle')?.addEventListener('change', drawAll);
 drawAll(); 
  fitCanvasWrapHeight();
 })();
+function setSideReady(side, val) {
+  const role = getCurrentRole();
+  
+  if (side === 'blue') {
+    blueReady = !!val;
+  } else if (side === 'red') {
+    redReady = !!val;
+  }
+  
+  if (typeof updateReadyUI === 'function') updateReadyUI();
+  
+  // Skicka till GM via socket
+  if (role !== 'gm' && gameChannel) {
+    gameChannel.postMessage({
+      type: 'ready',
+      side: side,
+      ready: !!val
+    });
+  }
+  
+  // GM broadcastar direkt
+  if (role === 'gm' && typeof broadcastStateFromGM === 'function') {
+    broadcastStateFromGM();
+  }
+}
 (function initReadySystem(){
   const blueBtn = document.getElementById('blueReadyBtn');
   const redBtn  = document.getElementById('redReadyBtn');
