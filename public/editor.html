@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tactics Editor v1.17.3 — Karta • Units • Scenario</title>
+<style>
+:root{--bg:#0b1020;--panel:#0f1832;--line:#243052;--ink:#e8eefc;--muted:#9fb1d4;--accent:#6cb2ff;--bad:#ff6b6b;--ok:#54d18c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.topbar{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:#0b1326;position:sticky;top:0;z-index:5}
+.tab{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:var(--ink);cursor:pointer}
+.tab.active{background:var(--accent);color:#071020;border-color:transparent;font-weight:700}
+.view{display:none}.view.active{display:block}
+h3,h4{margin:10px 0 8px}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px}
+.s{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc}
+textarea{min-height:68px}
+button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:#142045;color:#e8eefc;cursor:pointer}
+.btn.pri{background:var(--accent);color:#071020;border:0;font-weight:700}
+.btn.bad{background:var(--bad);color:#071020;border:0}
+.btn.ok{background:var(--ok);color:#06151a;border:0}
+.list{max-height:70vh;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#0e1730;padding:6px}
+.uitem{border:1px solid var(--line);border-radius:8px;background:#0a0f24;padding:8px;margin-bottom:8px;cursor:pointer}
+.uitem.active{outline:2px solid var(--accent)}
+.badge{display:inline-block;padding:2px 6px;border-radius:6px;background:#0b1326;border:1px solid var(--line);font-size:11px;color:#9fb1d4;margin-right:6px}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th,.table td{border:1px solid var(--line);padding:6px;text-align:left;background:#0b1326}
+.table th{background:#0e1730;position:sticky;top:0;z-index:2}
+.twrap{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.preview{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:start}
+.iconbox{width:160px;height:160px;background:#0a0f24;border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.iconbox img{max-width:100%;max-height:100%}
+.kbd{display:inline-block;padding:0 6px;border:1px solid var(--line);border-radius:6px;background:#0b1324;font-size:12px}
+.hide{display:none}
+.tip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:360px;background:#0f1832;border:1px solid #243052;color:#e8eefc;padding:8px 10px;border-radius:8px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+[data-tip]{position:relative}
+.canvasWrap{position:relative;border:1px dashed var(--line);border-radius:12px;overflow:auto;background:#0a0f24}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.w80{width:80px} .w120{width:120px}
+</style>
+</head>
+<body>
+  <!-- INLOGGNING -->
+<div id="loginPanel" style="
+  position:fixed;inset:0;z-index:9999;
+  background:#0b1020;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;
+  font-family:system-ui,sans-serif;color:#e8eefc;">
+  
+  <h2 style="margin:0">Taktikspel — Editor</h2>
+  
+  <div style="display:flex;flex-direction:column;gap:8px;width:280px">
+    <label style="font-size:14px;color:#9fb1d4">Lösenord</label>
+    <input id="loginLösen" type="password" placeholder="Ange lösenord"
+      style="padding:10px;border-radius:8px;border:1px solid #243052;
+      background:#0e1730;color:#e8eefc;font-size:16px">
+  </div>
+
+  <button id="loginBtn"
+    style="padding:12px 32px;border-radius:10px;border:0;
+    background:#6cb2ff;color:#071020;font-weight:700;
+    font-size:16px;cursor:pointer;width:280px">
+    Logga in
+  </button>
+
+  <div id="loginStatus" style="font-size:13px;color:#ff6b6b"></div>
+</div>
+<div class="topbar">
+  <div class="tab active" data-view="map">Karta</div>
+  <div class="tab" data-view="units">Units</div>
+  <div class="tab" data-view="scenario">Scenario</div>
+</div>
+
+<!-- =============== MAP EDITOR =============== -->
+<div class="view active" id="view-map">
+  <div class="p">
+    <h3>Karteditor</h3>
+    <div class="toolbar">
+      <label>Hex-storlek <input id="hexSize" type="number" value="50" class="w80"></label>
+      <label>Rader <input id="gridRows" type="number" value="12" class="w80"></label>
+<label>Kolumner <input id="gridCols" type="number" value="16" class="w80"></label>
+      <label>Orientering
+        <select id="hexOrient" class="w120">
+          <option value="flat">Flat-top</option>
+          <option value="point">Point-top</option>
+        </select>
+      </label>
+      <label>Koordinatstil
+        <select id="coordStyle" class="w120" title="Bokstav först">
+          <option value="rowLetters">Rad-bokstav (A1, A2 …)</option>
+          <option value="colLetters">Kolumn-bokstav (A1, B1 …)</option>
+        </select>
+      </label>
+      <label>Grid X <input id="gridOffX" type="number" value="80" class="w80"></label>
+      <label>Grid Y <input id="gridOffY" type="number" value="80" class="w80"></label>
+      <label>Grid rot (°) <input id="gridAngle" type="number" value="0" class="w80" title="Rotera hexnätet"></label>
+      <label>Snap <input id="snap" type="checkbox" checked></label>
+      <label>Visa koordinater <input id="showCoords" type="checkbox" checked></label>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="addBoard">+ Lägg till karta (bild)</button>
+      <input id="boardFile" type="file" accept="image/*" class="hide">
+      <label>Map filnamn <input id="mapFileName" type="text" placeholder="map.json" class="w120"></label>
+      <button class="btn" id="exportMap">Exportera</button>
+      <button class="btn" id="importMap">Importera</button>
+      <input id="mapJsonFile" type="file" accept="application/json" class="hide">
+    </div>
+
+    <div class="row">
+      <div style="flex:1;min-width:340px">
+        <div class="canvasWrap" id="mapWrap" style="height:70vh">
+          <canvas id="mapCanvas" width="2400" height="1600"></canvas>
+        </div>
+        <div class="s" style="margin-top:6px">Pan: <span class="kbd">Ctrl/Alt/Shift</span> + dra • Zoom: <span class="kbd">Ctrl/Alt</span> + hjul • Måla terräng: vänsterklick • <b>Sudd</b> aktiv för att radera.</div>
+      </div>
+
+      <div style="width:340px">
+        <h4>Terrängpensel</h4>
+        <div class="row">
+          <select id="terrainBrush" style="flex:1"></select>
+          <button class="btn" id="eraser">Sudd</button>
+        </div>
+
+        <h4 style="margin-top:12px">Multi-board</h4>
+        <div id="boardList" class="list" style="max-height:180px"></div>
+        <div class="grid2" style="margin-top:6px">
+          <label>Namn<input id="bName" type="text"></label>
+          <label>Rot (°)<input id="bRot" type="number" value="0"></label>
+        </div>
+        <div class="grid3">
+          <label>X<input id="bX" type="number" value="0"></label>
+          <label>Y<input id="bY" type="number" value="0"></label>
+          <div class="row">
+            <button class="btn" id="nL">◀</button>
+            <button class="btn" id="nU">▲</button>
+            <button class="btn" id="nD">▼</button>
+            <button class="btn" id="nR">▶</button>
+          </div>
+        </div>
+        <button class="btn ok" id="applyBoard">Uppdatera vald karta</button>
+        <div class="s">Tips: Välj en karta i listan för att redigera dess X/Y/Rot/Namn.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== UNITS =============== -->
+<div class="view" id="view-units">
+  <div class="p" style="display:grid;grid-template-columns:320px 1fr 420px;gap:12px">
+    <div>
+      <h3>Units</h3>
+      <div class="grid3">
+        <button class="btn pri" id="uNew">Ny</button>
+        <button class="btn" id="uDup">Duplicera</button>
+        <button class="btn bad" id="uDel">Ta bort</button>
+      </div>
+      <div class="grid3" style="margin-top:6px">
+        <button class="btn" id="uImport">Importera</button>
+        <div class="row"><label class="s">Units filnamn</label><input id="unitsFileName" type="text" placeholder="units.json"></div>
+        <button class="btn ok" id="uExport">Exportera</button>
+      </div>
+      <input id="uFile" type="file" accept="application/json" class="hide"/>
+      <div class="list" id="uList" style="margin-top:8px"></div>
+    </div>
+
+    <div>
+      <h3>Enhet • Grunddata</h3>
+      <div class="grid3">
+        <label>Id<input id="uId" type="text" placeholder="US_Rifle_Squad_44"></label>
+        <label>Namn<input id="uName" type="text" placeholder="Rifle Squad"></label>
+        <label>Fraktion<input id="uFaction" type="text" placeholder="US, GE"></label>
+      </div>
+      <div class="grid3">
+        <label>Typ
+          <select id="uType">
+            <option>infantry</option><option>vehicle</option><option>gun</option><option>boat</option><option>mine</option><option>other</option>
+          </select>
+        </label>
+        <label>Storlek<input id="uSize" type="text" placeholder="squad/team/section/vehicle"></label>
+        <label>Taggar<input id="uTags" type="text" placeholder="ETO_44, assault"></label>
+      </div>
+
+      <h4 style="margin-top:10px">Ikoner</h4>
+      <div class="grid3">
+        <label>Full (front)<input id="uIconFull" type="text" placeholder="assets/units/us_squad.png"></label>
+        <label>Reduced<input id="uIconReduced" type="text" placeholder="assets/units/us_squad_reduced.png"></label>
+        <div class="grid2">
+          <button class="btn" id="pickFull">Välj bild Full…</button>
+          <button class="btn" id="pickRed">Välj bild Red…</button>
+          <input id="fileFull" type="file" accept="image/*" class="hide">
+          <input id="fileRed" type="file" accept="image/*" class="hide">
+        </div>
+      </div>
+
+      <h4 style="margin-top:10px">Stats – Full</h4>
+      <div class="grid3">
+        <label>Move<input id="uMoveF" type="number" value="5"></label>
+        <label>Range (hex)<input id="uRangeF" type="number" value="6"></label>
+        <label>FP Normal<input id="uFpNormF" type="number" value="5"></label>
+      </div>
+      <div class="grid3">
+        <label>FP OpFire<input id="uFpOFF" type="number" value="3"></label>
+        <label>Morale N<input id="uMorNF" type="number" value="7"></label>
+        <label>Morale Y<input id="uMorYF" type="number" value="6"></label>
+      </div>
+      <div class="grid3">
+        <label>Morale R<input id="uMorRF" type="number" value="5"></label>
+        <label>LOS Height<input id="uLosH" type="number" value="1"></label>
+        <label>Road bonus<input id="uRoad" type="number" value="1"></label>
+      </div>
+
+      <h4 style="margin-top:10px">Stats – Reduced</h4>
+      <div class="grid3">
+        <label>Move<input id="uMoveR" type="number" value="4"></label>
+        <label>Range (hex)<input id="uRangeR" type="number" value="6"></label>
+        <label>FP Normal<input id="uFpNormR" type="number" value="4"></label>
+      </div>
+      <div class="grid3">
+        <label>FP OpFire<input id="uFpOFR" type="number" value="2"></label>
+        <label>Morale N<input id="uMorNR" type="number" value="6"></label>
+        <label>Morale Y<input id="uMorYR" type="number" value="5"></label>
+      </div>
+      <div class="grid3">
+        <label>Morale R<input id="uMorRR" type="number" value="4"></label>
+        <div></div><div></div>
+      </div>
+
+      <div id="type-infantry" class="p" style="margin:12px 0">
+        <h4>Infantry – Anti-tank</h4>
+        <div class="grid3">
+          <label>AT aktiverad
+            <select id="infATon"><option value="no">no</option><option value="yes">yes</option></select>
+          </label>
+          <label>AT FP Normal<input id="infATfpN" type="number" value="0"></label>
+          <label>AT FP OpFire<input id="infATfpO" type="number" value="0"></label>
+        </div>
+        <div class="grid3">
+          <label>AT Range (hex)<input id="infATrange" type="number" value="0"></label>
+          <label>AT Shots/turn<input id="infATshots" type="number" value="1"></label>
+          <label>AT Noteringar<input id="infATnotes" type="text" placeholder="ex. Panzerfaust engångs"></label>
+        </div>
+      </div>
+
+      <h4 style="margin-top:10px">Transport</h4>
+      <div class="grid3">
+        <label>Roll
+          <select id="uTrole">
+            <option value="none">none</option>
+            <option value="transport">transport</option>
+            <option value="passenger">passenger</option>
+            <option value="both">both</option>
+          </select>
+        </label>
+        <label>Kapacitet (#)<input id="uTcap" type="number" value="0"></label>
+        <label>Tillåtna typer<input id="uTallow" type="text" placeholder="infantry,gun"></label>
+      </div>
+      <div class="grid3">
+        <label>Tow gun?
+          <select id="uTowCan"><option value="no">no</option><option value="yes">yes</option></select>
+        </label>
+        <label>Tow types<input id="uTowTypes" type="text" placeholder="gun"></label>
+        <div></div>
+      </div>
+
+      <div class="grid3" style="margin-top:10px">
+        <button class="btn pri" id="uSave">Spara/uppdatera enhet</button>
+        <button class="btn bad" id="uClear">Rensa lista</button>
+        <button class="btn" id="applyTypeDefaults">Anv. default för Typ</button>
+      </div>
+    </div>
+
+    <div>
+      <h3>Rörelse & Terräng</h3>
+      <div class="s">Bocka i tillåtna terrängtyper, ev. MP-överskrivning per terräng för just denna enhet.</div>
+      <div class="twrap">
+        <table class="table" id="terrainMatrix">
+          <thead><tr><th>Terräng</th><th>Tillåten</th><th>MP (enhet)</th><th>Default (klass)</th><th>LOS</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h4 style="margin-top:12px">Preview</h4>
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <label style="display:flex;align-items:center;gap:6px">
+          <span class="s">Visa:</span>
+          <select id="prevMode" class="w120">
+            <option value="full">Full</option>
+            <option value="reduced">Reduced</option>
+          </select>
+        </label>
+      </div>
+      <div class="preview">
+        <div class="iconbox" id="prevIcon"><div class="s">ingen bild</div></div>
+        <div id="prevText" class="s"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== SCENARIO EDITOR =============== -->
+<div class="view" id="view-scenario">
+  <div class="p" style="display:grid;grid-template-columns:360px 1fr;gap:12px">
+    <div>
+      <h3>Scenario</h3>
+      <div class="grid3">
+        <button class="btn pri" id="scNew">Nytt</button>
+        <button class="btn" id="scImport">Importera</button>
+        <div class="row"><label class="s">Scenario filnamn</label><input id="scFileName" type="text" placeholder="scenario.json"></div>
+        <button class="btn ok" id="scExport">Exportera</button>
+        <button class="btn pri" id="scExportPaket">Exportera spelpaket</button>
+      </div>
+      <input id="scFile" type="file" accept="application/json" class="hide"/>
+
+      <h4 style="margin-top:10px">Grunddata</h4>
+      <label>Titel<input id="scTitle" type="text" placeholder="Objective Foy"></label>
+      <label>Beskrivning<textarea id="scDesc" placeholder="Kort narrativ/uppgift."></textarea></label>
+      <div class="grid3">
+        <label>Rundor<input id="scRounds" type="number" value="6"></label>
+        <label>Initiativ<input id="scInit" type="text" placeholder="Blue/Red"></label>
+        <label>Setup-fas (min)<input id="scSetupMin" type="number" value="0"></label>
+      </div>
+      <label>Segervillkor<textarea id="scVC" placeholder="Ex: Ta och håll E9 tre rundor; minimera förluster."></textarea></label>
+
+      <h4>Kartor</h4>
+      <div class="s">Hämta in från Karteditorn (inkl. grid-offset/rot och koordinatstil)</div>
+      <div id="boardList" class="list" style="max-height:180px"></div>
+      <button class="btn" id="scBindBoards">Uppdatera från Karteditor</button>
+
+      <h4>Setup-zoner</h4>
+      <div class="grid2">
+        <label>Blue zoner (A1-A4,B3)<input id="scBlueZones" type="text"></label>
+        <label>Red zoner<input id="scRedZones" type="text"></label>
+      </div>
+    </div>
+
+    <div>
+      <h3>Order of Battle (lätt val)</h3>
+      <div class="p">
+        <div class="grid3">
+          <label>Välj enhet
+            <input id="unitPicker" list="unitList" placeholder="börja skriva…">
+            <datalist id="unitList"></datalist>
+          </label>
+          <label>Antal<input id="unitCount" type="number" value="1"></label>
+          <label>Startstatus
+            <select id="unitStartState"><option value="full">full</option><option value="reduced">reduced</option></select>
+          </label>
+        </div>
+        <div class="grid3">
+          <label>Startzon/område<input id="unitStartZone" type="text" placeholder="t.ex. A1-A4, C3"></label>
+          <label>Startrunda<input id="unitStartRound" type="number" value="0"></label>
+          <label>Side
+            <select id="unitSide"><option value="blue">Blue</option><option value="red">Red</option></select>
+          </label>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn pri" id="addUnitToScenario">+ Lägg till i scenario</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="p">
+          <h4>Blue enheter</h4>
+          <div id="bluePool" class="list" style="min-height:160px"></div>
+        </div>
+        <div class="p">
+          <h4>Red enheter</h4>
+          <div id="redPool" class="list" style="min-height:160px"></div>
+        </div>
+      </div>
+
+      <div class="grid3" style="margin-top:10px">
+        <button class="btn" id="scGenCard">Generera scenariokort (PNG)</button>
+        <a id="scCardDL" class="btn ok" download="scenario_card.png" style="display:none">Ladda ner kort</a>
+        <div></div>
+      </div>
+      <canvas id="scCard" width="1000" height="1400" class="hide"></canvas>
+    </div>
+  </div>
+</div>
+
+<div id="tip" class="tip"></div>
+
+<script>
+/* Helper */
+const $ = (id) => document.getElementById(id);
+
+/* ================= TERRÄNG (inbyggd) ================= */
+const TERRA={ palette:{
+  open:{label:'Open',color:'#5B7FA3'}, field:{label:'Field',color:'#9fa85a'},
+  orchard:{label:'Orchard',color:'#4b8a4b'}, woods:{label:'Woods',color:'#2e7d32'},
+  wood_building:{label:'Wood Bldg',color:'#8b5e3c'}, stone_building:{label:'Stone Bldg',color:'#6b4a3a'},
+  road:{label:'Road',color:'#b5b5b5'}, trail:{label:'Trail',color:'#9c9c9c'},
+  river:{label:'River/Water',color:'#4aa7ff'}, marsh:{label:'Marsh',color:'#3f7f7f'},
+  hedge:{label:'Hedge/Wall',color:'#3a5a3a'}, bocage:{label:'Bocage',color:'#2f4f2f'},
+  hill:{label:'Hill',color:'#b08b45'}, rough:{label:'Rough',color:'#6e6e6e'},
+  crater:{label:'Crater',color:'#666088'}, smoke:{label:'Smoke',color:'#aaaaaa'}
+}, effects:{
+  open:{mp:{inf:1,veh:1,gun:2,boat:1},los:{blocks:false,conceal:0}},
+  field:{mp:{inf:1,veh:2,gun:3,boat:1},los:{blocks:false,conceal:1}},
+  orchard:{mp:{inf:1,veh:2,gun:3,boat:1},los:{blocks:false,conceal:1}},
+  woods:{mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  wood_building:{mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  stone_building:{mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  road:{mp:{inf:'2/3',veh:'1/2',gun:1,boat:'N/A'},los:{blocks:false,conceal:0}},
+  trail:{mp:{inf:1,veh:2,gun:2,boat:'N/A'},los:{blocks:false,conceal:0}},
+  river:{mp:{inf:'N/A',veh:'N/A',gun:'N/A',boat:1},los:{blocks:false,conceal:0}},
+  marsh:{mp:{inf:3,veh:'N/A',gun:'N/A',boat:1},los:{blocks:false,conceal:1}},
+  hedge:{mp:{inf:2,veh:3,gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  bocage:{mp:{inf:2,veh:4,gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:2}},
+  hill:{mp:{inf:2,veh:2,gun:3,boat:'N/A'},los:{blocks:false,conceal:0}},
+  rough:{mp:{inf:2,veh:3,gun:3,boat:'N/A'},los:{blocks:false,conceal:0}},
+  crater:{mp:{inf:2,veh:3,gun:3,boat:'N/A'},los:{blocks:false,conceal:1}},
+  smoke:{mp:{inf:1,veh:1,gun:1,boat:1},los:{blocks:true,conceal:3}}
+}};
+
+/* ================= TABS & TOOLTIP ================= */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('view-'+t.dataset.view).classList.add('active');
+    if(t.dataset.view==='units'){ ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); }
+    if(t.dataset.view==='scenario'){ refreshBoardList(); refreshUnitPicker(); refreshPools(); }
+  });
+});
+const tip=document.getElementById('tip');
+
+/* ============== MAP EDITOR ============== */
+const mapCv=$('mapCanvas'), mctx=mapCv.getContext('2d');
+let M={hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, showCoords:true, snap:true, boards:[], terrain:{}, gridOffX:80, gridOffY:80, rows:12, cols:16};
+let cam={z:1, vx:0, vy:0, pan:false, lastX:0, lastY:0};
+let activeBoardIndex=-1;
+
+/* UI binds */
+$('snap').onchange=e=>{M.snap=e.target.checked;};
+$('showCoords').onchange=e=>{M.showCoords=e.target.checked; drawMap();};
+$('hexSize').oninput=()=>{ M.hexSize=Math.max(20, +$('hexSize').value||50); drawMap(); }
+$('gridRows').oninput=()=>{ M.rows=Math.max(1, +$('gridRows').value||12); drawMap(); };
+$('gridCols').oninput=()=>{ M.cols=Math.max(1, +$('gridCols').value||16); drawMap(); };
+$('hexOrient').onchange=()=>{ M.orient=$('hexOrient').value; drawMap(); }
+$('coordStyle').onchange=()=>{ M.coordStyle=$('coordStyle').value; drawMap(); }
+$('gridOffX').oninput=()=>{ M.gridOffX=+$('gridOffX').value||0; drawMap(); }
+$('gridOffY').oninput=()=>{ M.gridOffY=+$('gridOffY').value||0; drawMap(); }
+$('gridAngle').oninput=()=>{ M.gridAngle=(+$('gridAngle').value||0)%360; drawMap(); }
+
+/* Terrängpensel */
+const brushSel=$('terrainBrush');
+function populateBrush(){
+  brushSel.innerHTML='';
+  for(const [tid,meta] of Object.entries(TERRA.palette)){
+    const opt=document.createElement('option'); opt.value=tid; opt.textContent=meta.label; brushSel.appendChild(opt);
+  }
+}
+populateBrush();
+
+/* Boards */
+$('addBoard').onclick=()=>$('boardFile').click();
+$('boardFile').onchange=(ev)=>{
+  const f=ev.target.files?.[0]; if(!f) return;
+  const img=new Image(); const url=URL.createObjectURL(f);
+  img.onload=()=>{ M.boards.push({name:f.name, src:url, x:0, y:0, rot:0, img}); activeBoardIndex=M.boards.length-1; drawMap(); refreshBoardList(); loadBoardEditor(); };
+  img.src=url;
+};
+function refreshBoardList(){
+  const list=document.querySelectorAll('#view-map #boardList')[0]; if(!list) return;
+  list.innerHTML='';
+  M.boards.forEach((b,i)=>{
+    const d=document.createElement('div'); d.className='uitem'+(i===activeBoardIndex?' active':'');
+    d.innerHTML=`<b>${b.name}</b><div class="s">x:${b.x} y:${b.y} rot:${b.rot}</div>`;
+    d.onclick=()=>{ activeBoardIndex=i; loadBoardEditor(); refreshBoardList(); };
+    list.appendChild(d);
+  });
+}
+function loadBoardEditor(){
+  const b=M.boards[activeBoardIndex]; if(!b){ $('bName').value=''; $('bX').value=0; $('bY').value=0; $('bRot').value=0; return; }
+  $('bName').value=b.name; $('bX').value=b.x; $('bY').value=b.y; $('bRot').value=b.rot;
+}
+$('applyBoard').onclick=()=>{
+  const b=M.boards[activeBoardIndex]; if(!b) return;
+  b.name=$('bName').value||b.name; b.x=+$('bX').value||0; b.y=+$('bY').value||0; b.rot=+$('bRot').value||0;
+  drawMap(); refreshBoardList();
+};
+$('nL').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].x-=5; $('bX').value=M.boards[activeBoardIndex].x; drawMap(); refreshBoardList(); }
+$('nR').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].x+=5; $('bX').value=M.boards[activeBoardIndex].x; drawMap(); refreshBoardList(); }
+$('nU').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].y-=5; $('bY').value=M.boards[activeBoardIndex].y; drawMap(); refreshBoardList(); }
+$('nD').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].y+=5; $('bY').value=M.boards[activeBoardIndex].y; drawMap(); refreshBoardList(); }
+
+/* Grid/hex helpers */
+function hexPoints(cx,cy,r,orient){ const pts=[]; for(let i=0;i<6;i++){ const a = orient==='flat' ? Math.PI/180*(60*i) : Math.PI/180*(60*i+30); pts.push({x:cx+r*Math.cos(a), y:cy+r*Math.sin(a)}); } return pts;}
+function drawHex(cx,cy,r,orient){
+  const pts=hexPoints(cx,cy,r,orient);
+  mctx.beginPath();
+  mctx.moveTo(pts[0].x, pts[0].y);
+  for(let i=1;i<6;i++) mctx.lineTo(pts[i].x, pts[i].y);
+  mctx.closePath();
+}
+function gridLoop(cb){
+  const r=M.hexSize, dx=(M.orient==='flat')? 1.5*r : Math.sqrt(3)*r, dy=(M.orient==='flat')? Math.sqrt(3)*r : 1.5*r;
+  const maxC = M.cols || Math.ceil(mapCv.width/(dx))+2;
+const maxR = M.rows || Math.ceil(mapCv.height/(dy))+2;
+  for(let ri=0; ri<maxR; ri++){
+    for(let ci=0; ci<maxC; ci++){
+      const baseX = ci*dx, baseY = (M.orient==='flat')? ri*dy + ((ci%2)? dy/2:0) : ri*dy;
+      const cx = baseX + M.gridOffX, cy = (M.orient==='flat')? baseY + M.gridOffY : baseY + M.gridOffY + ((ci%2)? dy/2:0);
+      cb(ri,ci,cx,cy,r);
+    }
+  }
+}
+function letter(idx){ let s=''; idx=idx|0; do{ s=String.fromCharCode(65+(idx%26))+s; idx=Math.floor(idx/26)-1; }while(idx>=0); return s; }
+function hexKey(ri,ci){ return (M.coordStyle==='rowLetters') ? letter(ri)+(ci+1) : letter(ci)+(ri+1); }
+
+/* Rotation helpers */
+function rotAround(x,y,cx,cy,deg){
+  const a=deg*Math.PI/180, s=Math.sin(a), c=Math.cos(a);
+  const dx=x-cx, dy=y-cy;
+  return {x: cx + dx*c - dy*s, y: cy + dx*s + dy*c};
+}
+function invRotAround(x,y,cx,cy,deg){ return rotAround(x,y,cx,cy,-deg); }
+
+/* Kamera/ritning */
+function drawMap(){
+  mctx.setTransform(1,0,0,1,0,0);
+  mctx.clearRect(0,0,mapCv.width,mapCv.height);
+  mctx.setTransform(cam.z,0,0,cam.z,-cam.vx*cam.z,-cam.vy*cam.z);
+
+  // Bakgrundskartor
+  M.boards.forEach(b=>{
+    if(!b.img) return;
+    mctx.save();
+    mctx.translate(b.x, b.y);
+    if(b.rot){ mctx.translate(b.img.width/2,b.img.height/2); mctx.rotate(b.rot*Math.PI/180); mctx.translate(-b.img.width/2,-b.img.height/2); }
+    mctx.drawImage(b.img,0,0);
+    mctx.restore();
+  });
+
+  // Rotera grid
+  mctx.save();
+  if(M.gridAngle){ mctx.translate(M.gridOffX, M.gridOffY); mctx.rotate(M.gridAngle*Math.PI/180); mctx.translate(-M.gridOffX, -M.gridOffY); }
+
+  // Terrängmask
+  gridLoop((ri,ci,cx,cy,r)=>{
+    const key=hexKey(ri,ci); const t=M.terrain[key];
+    if(t){
+      mctx.save(); drawHex(cx,cy,r,M.orient);
+      mctx.fillStyle = TERRA.palette[t]?.color || 'rgba(255,255,255,0.08)'; mctx.globalAlpha = 0.35; mctx.fill(); mctx.restore();
+    }
+  });
+
+  // Grid + etiketter
+  mctx.strokeStyle='rgba(255,255,255,.18)'; mctx.lineWidth=1;
+  gridLoop((ri,ci,cx,cy,r)=>{
+    drawHex(cx,cy,r,M.orient); mctx.stroke();
+    if(M.showCoords){ const label=hexKey(ri,ci); mctx.fillStyle='#cfe0ff'; mctx.font='10px Segoe UI'; mctx.fillText(label, cx- r*0.3, cy+4); }
+  });
+
+  mctx.restore();
+}
+
+/* Pan/zoom + paint */
+mapCv.addEventListener('mousedown',e=>{
+  if(e.button===0 && (e.ctrlKey||e.altKey||e.shiftKey||e.metaKey)){ cam.pan=true; cam.lastX=e.clientX; cam.lastY=e.clientY; return; }
+  if(e.button===0){
+    const ws=screenToWorld(e.offsetX,e.offsetY);
+    const p=invRotAround(ws.x, ws.y, M.gridOffX, M.gridOffY, M.gridAngle);
+    paintAt(p.x,p.y, $('eraser').classList.contains('active'));
+  }
+});
+window.addEventListener('mousemove',e=>{
+  if(cam.pan){ const dx=e.clientX-cam.lastX, dy=e.clientY-cam.lastY; cam.vx -= dx/cam.z; cam.vy -= dy/cam.z; cam.lastX=e.clientX; cam.lastY=e.clientY; drawMap(); }
+});
+window.addEventListener('mouseup',()=> cam.pan=false);
+mapCv.addEventListener('wheel',e=>{
+  if(!(e.ctrlKey||e.altKey||e.metaKey)) return; e.preventDefault();
+  const rect=mapCv.getBoundingClientRect(); const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const wx=cam.vx+mx/cam.z, wy=cam.vy+my/cam.z;
+  cam.z=Math.min(6,Math.max(.25, cam.z*(e.deltaY<0?1.12:0.9))); cam.vx=wx-mx/cam.z; cam.vy=wy-my/cam.z; drawMap();
+},{passive:false});
+
+function worldToScreen(x,y){ return {x:(x-cam.vx)*cam.z, y:(y-cam.vy)*cam.z}; }
+function screenToWorld(x,y){ return {x:x/cam.z+cam.vx, y:y/cam.z+cam.vy}; }
+
+function nearestHexCenter(x,y){
+  let best={d:1e9,cx:x,cy:y,ri:0,ci:0};
+  gridLoop((ri,ci,cx,cy)=>{ const d=(cx-x)*(cx-x)+(cy-y)*(cy-y); if(d<best.d) best={d,cx,cy,ri,ci}; });
+  return best;
+}
+function paintAt(x,y,erase=false){
+  const n=nearestHexCenter(x,y); const key=hexKey(n.ri,n.ci);
+  if(erase){ delete M.terrain[key]; } else { const t=brushSel.value; if(t) M.terrain[key]=t; }
+  drawMap();
+}
+$('eraser').onclick=(e)=>{ e.target.classList.toggle('active'); };
+
+/* Export/Import Map */
+$('exportMap').onclick=()=>{
+  const data={hexSize:M.hexSize, orient:M.orient, coordStyle:M.coordStyle, gridAngle:M.gridAngle, gridOffX:M.gridOffX, gridOffY:M.gridOffY,
+    rows:M.rows, cols:M.cols,
+    terrain:M.terrain, boards:M.boards.map(b=>({name:b.name, x:b.x, y:b.y, rot:b.rot}))};
+  const fn = ($('mapFileName').value||'map.json').trim() || 'map.json';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download=fn; a.click(); URL.revokeObjectURL(a.href);
+};
+$('importMap').onclick=()=>$('mapJsonFile').click();
+$('mapJsonFile').onchange=(ev)=>{
+  const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{
+    const d=JSON.parse(r.result);
+    M.hexSize=d.hexSize||50; M.orient=d.orient||'flat'; M.coordStyle=d.coordStyle||'rowLetters';
+    M.gridAngle=d.gridAngle||0; M.gridOffX=d.gridOffX??80; M.gridOffY=d.gridOffY??80; M.terrain=d.terrain||{};
+    $('hexSize').value=M.hexSize; $('hexOrient').value=M.orient; $('coordStyle').value=M.coordStyle; $('gridOffX').value=M.gridOffX; $('gridOffY').value=M.gridOffY; $('gridAngle').value=M.gridAngle;
+    if(Array.isArray(d.boards)){ M.boards=d.boards.map(b=>({name:b.name, src:null, x:b.x||0, y:b.y||0, rot:b.rot||0, img:null})); activeBoardIndex = M.boards.length?0:-1; }
+    refreshBoardList(); loadBoardEditor(); drawMap(); alert('Karta inläst (bilder laddas om manuellt).');
+  }catch(e){ alert('Fel i map.json: '+e.message); } };
+  r.readAsText(f);
+};
+
+/* ================= UNITS ================= */
+let UNITS={schema:'taktik.units.v3', units:[]};
+let activeUnitIndex=-1;
+
+function typeKey(t){ return (t==='vehicle')?'veh' : (t==='gun')?'gun' : (t==='boat')?'boat' : 'inf'; }
+function defaultAllowedForType(t){ const out=[]; for(const [tid,e] of Object.entries(TERRA.effects)){ const mp=e.mp?.[typeKey(t)]; if(mp!=='N/A') out.push(tid); } return out; }
+function autoId(name,faction){ const n=(name||'unit').replace(/\s+/g,'_').replace(/[^A-Za-z0-9_]/g,''); const f=(faction||'').replace(/\s+/g,'').toUpperCase(); let base=(f?f+'_':'')+n; let id=base, i=1; while(UNITS.units.some(u=>u.id===id)) id=base+'_'+(++i); return id; }
+
+function ensureTerrainTable(){ const table = $('terrainMatrix'); if(!table){ console.error('Terrain table saknas.'); return null; } let tb = table.querySelector('tbody'); if(!tb){ tb=document.createElement('tbody'); table.appendChild(tb); } return tb; }
+function showTypePanels(){ const t=$('uType').value; $('type-infantry').style.display = (t==='infantry') ? 'block' : 'none'; }
+function buildTerrainMatrix(){
+  const tb=ensureTerrainTable(); if(!tb) return; tb.innerHTML='';
+  const utype=$('uType').value || 'infantry';
+  for(const [tid,meta] of Object.entries(TERRA.palette)){
+    const eff=TERRA.effects[tid]||{}; const defMP=eff.mp?.[typeKey(utype)];
+    const tr=document.createElement('tr'); tr.dataset.tid=tid;
+    const c0=document.createElement('td'); c0.innerHTML=`<b>${meta.label}</b><div class="s">${tid}</div>`;
+    const c1=document.createElement('td'); c1.style.textAlign='center'; const cb=document.createElement('input'); cb.type='checkbox'; c1.appendChild(cb);
+    const c2=document.createElement('td'); const inp=document.createElement('input'); inp.type='text'; inp.placeholder='(default)'; c2.appendChild(inp);
+    const c3=document.createElement('td'); c3.textContent=(defMP!=null)?String(defMP):'—';
+    const c4=document.createElement('td'); c4.textContent = `${eff.los?.blocks?'blocks':'ok'} / conceal ${eff.los?.conceal??0}`;
+    [cb,inp].forEach(el=>el.addEventListener('input',saveTerrainMatrix));
+    tr.append(c0,c1,c2,c3,c4); tb.appendChild(tr);
+  }
+  applyTypeDefaults(); saveTerrainMatrix();
+}
+function saveTerrainMatrix(){
+  const allowed=[]; const mpOverrides={};
+  document.querySelectorAll('#terrainMatrix tbody tr').forEach(tr=>{
+    const tid=tr.dataset.tid; const cb=tr.querySelector('input[type=checkbox]'); const iv=tr.querySelector('input[type=text]').value.trim();
+    if(cb?.checked) allowed.push(tid); if(iv!=='') mpOverrides[tid]=isNaN(Number(iv))? iv : Number(iv);
+  });
+  document.body.dataset.allowedTerrain=JSON.stringify(allowed);
+  document.body.dataset.mpOverrides=JSON.stringify(mpOverrides);
+}
+function formToUnit(readMatrix=true){
+  let allowed=[], mpOverrides={}; if(readMatrix){ try{ allowed=JSON.parse(document.body.dataset.allowedTerrain||'[]'); }catch{} try{ mpOverrides=JSON.parse(document.body.dataset.mpOverrides||'{}'); }catch{} }
+  const t=$('uType').value;
+  const obj={
+    id: $('uId').value || autoId($('uName').value,$('uFaction').value),
+    name: $('uName').value || $('uId').value,
+    faction: $('uFaction').value||'',
+    type: t,
+    size: $('uSize').value||'',
+    tags: ($('uTags').value||'').split(',').map(s=>s.trim()).filter(Boolean),
+    display:{ icon_front:$('uIconFull').value||'', icon_reduced:$('uIconReduced').value||'' },
+    stats:{
+      full:{ move:+($('uMoveF').value||0), range_hex:+($('uRangeF').value||0), fp_normal:+($('uFpNormF').value||0), fp_opfire:+($('uFpOFF').value||0),
+             morale:{normal:+($('uMorNF').value||0), yellow:+($('uMorYF').value||0), red:+($('uMorRF').value||0)} },
+      reduced:{ move:+($('uMoveR').value||0), range_hex:+($('uRangeR').value||0), fp_normal:+($('uFpNormR').value||0), fp_opfire:+($('uFpOFR').value||0),
+             morale:{normal:+($('uMorNR').value||0), yellow:+($('uMorYR').value||0), red:+($('uMorRR').value||0)} },
+      los_height:+($('uLosH').value||0), road_bonus:+($('uRoad').value||0)
+    },
+    movement:{ allowedTerrain:allowed, mpOverrides:mpOverrides },
+    transport:{
+      role: $('uTrole').value||'none',
+      capacity: +($('uTcap').value||0),
+      allowedTypes: ($('uTallow').value||'').split(',').map(s=>s.trim()).filter(Boolean),
+      tow:{ can: $('uTowCan').value==='yes', types: ($('uTowTypes').value||'').split(',').map(s=>s.trim()).filter(Boolean) }
+    },
+    typeExt:{}
+  };
+  if(t==='infantry'){
+    obj.typeExt.infantryAT={
+      enabled: $('infATon').value==='yes',
+      fp_normal:+($('infATfpN').value||0),
+      fp_opfire:+($('infATfpO').value||0),
+      range_hex:+($('infATrange').value||0),
+      shots_per_turn:+($('infATshots').value||1),
+      notes:$('infATnotes').value||''
+    };
+  }
+  return obj;
+}
+function loadUnitToForm(){
+  const u=UNITS.units[activeUnitIndex]; if(!u){ clearForm(); return; }
+  $('uId').value=u.id||''; $('uName').value=u.name||''; $('uFaction').value=u.faction||'';
+  $('uType').value=u.type||'infantry'; showTypePanels();
+  $('uSize').value=u.size||''; $('uTags').value=(u.tags||[]).join(', ');
+  $('uIconFull').value=u.display?.icon_front||''; $('uIconReduced').value=u.display?.icon_reduced||'';
+  $('uMoveF').value=u.stats?.full?.move??5; $('uRangeF').value=u.stats?.full?.range_hex??6; $('uFpNormF').value=u.stats?.full?.fp_normal??5; $('uFpOFF').value=u.stats?.full?.fp_opfire??3;
+  $('uMorNF').value=u.stats?.full?.morale?.normal??7; $('uMorYF').value=u.stats?.full?.morale?.yellow??6; $('uMorRF').value=u.stats?.full?.morale?.red??5;
+  $('uMoveR').value=u.stats?.reduced?.move??4; $('uRangeR').value=u.stats?.reduced?.range_hex??6; $('uFpNormR').value=u.stats?.reduced?.fp_normal??4; $('uFpOFR').value=u.stats?.reduced?.fp_opfire??2;
+  $('uMorNR').value=u.stats?.reduced?.morale?.normal??6; $('uMorYR').value=u.stats?.reduced?.morale?.yellow??5; $('uMorRR').value=u.stats?.reduced?.morale?.red??4;
+  $('uLosH').value=u.stats?.los_height??1; $('uRoad').value=u.stats?.road_bonus??0;
+
+  showTypePanels();
+  if(u.type==='infantry'){
+    const at=u.typeExt?.infantryAT||{enabled:false,fp_normal:0,fp_opfire:0,range_hex:0,shots_per_turn:1,notes:''};
+    $('infATon').value=at.enabled?'yes':'no'; $('infATfpN').value=at.fp_normal||0; $('infATfpO').value=at.fp_opfire||0; $('infATrange').value=at.range_hex||0; $('infATshots').value=at.shots_per_turn||1; $('infATnotes').value=at.notes||'';
+  }
+
+  buildTerrainMatrix();
+  const allowed=new Set(u.movement?.allowedTerrain||[]); const mpOv=u.movement?.mpOverrides||{};
+  document.querySelectorAll('#terrainMatrix tbody tr').forEach(tr=>{
+    const tid=tr.dataset.tid; tr.querySelector('input[type=checkbox]').checked = allowed.has(tid);
+    const iv=mpOv[tid]; tr.querySelector('input[type=text]').value=(iv!=null)?String(iv):'';
+  });
+  saveTerrainMatrix();
+  updatePreview();
+}
+function clearForm(){
+  document.querySelectorAll('#view-units input[type=text],#view-units input[type=number]').forEach(el=>el.value='');
+  $('uType').value='infantry'; showTypePanels();
+  $('uTrole').value='none'; $('uTowCan').value='no';
+  $('infATon').value='no'; $('infATshots').value=1;
+  $('uMoveF').value=5; $('uRangeF').value=6; $('uFpNormF').value=5; $('uFpOFF').value=3; $('uMorNF').value=7; $('uMorYF').value=6; $('uMorRF').value=5;
+  $('uMoveR').value=4; $('uRangeR').value=6; $('uFpNormR').value=4; $('uFpOFR').value=2; $('uMorNR').value=6; $('uMorYR').value=5; $('uMorRR').value=4;
+  $('uLosH').value=1; $('uRoad').value=1; $('prevMode').value='full';
+  buildTerrainMatrix(); applyTypeDefaults(); updatePreview();
+}
+
+/* Preview */
+$('prevMode').addEventListener('change',updatePreview);
+function updatePreview(){
+  const u=formToUnit();
+  const box=$('prevIcon'), txt=$('prevText'); box.innerHTML='';
+  const showReduced = ($('prevMode').value==='reduced');
+  const icon = showReduced ? (u.display.icon_reduced||u.display.icon_front) : (u.display.icon_front||u.display.icon_reduced);
+  if(icon && icon.trim()){ const img=new Image(); img.onload=()=>box.appendChild(img); img.onerror=()=>{box.innerHTML='<div class="s">bild ej hittad</div>';}; img.src=icon; }
+  else{ box.innerHTML='<div class="s">ingen bild</div>'; }
+  const S = showReduced? u.stats.reduced : u.stats.full;
+  const mor=`${S.morale.normal}/${S.morale.yellow}/${S.morale.red}`;
+  let extra='';
+  if(u.type==='infantry' && u.typeExt?.infantryAT?.enabled){
+    const at=u.typeExt.infantryAT; extra+=` • AT FP:${at.fp_normal}(OP ${at.fp_opfire}) R:${at.range_hex} Sh:${at.shots_per_turn}`;
+  }
+  txt.innerHTML = `<b>${u.name||u.id}</b> <span class="s">[${u.faction||'-'} • ${u.type} • ${showReduced?'reduced':'full'}]</span><br>
+  FP:${S.fp_normal} (OP ${S.fp_opfire}) • R:${S.range_hex} • M:${S.move} • Mor:${mor} • LOS H:${u.stats.los_height} • Road:+${u.stats.road_bonus}${extra}`;
+}
+
+/* Defaults */
+function applyTypeDefaults(){
+  const utype=$('uType').value||'infantry';
+  const allowed=new Set(defaultAllowedForType(utype));
+  document.querySelectorAll('#terrainMatrix tbody tr').forEach(tr=>{
+    const tid=tr.dataset.tid; const cb=tr.querySelector('input[type=checkbox]'); if(cb) cb.checked = allowed.has(tid);
+    const inp=tr.querySelector('input[type=text]'); if(inp) inp.value='';
+  });
+  saveTerrainMatrix(); updatePreview();
+}
+
+/* Unit list */
+function refreshUnitList(){
+  const list=$('uList'); list.innerHTML='';
+  UNITS.units.forEach((u,i)=>{
+    const d=document.createElement('div'); d.className='uitem'+(i===activeUnitIndex?' active':'');
+    d.innerHTML=`<div><b>${u.name||u.id}</b></div>
+      <div class="s"><span class="badge">${u.faction||'-'}</span><span class="badge">${u.type||'-'}</span><span class="badge">size:${u.size||'-'}</span></div>
+      <div class="s">${u.id||''}</div>`;
+    d.onclick=()=>{ activeUnitIndex=i; loadUnitToForm(); refreshUnitList(); };
+    list.appendChild(d);
+  });
+}
+$('uNew').addEventListener('click',()=>{
+  const nu={ id:autoId('New_Unit',''), name:'New Unit', faction:'', type:'infantry', size:'squad', tags:[],
+    display:{icon_front:'',icon_reduced:''},
+    stats:{ full:{move:5,range_hex:6,fp_normal:5,fp_opfire:3,morale:{normal:7,yellow:6,red:5}},
+            reduced:{move:4,range_hex:6,fp_normal:4,fp_opfire:2,morale:{normal:6,yellow:5,red:4}},
+            los_height:1, road_bonus:1 },
+    movement:{ allowedTerrain:[], mpOverrides:{} },
+    transport:{ role:'none', capacity:0, allowedTypes:[], tow:{can:false, types:[]} },
+    typeExt:{ infantryAT:{enabled:false,fp_normal:0,fp_opfire:0,range_hex:0,shots_per_turn:1,notes:''} }
+  };
+  UNITS.units.push(nu); activeUnitIndex=UNITS.units.length-1; loadUnitToForm(); refreshUnitList(); applyTypeDefaults();
+});
+$('uDup').addEventListener('click',()=>{ if(activeUnitIndex<0) return; const copy=JSON.parse(JSON.stringify(UNITS.units[activeUnitIndex])); copy.id=autoId(copy.name,copy.faction); UNITS.units.splice(activeUnitIndex+1,0,copy); activeUnitIndex+=1; loadUnitToForm(); refreshUnitList(); });
+$('uDel').addEventListener('click',()=>{ if(activeUnitIndex<0) return; if(!confirm('Ta bort enheten?')) return; UNITS.units.splice(activeUnitIndex,1); activeUnitIndex=-1; clearForm(); refreshUnitList(); });
+$('uSave').addEventListener('click',()=>{ const u=formToUnit(true); if(activeUnitIndex<0){ UNITS.units.push(u); activeUnitIndex=UNITS.units.length-1; } else { UNITS.units[activeUnitIndex]=u; } refreshUnitList(); alert('Enhet sparad.'); });
+$('uClear').addEventListener('click',()=>{ if(!confirm('Rensa hela listan?')) return; UNITS={schema:'taktik.units.v3',units:[]}; activeUnitIndex=-1; clearForm(); refreshUnitList(); });
+$('uType').addEventListener('change',()=>{ showTypePanels(); buildTerrainMatrix(); applyTypeDefaults(); updatePreview(); });
+$('pickFull').addEventListener('click',()=>$('fileFull').click());
+$('pickRed').addEventListener('click',()=>$('fileRed').click());
+$('fileFull').addEventListener('change',ev=>{ const f=ev.target.files?.[0]; if(!f) return; $('uIconFull').value='assets/units/'+f.name; updatePreview(); });
+$('fileRed').addEventListener('change',ev=>{ const f=ev.target.files?.[0]; if(!f) return; $('uIconReduced').value='assets/units/'+f.name; updatePreview(); });
+$('uImport').addEventListener('click',()=>$('uFile').click());
+$('uFile').addEventListener('change',ev=>{
+  const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{
+    const data=JSON.parse(r.result); if(!data.units) throw new Error('units[] saknas');
+    data.units.forEach(u=>{
+      u.stats=u.stats||{}; u.stats.full=u.stats.full||{move:5,range_hex:6,fp_normal:5,fp_opfire:3,morale:{normal:7,yellow:6,red:5}};
+      u.stats.reduced=u.stats.reduced||{move:4,range_hex:6,fp_normal:4,fp_opfire:2,morale:{normal:6,yellow:5,red:4}};
+      u.stats.los_height = (u.stats.los_height!=null)?u.stats.los_height:1; u.stats.road_bonus = (u.stats.road_bonus!=null)?u.stats.road_bonus:1;
+      u.display=u.display||{icon_front:'',icon_reduced:''};
+      u.movement=u.movement||{allowedTerrain:[],mpOverrides:{}};
+      u.transport=u.transport||{role:'none',capacity:0,allowedTypes:[],tow:{can:false,types:[]}};
+      u.typeExt=u.typeExt||{}; if(u.type==='infantry' && !u.typeExt.infantryAT){ u.typeExt.infantryAT={enabled:false,fp_normal:0,fp_opfire:0,range_hex:0,shots_per_turn:1,notes:''}; }
+    });
+    UNITS={schema:'taktik.units.v3', units:data.units}; activeUnitIndex = UNITS.units.length?0:-1;
+    loadUnitToForm(); refreshUnitList(); alert('Units importerade.');
+  }catch(e){ alert('Fel i units.json: '+e.message); } };
+  r.readAsText(f);
+});
+$('uExport').addEventListener('click',()=>{
+  const fn = ($('unitsFileName').value||'units.json').trim()||'units.json';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(UNITS,null,2)],{type:'application/json'}));
+  a.download=fn; a.click(); URL.revokeObjectURL(a.href);
+});
+
+/* ================= SCENARIO ================= */
+let SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', boards:[], map:{hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, gridOffX:80, gridOffY:80, terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}};
+function refreshPools(){
+  const mk=(arr,side)=>{
+    const box=$(side+'Pool'); box.innerHTML='';
+    arr.forEach((p,i)=>{
+      const d=document.createElement('div'); d.className='uitem';
+      d.innerHTML=`<b>${p.id}</b> <span class="badge">x${p.count}</span> <span class="badge">${p.state}</span>
+      <div class="s">zon:${p.startZone||'-'} • runda:${p.startRound}</div>`;
+      d.onclick=()=>{ if(confirm('Ta bort?')){ arr.splice(i,1); refreshPools(); } };
+      box.appendChild(d);
+    });
+  };
+  mk(SC.orbat.blue,'blue'); mk(SC.orbat.red,'red');
+}
+function boardSnapshot(){
+  SC.boards = M.boards.map((b,i)=>({name:b.name,x:b.x,y:b.y,rot:b.rot, index:i}));
+  SC.map = {hexSize:M.hexSize, orient:M.orient, coordStyle:M.coordStyle, gridAngle:M.gridAngle, gridOffX:M.gridOffX, gridOffY:M.gridOffY, terrain:M.terrain};
+}
+$('scBindBoards').onclick=()=>{ boardSnapshot(); refreshBoardList(); alert('Scenariots kartor uppdaterade från Karteditor.'); };
+function refreshBoardList(){
+  const list = document.querySelectorAll('#view-scenario #boardList')[0]; if(!list) return; list.innerHTML='';
+  if(!SC.boards || !SC.boards.length){ list.innerHTML='<div class="s">— Inga kartor kopplade ännu —</div>'; return; }
+  SC.boards.forEach((b,i)=>{ const d=document.createElement('div'); d.className='uitem'; d.innerHTML=`<b>${b.name}</b><div class="s">x:${b.x} y:${b.y} rot:${b.rot}</div>`; list.appendChild(d); });
+}
+
+/* Unit picker */
+function refreshUnitPicker(){
+  const dl=$('unitList'); dl.innerHTML='';
+  UNITS.units.forEach(u=>{
+    const opt=document.createElement('option'); opt.value=u.id; opt.label=`${u.name||u.id} [${u.type}]`; dl.appendChild(opt);
+  });
+}
+$('addUnitToScenario').onclick=()=>{
+  const id = $('unitPicker').value.trim(); if(!id){ alert('Välj enhet (id)'); return; }
+  const side=$('unitSide').value; const count=+($('unitCount').value||1);
+  const state=$('unitStartState').value; const startZone=$('unitStartZone').value.trim(); const startRound=+($('unitStartRound').value||0);
+  const item={id,count,state,startZone,startRound};
+  if(side==='blue'){ SC.orbat.blue.push(item); } else { SC.orbat.red.push(item); }
+  $('unitPicker').value=''; refreshPools();
+};
+
+function fillScenarioForm(){
+  $('scTitle').value=SC.title||''; $('scDesc').value=SC.desc||'';
+  $('scRounds').value=SC.rounds||6; $('scInit').value=SC.initiative||'Blue'; $('scSetupMin').value=SC.setupMin||0;
+  $('scVC').value=SC.vc||''; $('scBlueZones').value=SC.setup?.blue||''; $('scRedZones').value=SC.setup?.red||'';
+  refreshBoardList(); refreshUnitPicker(); refreshPools();
+}
+function readScenarioForm(){
+  SC.title=$('scTitle').value||''; SC.desc=$('scDesc').value||'';
+  SC.rounds=+($('scRounds').value||6); SC.initiative=$('scInit').value||'Blue'; SC.setupMin=+($('scSetupMin').value||0);
+  SC.vc=$('scVC').value||''; SC.setup.blue=$('scBlueZones').value||''; SC.setup.red=$('scRedZones').value||'';
+}
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scImport').onclick=()=>$('scFile').click();
+$('scFile').onchange=(ev)=>{
+  const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ SC=JSON.parse(r.result); fillScenarioForm(); alert('Scenario importerat.'); }catch(e){ alert('Fel i scenario.json: '+e.message); } };
+  r.readAsText(f);
+};
+$('scExport').onclick=()=>{
+  readScenarioForm(); boardSnapshot();
+  const fn = ($('scFileName').value||'scenario.json').trim()||'scenario.json';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(SC,null,2)],{type:'application/json'}));
+  a.download=fn; a.click(); URL.revokeObjectURL(a.href);
+};
+$('scExportPaket').onclick=()=>{
+  readScenarioForm(); boardSnapshot();
+  
+  const paket = {
+    version: '1.0',
+   map: {
+      hexSize: M.hexSize,
+      orient: M.orient,
+      coordStyle: M.coordStyle,
+      gridAngle: M.gridAngle,
+      gridOffX: M.gridOffX,
+      gridOffY: M.gridOffY,
+      rows: M.rows,
+      cols: M.cols,
+      terrain: M.terrain,
+      boards: M.boards.map(b=>({name:b.name, x:b.x, y:b.y, rot:b.rot}))
+    },
+    units: UNITS,
+    scenario: SC
+  };
+
+  const titel = (SC.title||'spelpaket').replace(/\s+/g,'_').toLowerCase();
+  const fn = titel + '.json';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(paket,null,2)],{type:'application/json'}));
+  a.download = fn;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  alert('Spelpaket exporterat: ' + fn);
+};
+/* Scenariokort (PNG) – med kartbild */
+$('scGenCard').onclick=()=>{
+  readScenarioForm(); boardSnapshot();
+  const c=$('scCard'), ctx=c.getContext('2d'); c.width=1000; c.height=1400;
+  // Bakgrund
+  ctx.fillStyle='#f6f8ff'; ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle='#0d1b34'; ctx.fillRect(0,0,c.width,84);
+  ctx.fillStyle='#fff'; ctx.font='bold 30px Segoe UI'; ctx.fillText(SC.title||'Scenario',24,52);
+
+  // Textblock vänster
+  let y=120;
+  ctx.fillStyle='#0d1b34'; ctx.font='bold 20px Segoe UI'; ctx.fillText('Beskrivning',24,y);
+  y+=10; ctx.font='16px Segoe UI'; y = drawPara(ctx, SC.desc||'-', 24, y+18, 560, 22);
+
+  y+=18; ctx.font='bold 20px Segoe UI'; ctx.fillText('Rundor / Initiativ / Setup',24,y);
+  y+=8; ctx.font='16px Segoe UI'; ctx.fillText(`Rundor: ${SC.rounds}  •  Init: ${SC.initiative}  •  Setup (min): ${SC.setupMin}`,24,y+22);
+  y+=44; ctx.font='bold 20px Segoe UI'; ctx.fillText('Segervillkor',24,y);
+  y+=10; ctx.font='16px Segoe UI'; y = drawPara(ctx, SC.vc||'-', 24, y+18, 560, 22);
+
+  // Orbat kolumner
+  y+=14; ctx.font='bold 20px Segoe UI'; ctx.fillText('Blue',24,y); ctx.fillText('Red',300,y);
+  const orbatTop=y+10; ctx.font='16px Segoe UI';
+  const blueLines=(SC.orbat.blue||[]).map(p=>`×${p.count} ${p.id} • ${p.state} • r:${p.startRound} • ${p.startZone||'-'}`);
+  const redLines=(SC.orbat.red||[]).map(p=>`×${p.count} ${p.id} • ${p.state} • r:${p.startRound} • ${p.startZone||'-'}`);
+  let yB = drawPara(ctx, blueLines.join('\n')||'-', 24, orbatTop+18, 260, 20);
+  let yR = drawPara(ctx, redLines.join('\n')||'-', 300, orbatTop+18, 260, 20);
+  const bottomLeft = Math.max(yB,yR)+10;
+
+  // Kartbild till höger (snapshot av live-kartan i editor)
+  const mapShot = mapCv;
+  const imgW = 380, imgH = 380;
+  ctx.fillStyle='#0d1b34'; ctx.font='bold 20px Segoe UI'; ctx.fillText('Karta (översikt)', 600, 120);
+  ctx.strokeStyle='#0d1b34'; ctx.strokeRect(600, 135, imgW+8, imgH+8);
+  ctx.drawImage(mapShot, 600+4, 135+4, imgW, imgH);
+
+  // Setup-zoner box
+  ctx.font='bold 18px Segoe UI'; ctx.fillText('Setup-zoner', 600, 550);
+  ctx.font='16px Segoe UI';
+  drawPara(ctx, `Blue: ${SC.setup.blue||'-'}`, 600, 574, 380, 20);
+  drawPara(ctx, `Red: ${SC.setup.red||'-'}`, 600, 598, 380, 20);
+
+  // Terränglegend
+  ctx.font='bold 16px Segoe UI'; ctx.fillText('Terränglegend', 24, 1080);
+  let lx=24, ly=1104, count=0;
+  for(const [tid,p] of Object.entries(TERRA.palette)){
+    ctx.fillStyle=p.color; ctx.fillRect(lx,ly,22,14);
+    ctx.fillStyle='#0d1b34'; ctx.font='14px Segoe UI'; ctx.fillText(p.label, lx+28, ly+12);
+    lx+=160; count++; if(count%3===0){ lx=24; ly+=22; }
+    if(ly>1340) break;
+  }
+
+  const a=$('scCardDL'); a.style.display='inline-block'; a.href=c.toDataURL('image/png'); a.download='scenario_card.png';
+  alert('Scenariokort genererat. Klicka "Ladda ner kort".');
+};
+function drawPara(ctx, text, x, y, maxW, lh){
+  const lines=(text||'').toString().split('\n'); let yy=y;
+  lines.forEach(ln=>{ wrap(ctx,ln,maxW).forEach(ch=>{ ctx.fillText(ch,x,yy); yy+=lh; }); });
+  return yy;
+}
+function wrap(ctx, text, maxW){
+  const words=(text||'').split(' '), out=[]; let line='';
+  words.forEach(w=>{ const t=line? line+' '+w : w; if(ctx.measureText(t).width>maxW){ if(line) out.push(line); line=w; } else line=t; });
+  if(line) out.push(line); return out;
+}
+
+/* ===== Init ===== */
+function safeInit(){
+  $('gridRows').value = M.rows || 12;
+  $('gridCols').value = M.cols || 16;
+  drawMap(); showTypePanels(); ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); updatePreview();
+  fillScenarioForm(); refreshUnitPicker(); refreshPools();
+  console.log('v1.17.3 init klar');
+}
+document.addEventListener('DOMContentLoaded', safeInit);
+/* ===== LOGIN ===== */
+let editorPassword = '';
+
+document.getElementById('loginBtn').onclick = async function() {
+  const pw = document.getElementById('loginLösen').value;
+  if (!pw) return;
+  
+  const res = await fetch('https://taktikspel.onrender.com/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pw })
+  });
+  const data = await res.json();
+  
+  if (data.ok) {
+    editorPassword = pw;
+    document.getElementById('loginPanel').style.display = 'none';
+  } else {
+    document.getElementById('loginStatus').textContent = 'Fel lösenord!';
+  }
+};
+
+document.getElementById('loginLösen').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+</script>
+</body>
+</html>
