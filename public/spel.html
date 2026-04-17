@@ -5095,48 +5095,47 @@ function setSideReady(side, val) {
     broadcastStateFromGM();
   }
 }
-(function initReadySystem(){
-  const blueBtn = document.getElementById('blueReadyBtn');
-  const redBtn  = document.getElementById('redReadyBtn');
-  const autoChk = document.getElementById('autoAdvanceChk');
-
-if (blueBtn) {
-    blueBtn.addEventListener('click', () => {
-      const role = getCurrentRole();
-      if (role === 'blue') {
-        gameChannel.postMessage({ type: 'ready', side: 'blue', ready: !blueReady });
-        blueReady = !blueReady;
-        updateReadyUI();
-      } else if (role === 'gm') {
-        setBlueReady(!blueReady);
-        if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+if (blueReadyBtn) {
+  blueReadyBtn.addEventListener('click', () => {
+    const role = getCurrentRole();
+    if (role !== 'blue' && role !== 'gm') return;
+    const newVal = !blueReady;
+    blueReady = newVal;
+    if (typeof updateReadyUI === 'function') updateReadyUI();
+    if (gameChannel) {
+      try {
+        gameChannel.postMessage({ type:'ready', side:'blue', ready:newVal });
+      } catch (e) {
+        console.warn('ready msg (blue) failed:', e);
       }
-    });
-  }
+    }
+    if (role === 'gm') {
+      if (typeof maybeAutoAdvanceRound === 'function') maybeAutoAdvanceRound();
+      if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+    }
+  });
+}
 
-  if (redBtn) {
-    redBtn.addEventListener('click', () => {
-      const role = getCurrentRole();
-      if (role === 'red') {
-        gameChannel.postMessage({ type: 'ready', side: 'red', ready: !redReady });
-        redReady = !redReady;
-        updateReadyUI();
-      } else if (role === 'gm') {
-        setRedReady(!redReady);
-        if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+if (redReadyBtn) {
+  redReadyBtn.addEventListener('click', () => {
+    const role = getCurrentRole();
+    if (role !== 'red' && role !== 'gm') return;
+    const newVal = !redReady;
+    redReady = newVal;
+    if (typeof updateReadyUI === 'function') updateReadyUI();
+    if (gameChannel) {
+      try {
+        gameChannel.postMessage({ type:'ready', side:'red', ready:newVal });
+      } catch (e) {
+        console.warn('ready msg (red) failed:', e);
       }
-    });
-  }
-
-  if (autoChk) {
-    autoChk.addEventListener('change', e => {
-      autoAdvance = !!e.target.checked;
-      updateReadyUI();
-    });
-  }
-
-  updateReadyUI();
-})();
+    }
+    if (role === 'gm') {
+      if (typeof maybeAutoAdvanceRound === 'function') maybeAutoAdvanceRound();
+      if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+    }
+  });
+}
 
 </script>
 <script>
