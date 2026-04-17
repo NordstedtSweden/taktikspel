@@ -62,6 +62,20 @@ app.post('/api/spara-karta', (req, res) => {
   res.json({ ok: true, filnamn });
 });
 
+// Spara enhetsikon
+app.post('/api/spara-ikon', (req, res) => {
+  const { password, filnamn, data } = req.body;
+  if (password !== EDITOR_PASSWORD) {
+    return res.status(401).json({ ok: false, error: 'Ej behörig' });
+  }
+  const dir = path.join(__dirname, 'public/assets/units');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const fil = path.join(dir, filnamn.replace(/[^a-zA-Z0-9_\-\.]/g, '_'));
+  const base64 = data.replace(/^data:image\/\w+;base64,/, '');
+  fs.writeFileSync(fil, Buffer.from(base64, 'base64'));
+  res.json({ ok: true, filnamn });
+});
+
 const spel = {};
 
 io.on('connection', socket => {
