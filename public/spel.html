@@ -4908,6 +4908,63 @@ cv.addEventListener('wheel',e=>{
   const wx=cam.vx+mx/cam.z, wy=cam.vy+my/cam.z;
   cam.z=Math.min(6,Math.max(.25, cam.z*(e.deltaY<0?1.12:0.9))); cam.vx=wx-mx/cam.z; cam.vy=wy-my/cam.z; drawAll();
 },{passive:false});
+/* ===== Touch-stöd för pekskärmar ===== */
+let touch1 = null, touch2 = null, lastPinchDist = null;
+
+cv.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    touch1 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    cam.pan = true;
+    cam.lx = touch1.x;
+    cam.ly = touch1.y;
+  } else if (e.touches.length === 2) {
+    cam.pan = false;
+    touch1 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touch2 = { x: e.touches[1].clientX, y: e.touches[1].clientY };
+    lastPinchDist = Math.hypot(touch2.x - touch1.x, touch2.y - touch1.y);
+  }
+}, { passive: false });
+
+cv.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && cam.pan) {
+    const dx = e.touches[0].clientX - cam.lx;
+    const dy = e.touches[0].clientY - cam.ly;
+    cam.vx -= dx / cam.z;
+    cam.vy -= dy / cam.z;
+    cam.lx = e.touches[0].clientX;
+    cam.ly = e.touches[0].clientY;
+    drawAll();
+  } else if (e.touches.length === 2) {
+    const t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    const t2 = { x: e.touches[1].clientX, y: e.touches[1].clientY };
+    const dist = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+    
+    if (lastPinchDist) {
+      const scale = dist / lastPinchDist;
+      const mx = (t1.x + t2.x) / 2;
+      const my = (t1.y + t2.y) / 2;
+      const rect = cv.getBoundingClientRect();
+      const cx = mx - rect.left;
+      const cy = my - rect.top;
+      const wx = cam.vx + cx / cam.z;
+      const wy = cam.vy + cy / cam.z;
+      cam.z = Math.min(6, Math.max(0.25, cam.z * scale));
+      cam.vx = wx - cx / cam.z;
+      cam.vy = wy - cy / cam.z;
+      drawAll();
+    }
+    lastPinchDist = dist;
+  }
+}, { passive: false });
+
+cv.addEventListener('touchend', e => {
+  cam.pan = false;
+  touch1 = null;
+  touch2 = null;
+  lastPinchDist = null;
+}, { passive: false });
 
 cv.addEventListener('click', e => {
  
