@@ -315,6 +315,11 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
         <button class="btn" id="scImport">Importera</button>
         <div class="row"><label class="s">Scenario filnamn</label><input id="scFileName" type="text" placeholder="scenario.json"></div>
         <button class="btn ok" id="scExport">Exportera</button>
+        <button class="btn pri" id="scPublicera">Publicera på server</button>
+<button class="btn" id="laddaUppKarta">Ladda upp kartbild</button>
+<button class="btn" id="laddaUppIkon">Ladda upp enhetsikon</button>
+<input type="file" id="kartaFil" accept="image/*" style="display:none">
+<input type="file" id="ikonFil" accept="image/png" multiple style="display:none">
         <button class="btn pri" id="scExportPaket">Exportera spelpaket</button>
       </div>
       <input id="scFile" type="file" accept="application/json" class="hide"/>
@@ -1019,6 +1024,108 @@ document.getElementById('loginBtn').onclick = async function() {
 document.getElementById('loginLösen').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('loginBtn').click();
 });
+/* ===== SERVER PUBLICERING ===== */
+const SERVER = 'https://taktikspel.onrender.com';
+
+// Publicera spelpaket
+document.getElementById('scPublicera').onclick = async function() {
+  if (!editorPassword) { alert('Logga in först!'); return; }
+  readScenarioForm(); boardSnapshot();
+  
+  const paket = {
+    version: '1.0',
+    map: {
+      hexSize: M.hexSize, orient: M.orient, coordStyle: M.coordStyle,
+      gridAngle: M.gridAngle, gridOffX: M.gridOffX, gridOffY: M.gridOffY,
+      rows: M.rows, cols: M.cols, terrain: M.terrain,
+      boards: M.boards.map(b=>({name:b.name, x:b.x, y:b.y, rot:b.rot}))
+    },
+    units: UNITS,
+    scenario: SC
+  };
+
+  const titel = (SC.title||'spelpaket').replace(/\s+/g,'_').toLowerCase();
+  const filnamn = titel + '.json';
+
+  try {
+    const res = await fetch(SERVER + '/api/spara-paket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: editorPassword, filnamn, data: paket })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert('Spelpaket publicerat: ' + filnamn);
+    } else {
+      alert('Fel: ' + data.error);
+    }
+  } catch(e) {
+    alert('Kunde inte nå servern: ' + e.message);
+  }
+};
+
+// Ladda upp kartbild
+document.getElementById('laddaUppKarta').onclick = () => document.getElementById('kartaFil').click();
+document.getElementById('kartaFil').onchange = async function() {
+  const fil = this.files?.[0];
+  if (!fil || !editorPassword) return;
+  
+  const reader = new FileReader();
+  reader.onload = async function() {
+    try {
+      const res = await fetch(SERVER + '/api/spara-karta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: editorPassword,
+          filnamn: fil.name,
+          data: reader.result
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert('Kartbild uppladdad: ' + fil.name);
+      } else {
+        alert('Fel: ' + data.error);
+      }
+    } catch(e) {
+      alert('Kunde inte nå servern: ' + e.message);
+    }
+  };
+  reader.readAsDataURL(fil);
+};
+
+// Ladda upp enhetsikoner
+document.getElementById('laddaUppIkon').onclick = () => document.getElementById('ikonFil').click();
+document.getElementById('ikonFil').onchange = async function() {
+  if (!editorPassword) return;
+  const filer = Array.from(this.files);
+  let ok = 0;
+  
+  for (const fil of filer) {
+    const reader = new FileReader();
+    await new Promise(resolve => {
+      reader.onload = async function() {
+        try {
+          const res = await fetch(SERVER + '/api/spara-ikon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              password: editorPassword,
+              filnamn: fil.name,
+              data: reader.result
+            })
+          });
+          const data = await res.json();
+          if (data.ok) ok++;
+        } catch(e) {}
+        resolve();
+      };
+      reader.readAsDataURL(fil);
+    });
+  }
+  alert(ok + ' av ' + filer.length + ' ikoner uppladdade!');
+};
 </script>
 </body>
 </html>
