@@ -825,8 +825,7 @@ $('uDel').addEventListener('click',()=>{ if(activeUnitIndex<0) return; if(!confi
 $('uSave').addEventListener('click',()=>{ const u=formToUnit(true); if(activeUnitIndex<0){ UNITS.units.push(u); activeUnitIndex=UNITS.units.length-1; } else { UNITS.units[activeUnitIndex]=u; } refreshUnitList(); alert('Enhet sparad.'); });
 $('uClear').addEventListener('click',()=>{ if(!confirm('Rensa hela listan?')) return; UNITS={schema:'taktik.units.v3',units:[]}; activeUnitIndex=-1; clearForm(); refreshUnitList(); });
 $('uType').addEventListener('change',()=>{ showTypePanels(); buildTerrainMatrix(); applyTypeDefaults(); updatePreview(); });
-$('pickFull').addEventListener('click', () => $('fileFull').click());
-$('pickRed').addEventListener('click', () => $('fileRed').click());
+
 $('fileFull').addEventListener('change', async ev => {
   const f = ev.target.files?.[0]; if (!f) return;
   if (editorPassword) {
@@ -1067,6 +1066,8 @@ function safeInit(){
   $('gridCols').value = M.cols || 16;
   drawMap(); showTypePanels(); ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); updatePreview();
   fillScenarioForm(); refreshUnitPicker(); refreshPools();
+  $('pickFull').addEventListener('click', () => $('fileFull').click());
+  $('pickRed').addEventListener('click', () => $('fileRed').click());
   console.log('v1.17.3 init klar');
 }
 document.addEventListener('DOMContentLoaded', safeInit);
