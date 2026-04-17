@@ -872,8 +872,7 @@ $('fileRed').addEventListener('change', async ev => {
     updatePreview();
   }
 });
-$('fileFull').addEventListener('change',ev=>{ const f=ev.target.files?.[0]; if(!f) return; $('uIconFull').value='assets/units/'+f.name; updatePreview(); });
-$('fileRed').addEventListener('change',ev=>{ const f=ev.target.files?.[0]; if(!f) return; $('uIconReduced').value='assets/units/'+f.name; updatePreview(); });
+
 $('uImport').addEventListener('click',()=>$('uFile').click());
 $('uFile').addEventListener('change',ev=>{
   const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
