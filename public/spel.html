@@ -1767,11 +1767,7 @@ const gameChannel = {
   }
 };
 
-socket.on('state', function(msg) {
-  if (gameChannel._onmessage) {
-    gameChannel._onmessage({ data: msg });
-  }
-});
+
 
 try {
   Object.defineProperty(gameChannel, 'onmessage', {
