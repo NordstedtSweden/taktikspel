@@ -47,7 +47,8 @@ button{cursor:pointer}
   min-height: calc(100vh - 150px);
   overflow: hidden;
 }
-
+.dold-for-spelare { display: none !important; }
+.gm-only { display: none !important; }
 #mapCanvas{background:#0a0f24}
 .kbd{display:inline-block;padding:0 6px;border:1px solid var(--line);border-radius:6px;background:#0b1324;font-size:12px}
 .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
@@ -284,7 +285,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
         <option value="red">Red</option>
       </select>
     </label>
-    <button class="btn pri" id="loadPaketBtn">Ladda spelpaket…</button>
+    <button class="btn pri gm-only" id="loadPaketBtn">Ladda spelpaket…</button>
 <input type="file" id="paketFile" accept="application/json" style="display:none">
 
 <!-- Scenarioväljare -->
@@ -1353,6 +1354,14 @@ if (gmPlaceBox) {
   const btn = $(id);
   if (btn) btn.style.display = 'none';
 });
+const loadPaketBtn = $('loadPaketBtn');
+if (loadPaketBtn) {
+  loadPaketBtn.style.display = (effektivRoll === 'gm') ? '' : 'none';
+}
+if (window.spelRoll === 'blue' || window.spelRoll === 'red') {
+  const loadPaketBtn = $('loadPaketBtn');
+  if (loadPaketBtn) loadPaketBtn.style.display = 'none';
+}
 
   // LOS-toggle endast i GM-läge
   const gmLosToggle = document.getElementById('gmLosToggle');
@@ -1729,12 +1738,24 @@ document.getElementById('anslutBtn').onclick = function() {
   // Dölj anslutningsskärmen
   document.getElementById('anslutPanel').style.display = 'none';
   document.getElementById('anslutPanel').style.pointerEvents = 'none';
- if (roll === 'blue' || roll === 'red') {
-  const gmPlaceBox = document.getElementById('gmPlaceBox');
-  if (gmPlaceBox) gmPlaceBox.style.display = 'none';
-  const status = document.getElementById('status');
-  if (status) status.style.display = 'none';
-}
+
+  if (roll === 'blue' || roll === 'red') {
+    const gmPlaceBox = document.getElementById('gmPlaceBox');
+    if (gmPlaceBox) gmPlaceBox.style.display = 'none';
+    const status = document.getElementById('status');
+    if (status) status.style.display = 'none';
+    const loadPaketBtn = document.getElementById('loadPaketBtn');
+    if (loadPaketBtn) loadPaketBtn.style.setProperty('display', 'none', 'important');
+    const paketFile = document.getElementById('paketFile');
+    if (paketFile) paketFile.style.display = 'none';
+  }
+
+  if (roll === 'gm') {
+    document.querySelectorAll('.gm-only').forEach(el => {
+      el.style.setProperty('display', 'inline-block', 'important');
+    });
+  }
+
   document.getElementById('anslutStatus').textContent = '';
 };
 
