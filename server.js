@@ -85,11 +85,24 @@ app.post('/api/spara-paket', async (req, res) => {
 });
 
 // Lista tillgängliga spelpaket
-app.get('/api/paket', (req, res) => {
-  const dir = path.join(__dirname, 'public/paket');
-  if (!fs.existsSync(dir)) return res.json({ paket: [] });
-  const filer = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
-  res.json({ paket: filer });
+app.get('/api/paket', async (req, res) => {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/public/paket`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!response.ok) return res.json({ paket: [] });
+    const filer = await response.json();
+    const paket = filer
+      .filter(f => f.name.endsWith('.json'))
+      .map(f => f.name);
+    res.json({ paket });
+  } catch(e) {
+    res.json({ paket: [] });
+  }
 });
 
 // Spara kartbild
