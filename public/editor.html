@@ -773,7 +773,18 @@ function updatePreview(){
   const box=$('prevIcon'), txt=$('prevText'); box.innerHTML='';
   const showReduced = ($('prevMode').value==='reduced');
   const icon = showReduced ? (u.display.icon_reduced||u.display.icon_front) : (u.display.icon_front||u.display.icon_reduced);
-  if(icon && icon.trim()){ const img=new Image(); img.onload=()=>box.appendChild(img); img.onerror=()=>{box.innerHTML='<div class="s">bild ej hittad</div>';}; img.src=icon; }
+  if(icon && icon.trim()){
+  const img=new Image();
+  img.onload=()=>box.appendChild(img);
+  img.onerror=()=>{
+    if(!img.src.startsWith('https://')) {
+      img.src='https://taktikspel.onrender.com/'+icon;
+    } else {
+      box.innerHTML='<div class="s">bild ej hittad</div>';
+    }
+  };
+  img.src=icon;
+}
   else{ box.innerHTML='<div class="s">ingen bild</div>'; }
   const S = showReduced? u.stats.reduced : u.stats.full;
   const mor=`${S.morale.normal}/${S.morale.yellow}/${S.morale.red}`;
