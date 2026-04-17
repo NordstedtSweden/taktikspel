@@ -57,7 +57,13 @@ async function sparaTillGitHub(filsökväg, base64data, meddelande) {
 app.use(express.json({ limit: '50mb' }));
 app.use('/kartor', express.static(path.join(__dirname, 'public/kartor')));
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  }
+}));
 
 // Kontrollera lösenord
 app.post('/api/login', (req, res) => {
