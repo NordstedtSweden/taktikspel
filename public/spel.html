@@ -5784,8 +5784,7 @@ window.TERRAIN_COST_TABLE_MP = window.TERRAIN_COST_TABLE_MP || {
   road:1, open:2, field:3, orchard:3, trail:3,
   woods:4, hill:4, rough:4, crater:4, smoke:4,
   hedge:5, bocage:5, marsh:5,
-  stone_building:4, wood_building:4
-  river: 999, water: 999
+  stone_building:4, wood_building:4, river: 99, water: 99
 };
 
 /* ---------- Hjälpare ---------- */
@@ -5806,7 +5805,6 @@ function getTerrainCostPips(label){
 function computeSegmentCostPips(unit, fromHex, toHex){
   const cf = getTerrainCostPips(fromHex);
   const ct = getTerrainCostPips(toHex);
-  if (cf >= 999 || ct >= 999) return 999;
   return Math.max(cf, ct);
 }
 function computeUnitPips(u){
@@ -6040,7 +6038,8 @@ if (u.hex === u.orderTarget) continue;
       }
 
       const cost = computeSegmentCostPips(u, cur, nx);
-      if (!isFinite(cost) || cost <= 0 || cost >= 999) break;
+      if (!isFinite(cost) || cost <= 0) break;
+      if (cost > 50) break;
       if ((u.mpRemaining ?? 0) < cost) break; // slut på pips
 
       u.mpRemaining -= cost;
