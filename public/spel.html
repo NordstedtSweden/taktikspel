@@ -6003,8 +6003,8 @@ function startMovementPhase(){
     u._opfireStop    = false;
     u._opfireLockHex = null;
     u._opfLastHex    = null;
-    if (u.orderTarget && u.hex === u.orderTarget) continue;
-
+    if (!u.orderTarget) continue;
+if (u.hex === u.orderTarget) continue;
     // === NY ALL-DIRECTIONS-LOOP ===
     let cur = u.hex;
     let moved = false;
