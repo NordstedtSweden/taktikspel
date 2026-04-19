@@ -4892,6 +4892,8 @@ wrap.addEventListener('mousemove',e=>{
   }
 });
 cv.addEventListener('mousedown',e=>{
+ const animPågår = Array.isArray(PLACED) && PLACED.some(u => u._anim && u._anim.active);
+  if (animPågår) return;
   if(e.button===0&&(e.ctrlKey||e.altKey||e.shiftKey||e.metaKey)){ cam.pan=true; cam.lx=e.clientX; cam.ly=e.clientY; }
 });
 window.addEventListener('mousemove',e=>{
@@ -4909,6 +4911,8 @@ let touch1 = null, touch2 = null, lastPinchDist = null;
 
 cv.addEventListener('touchstart', e => {
   e.preventDefault();
+  const animPågår = Array.isArray(PLACED) && PLACED.some(u => u._anim && u._anim.active);
+  if (animPågår) return;
   if (e.touches.length === 1) {
     touch1 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     cam.pan = true;
