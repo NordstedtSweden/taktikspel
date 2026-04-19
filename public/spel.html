@@ -5431,8 +5431,8 @@ function getBoardContainerFor(node){
 function nodeCenterInContainer(node, container){
   const cr = container.getBoundingClientRect();
   const nr = node.getBoundingClientRect();
-  const x = (nr.left + nr.width/2) - cr.left + window.scrollX;
-  const y = (nr.top  + nr.height/2) - cr.top  + window.scrollY;
+  const x = (nr.left + nr.width/2) - cr.left + (container.scrollLeft || 0);
+  const y = (nr.top  + nr.height/2) - cr.top  + (container.scrollTop  || 0);
   return {x,y};
 }
 
