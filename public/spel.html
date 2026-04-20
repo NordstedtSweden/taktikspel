@@ -3492,6 +3492,7 @@ if (Array.isArray(PLACED)) {
       if (u.eliminated) return;
       if (!u.order) return;              // saknar order
       if (u.hasFired) return;            // redan skjutit denna runda
+      if ((u.order||'').toLowerCase() === 'scout') return; // spaningsorder — skjuter aldrig
 
       // v2.9: röd-suppressed kan inte skjuta
       if (typeof canUnitAct === 'function' && !canUnitAct(u)) {
