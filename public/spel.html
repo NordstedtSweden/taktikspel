@@ -2816,7 +2816,7 @@ function dist2BetweenHexes(hexA, hexB) {
 }
 
 function chooseNearestTarget(shooter) {
-  const enemies = PLACED.filter(e => e.side !== shooter.side && !e.eliminated);
+  const enemies = PLACED.filter(e => e.side !== shooter.side && !e.eliminated && !e.spanarNu);
   let best = null, bestD2 = Infinity;
   for (const e of enemies) {
     if (hasLOS(shooter.hex, e.hex)) {
@@ -3445,6 +3445,16 @@ function nextRound () {
   // === v2.9: ROUND START ===
   if (typeof currentRound === 'number') currentRound++; else currentRound = 1;
   if (typeof logEvent === 'function') logEvent(`--- Runda ${currentRound} ---`);
+
+  // Sätt spanarNu för spanare som redan är på plats (innan skjutfasen)
+  if (Array.isArray(PLACED)) {
+    for (const u of PLACED) {
+      if ((u.order || '').toLowerCase() === 'scout' &&
+          !u.eliminated && u.orderTarget && u.hex === u.orderTarget) {
+        u.spanarNu = true;
+      }
+    }
+  }
 
 
 
@@ -4621,7 +4631,7 @@ function dist2BetweenHexes(hexA, hexB){
 }
 // --- Välj närmsta mål i LOS (ignorerar eliminerade) ---
 function chooseNearestTarget(shooter){
-  const enemies = PLACED.filter(e => e.side !== shooter.side && !e.eliminated);
+  const enemies = PLACED.filter(e => e.side !== shooter.side && !e.eliminated && !e.spanarNu);
   let best = null, bestD2 = Infinity;
   for(const e of enemies){
     if(hasLOS(shooter.hex, e.hex)){
