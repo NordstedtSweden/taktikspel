@@ -1691,7 +1691,10 @@ let PLACED=[];
 
 window.spelKod = null;
 
-const socket = io('https://taktikspel.onrender.com');
+const socket = io('https://taktikspel.onrender.com', {
+  transports: ['polling'],
+  upgrade: false
+});
 
 socket.on('connect', () => {
   console.log('Ansluten till server!');
