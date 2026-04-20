@@ -4126,8 +4126,12 @@ orderMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
       orderTargetUnit.orderTarget = targetHex;
     }
     hideHint();
+  } else if (ord === 'support') {
+    // support → välj vänlig enhet att understödja
+    pendingTarget = { unitRef: orderTargetUnit, type: ord };
+    showHint('Klicka på den egna enhet du vill understödja…');
   } else {
-    // take / clear / support → välj mål-hex på kartan
+    // take / clear → välj mål-hex på kartan
     pendingTarget = { unitRef: orderTargetUnit, type: ord };
     showHint('Klicka på mål-hex på kartan…');
   }
@@ -4529,7 +4533,13 @@ function renderBangBadge(node, p) {
 
 function drawOrderArrow(p, color){
   const from=hexCenterWorld(p.hex);
-  const to=hexCenterWorld(p.orderTarget);
+  // För support-order är orderTarget ett enhets-ID, inte en hex — hitta enhetens aktuella hex
+  let målHex = p.orderTarget;
+  if ((p.order||'').toLowerCase() === 'support' && typeof PLACED !== 'undefined') {
+    const stöd = PLACED.find(u => u.uid === p.orderTarget || u.id === p.orderTarget || u.name === p.orderTarget);
+    if (stöd) målHex = stöd._losHex || stöd.hex;
+  }
+  const to=hexCenterWorld(målHex);
   if(!from || !to) return;
   ctx.save();
   ctx.setTransform(cam.z,0,0,cam.z,-cam.vx*cam.z,-cam.vy*cam.z);
@@ -4971,16 +4981,59 @@ cv.addEventListener('touchend', e => {
 
 cv.addEventListener('click', e => {
  
-    // 1) Om vi är i målvalsläge (pendingTarget) – välj målhex
+    // 1) Om vi är i målvalsläge (pendingTarget) – välj målhex eller vänlig enhet
  if (pendingTarget && pendingTarget.unitRef) {
+  const u   = pendingTarget.unitRef;
+  const ord = pendingTarget.type;
+
+  if (ord === 'support') {
+    // Hitta närmaste enhetikon som klickades på
+    const picons = [...document.querySelectorAll('.unitIcon')];
+    let nearest = null, bd = 900;
+    picons.forEach(n => {
+      const r  = n.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top  + r.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const d  = dx*dx + dy*dy;
+      if (d < bd) { bd = d; nearest = n; }
+    });
+    if (nearest) {
+      const title = nearest.title;
+      const mm = title?.match(/(BLUE|RED)\s+(.+?)\s+@\s+([A-Z]+\d+)/i);
+      if (mm) {
+        const tside = mm[1].toLowerCase();
+        const tid   = mm[2];
+        const thex  = mm[3];
+        const stödenhet = PLACED.find(x => x.side === tside && x.id === tid && x.hex === thex);
+        // Bara vänliga enheter, inte sig själv
+        if (stödenhet && stödenhet.side === u.side && stödenhet !== u) {
+          const målId = stödenhet.uid || stödenhet.id || stödenhet.name;
+          if (typeof sendOrderCommand === 'function') {
+            sendOrderCommand(u, ord, målId);
+          } else {
+            u.order       = ord;
+            u.orderTarget = målId;
+          }
+          hideHint();
+          pendingTarget = null;
+          if (typeof drawAll === 'function')      drawAll();
+          if (typeof renderOrders === 'function') renderOrders();
+          return;
+        }
+      }
+    }
+    // Klick på ogiltigt mål — vänta på nytt klick
+    return;
+  }
+
   const m  = mousePosOnCanvas(e);
   const ws = screenToWorld(m.x, m.y);
   const p  = invRot(ws.x, ws.y, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
   const hit = nearestHex(p.x, p.y);
   if (hit) {
     const hex = hexKey(hit.ri, hit.ci);
-    const u   = pendingTarget.unitRef;
-    const ord = pendingTarget.type;
 
     // Låt sendOrderCommand sköta allt:
     // - om roll = GM: applicera direkt + broadcast
@@ -5664,6 +5717,31 @@ function performOpFireAttack(attacker, defender){
           drawUnitsAndOrders();
         }
       }
+    }
+  }
+
+  // Moteld: om defender understöds av en kamrat → kamraten skjuter tillbaka på angriparen
+  if (typeof PLACED !== 'undefined' && Array.isArray(PLACED)) {
+    const defId = defender.uid || defender.id || defender.name;
+    const moteldSkyttar = PLACED.filter(s =>
+      s && s.side === defender.side &&
+      !s.eliminated && s.state !== 'eliminated' &&
+      (s.order || '').toLowerCase() === 'support' &&
+      s.orderTarget === defId &&
+      !s.hasFiredThisRound &&
+      !(typeof isRedSuppressed === 'function' && isRedSuppressed(s))
+    );
+    for (const stöd of moteldSkyttar) {
+      const stödHex = stöd._losHex || stöd.hex;
+      const angHex  = attacker._losHex || attacker.hex;
+      if (!stödHex || !angHex) continue;
+      if (typeof hasLOS === 'function' && !hasLOS(stödHex, angHex)) continue;
+      const räckvidd = typeof getUnitRangeHex === 'function' ? getUnitRangeHex(stöd) : 5;
+      if (typeof hexDist === 'function' && hexDist(stödHex, angHex) > räckvidd) continue;
+      if (typeof logEvent === 'function') {
+        logEvent(`${fmtSide(stöd)} ${fmtName(stöd)} moteld — understödjer ${fmtName(defender)}!`);
+      }
+      performOpFireAttack(stöd, attacker);
     }
   }
 
