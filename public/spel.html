@@ -4273,6 +4273,9 @@ if (role === 'gm') {
     const hx = liveHex(p);
     const losVisible = hx ? visHexes.has(hx) : false;
 
+    // Spanar dolt — syns aldrig för fienden oavsett LOS eller tidigare kontakt
+    if (p.spanarNu) return false;
+
     const spottedBySide =
       p.spottedBy && (p.spottedBy[role] === true);
 
