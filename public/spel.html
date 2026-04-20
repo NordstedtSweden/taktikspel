@@ -4553,28 +4553,44 @@ function renderBangBadge(node, p) {
 
 function drawOrderArrow(p, color){
   const from=hexCenterWorld(p.hex);
-  // För support-order är orderTarget ett enhets-ID, inte en hex — hitta enhetens aktuella hex
+  const isSupport = (p.order||'').toLowerCase() === 'support';
+
+  // För support-order är orderTarget ett enhets-ID — hitta enhetens aktuella hex
   let målHex = p.orderTarget;
-  if ((p.order||'').toLowerCase() === 'support' && typeof PLACED !== 'undefined') {
+  let visningsnamn = p.orderTarget;
+  if (isSupport && typeof PLACED !== 'undefined') {
     const stöd = PLACED.find(u => u.uid === p.orderTarget || u.id === p.orderTarget || u.name === p.orderTarget);
-    if (stöd) målHex = stöd._losHex || stöd.hex;
+    if (stöd) { målHex = stöd._losHex || stöd.hex; visningsnamn = stöd.id || stöd.name; }
   }
   const to=hexCenterWorld(målHex);
   if(!from || !to) return;
   ctx.save();
   ctx.setTransform(cam.z,0,0,cam.z,-cam.vx*cam.z,-cam.vy*cam.z);
-  ctx.strokeStyle = color; ctx.lineWidth=2; ctx.globalAlpha=0.9;
   const A=rot(from.x,from.y, MAP.gridOffX,MAP.gridOffY, MAP.gridAngle);
   const B=rot(to.x,to.y, MAP.gridOffX,MAP.gridOffY, MAP.gridAngle);
-  ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
-  const ang=Math.atan2(B.y-A.y, B.x-A.x);
-  ctx.beginPath(); ctx.moveTo(B.x,B.y);
-  ctx.lineTo(B.x-10*Math.cos(ang-0.35), B.y-10*Math.sin(ang-0.35));
-  ctx.lineTo(B.x-10*Math.cos(ang+0.35), B.y-10*Math.sin(ang+0.35));
-  ctx.closePath(); ctx.fillStyle=color; ctx.fill();
-  ctx.fillStyle='#000000aa'; ctx.fillRect(B.x+6, B.y-16, 38, 18);
-  ctx.fillStyle='#fff'; ctx.font='12px Segoe UI';
-  ctx.fillText(p.orderTarget, B.x+8, B.y-3);
+  ctx.globalAlpha=0.9; ctx.lineWidth=2;
+
+  if (isSupport) {
+    // Blå streckad linje utan pilspets för understöd
+    ctx.strokeStyle = '#4da6ff';
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+    ctx.setLineDash([]);
+    // Liten cirkel vid den understödda enheten
+    ctx.beginPath(); ctx.arc(B.x, B.y, 6, 0, Math.PI*2);
+    ctx.strokeStyle='#4da6ff'; ctx.stroke();
+  } else {
+    ctx.strokeStyle = color;
+    ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+    const ang=Math.atan2(B.y-A.y, B.x-A.x);
+    ctx.beginPath(); ctx.moveTo(B.x,B.y);
+    ctx.lineTo(B.x-10*Math.cos(ang-0.35), B.y-10*Math.sin(ang-0.35));
+    ctx.lineTo(B.x-10*Math.cos(ang+0.35), B.y-10*Math.sin(ang+0.35));
+    ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+    ctx.fillStyle='#000000aa'; ctx.fillRect(B.x+6, B.y-16, 38, 18);
+    ctx.fillStyle='#fff'; ctx.font='12px Segoe UI';
+    ctx.fillText(visningsnamn, B.x+8, B.y-3);
+  }
   ctx.restore();
 }
 function hexCenterWorld(hex){
@@ -6105,6 +6121,8 @@ function startMovementPhase(){
     u._opfireLockHex = null;
     u._opfLastHex    = null;
     if (!u.orderTarget) continue;
+    // Support-order: enheten stannar kvar och understödjer — ingen rörelse
+    if ((u.order || '').toLowerCase() === 'support') continue;
 if (u.hex === u.orderTarget) continue;
     // === NY ALL-DIRECTIONS-LOOP ===
     let cur = u.hex;
