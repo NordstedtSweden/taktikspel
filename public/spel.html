@@ -1020,6 +1020,9 @@ function getCombatModifier(attacker, defender, combatState) {
   const s = (attacker.suppression || attacker.suppressed || '').toLowerCase();
   if (s === "yellow") mod -= 1;
 
+  // Understödsbonus: försvararen understöds av en kamrat med LOS till angriparen
+  if (typeof getUnderstödsbonus === 'function') mod += getUnderstödsbonus(attacker, defender);
+
   return mod;
 }
 
@@ -5466,6 +5469,22 @@ function computeRangeMod(attacker, defender){
   return -1;                     // långt, men inom praktiskt avstånd
 }
 
+// Understödsbonus: returnerar -1 om defender har en aktiv understödjare med LOS till angriparen
+function getUnderstödsbonus(attacker, defender){
+  if (!Array.isArray(PLACED) || !attacker || !defender) return 0;
+  const defId = defender.uid || defender.id || defender.name;
+  const angHex = attacker._losHex || attacker.hex;
+  const supporter = PLACED.find(s =>
+    s && s.side === defender.side &&
+    !s.eliminated && s.state !== 'eliminated' &&
+    (s.order || '').toLowerCase() === 'support' &&
+    (s.orderTarget === defId) &&
+    !(typeof isRedSuppressed === 'function' && isRedSuppressed(s)) &&
+    (typeof hasLOS === 'function' ? hasLOS(s._losHex || s.hex, angHex) : true)
+  );
+  return supporter ? -1 : 0;
+}
+
 // Cover-mod baserat på terräng på försvararens hex
 function computeCoverMod(attacker, defender){
   const h = (defender._losHex || defender.hex);
@@ -5505,6 +5524,10 @@ function getToHitMod(attacker, defender, mode){
   if (mode === 'opfire' && attacker.hasFiredLastRound) {
     mod -= 3;   // justerbar: -2 lite snällare, -4 nästan omöjligt
   }
+
+  // Understödsbonus: målet understöds av en kamrat med LOS till angriparen
+  if (typeof getUnderstödsbonus === 'function') mod += getUnderstödsbonus(attacker, defender);
+
   return mod;
 }
 
