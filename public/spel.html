@@ -410,7 +410,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 <div id="orderMenu" class="orderMenu hidden">
   <button data-order="take">🎯 Take (Ta)</button>
   <button data-order="defend">🛡️ Defend (Försvara)</button>
-  <button data-order="clear">🧹 Clear (Rensa)</button>
+  <button data-order="scout">🔭 Scout (Spana)</button>
   <button data-order="support">🤝 Support (Understödja)</button>
   <button data-order="none">✖ Rensa order</button>
 </div>
@@ -1803,6 +1803,7 @@ function buildAuthoritativeState() {
         eliminated: !!u.eliminated,
          // 🔹 LOS 2.0 – fält som klienterna behöver
         hidden: u.hidden === true,
+        spanarNu: u.spanarNu === true,
         hasFiredThisRound: u.hasFiredThisRound === true,
         revealedFor: typeof u.revealedFor === 'number' ? u.revealedFor : 0,
         spottedBy: u.spottedBy || { blue:false, red:false },
@@ -2002,6 +2003,7 @@ function applyStateFromGM(payload) {
         suppressionLevel: src.suppressionLevel ?? 0,
         eliminated: !!src.eliminated,
         hidden: src.hidden === true,
+        spanarNu: src.spanarNu === true,
 
         // 🔶 LOS 2.0 – ta med båda eld-flaggorna från GM
         hasFiredThisRound: !!src.hasFiredThisRound,
@@ -2069,6 +2071,9 @@ function applyOrderFromCommand(unit, order, targetHex) {
   if (!unit) return;
   const o = (order || 'none').toLowerCase();
 
+  // Ny order avbryter spaningsläge — enheten blir synlig igen
+  unit.spanarNu = false;
+
   if (o === 'none') {
     unit.order = null;
     unit.orderTarget = null;
@@ -2087,7 +2092,7 @@ function applyOrderFromCommand(unit, order, targetHex) {
 
   // Om du vill kan du trigga path-planering här för GM
   if (typeof planPathForUnit === 'function' && unit.orderTarget) {
-    if (o === 'take' || o === 'clear') {
+    if (o === 'take' || o === 'scout') {
       planPathForUnit(unit, unit.orderTarget);
     }
   }
@@ -3113,7 +3118,7 @@ function resetUnitForNewRound(unit){
 
   // Om TAKE / CLEAR → säkerställ att path är planerad mot orderTarget
   if ((unit.order === 'take' || unit.order === 'Take' ||
-       unit.order === 'clear' || unit.order === 'Clear') &&
+       unit.order === 'scout' || unit.order === 'Scout') &&
       unit.orderTarget &&
       (!unit.plannedPath || unit.targetHex !== unit.orderTarget)) {
     planPathForUnit(unit, unit.orderTarget);
@@ -4083,7 +4088,7 @@ PLACED.push(obj);
 });
 
 /* ===== Ordermeny + målval ===== */
-const ORDER_ICONS={none:'',take:'🎯',defend:'🛡️',clear:'🧹',support:'🤝'};
+const ORDER_ICONS={none:'',take:'🎯',defend:'🛡️',scout:'🔭',support:'🤝'};
 const orderMenu=$('orderMenu'); let orderTargetUnit=null;
 window.addEventListener('click',e=>{ if(!orderMenu.contains(e.target)) orderMenu.classList.add('hidden'); });
 orderMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -4832,6 +4837,7 @@ function computeVisibleHexes(side){
   for (const v of PLACED) {
     if (!v || v.eliminated || v.state === 'eliminated') continue;
     if (v.side !== enemySide) continue;
+    if (v.spanarNu) continue; // i spaningsläge — syns inte för fienden
 
     const vHex = liveHex(v);
     if (!vHex) continue;
@@ -6413,6 +6419,18 @@ if (stepChanged || liveChanged) {
       u._losHex    = null;
       if (u._anim) u._anim.active = false;
       touched.add(u);
+    }
+
+    // Spana: enhet som nått sitt mål går in i dolt spaningsläge
+    for (const u of PLACED) {
+      if ((u.order || '').toLowerCase() === 'scout' &&
+          !u.eliminated && u.state !== 'eliminated' &&
+          u.hex === u.orderTarget && !u.spanarNu) {
+        u.spanarNu = true;
+        if (typeof logEvent === 'function') {
+          logEvent(`${fmtSide(u)} ${fmtName(u)} är på plats och spanar dolt. 🔭`);
+        }
+      }
     }
 
     if (typeof updateLOS === "function") updateLOS();
