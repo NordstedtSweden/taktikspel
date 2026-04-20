@@ -4378,6 +4378,26 @@ if (icon){
            node.addEventListener('click',(e)=>{
         e.stopPropagation();
 
+        // Om vi väntar på att välja understödd enhet — hantera det här
+        if (pendingTarget && pendingTarget.type === 'support') {
+          const u = pendingTarget.unitRef;
+          // Bara vänliga enheter, inte sig själv
+          if (p.side === u.side && p !== u) {
+            const målId = p.uid || p.id || p.name;
+            if (typeof sendOrderCommand === 'function') {
+              sendOrderCommand(u, 'support', målId);
+            } else {
+              u.order       = 'support';
+              u.orderTarget = målId;
+            }
+            hideHint();
+            pendingTarget = null;
+            if (typeof drawAll === 'function')      drawAll();
+            if (typeof renderOrders === 'function') renderOrders();
+          }
+          return;
+        }
+
         // Hämta aktuell roll via helper om den finns, annars via dropdown
         const roleNow = (typeof getCurrentRole === 'function')
           ? getCurrentRole()
