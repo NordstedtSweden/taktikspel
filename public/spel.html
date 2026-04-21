@@ -288,6 +288,15 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <button class="btn pri gm-only" id="loadPaketBtn">Ladda spelpaket…</button>
 <input type="file" id="paketFile" accept="application/json" style="display:none">
 
+<!-- Uppdragsmodal -->
+<div id="uppdragModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:480px;max-width:92vw;max-height:80vh;overflow:auto">
+    <h3 id="uppdragRubrik" style="margin:0 0 12px;color:#e8eefc">Mitt uppdrag</h3>
+    <pre id="uppdragText" style="white-space:pre-wrap;font-family:inherit;color:#e8eefc;margin:0 0 16px;line-height:1.6">—</pre>
+    <button class="btn" id="uppdragStangBtn" style="float:right">Stäng</button>
+  </div>
+</div>
+
 <!-- Scenarioväljare -->
 <div id="scenarioModal" style="
   display:none;position:fixed;inset:0;z-index:9999;
@@ -377,6 +386,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
       <button id="nextRoundBtn" class="btn pri">
       ▶ Nästa runda
     </button>
+    <button id="uppdragBtn" class="btn" style="background:#17224a;border-color:#4da6ff;color:#4da6ff">📋 Mitt uppdrag</button>
     <label class="readyAutoLabel">
       <input type="checkbox" id="autoNextChk">
       Auto kör nästa runda
@@ -3802,10 +3812,35 @@ document.getElementById('scenarioStangBtn').onclick = () => {
   document.getElementById('scenarioModal').style.display = 'none';
 };
 
+// Uppdragsknapp — visar rätt sidas order
+document.getElementById('uppdragBtn').onclick = () => {
+  const role = typeof getCurrentRole === 'function' ? getCurrentRole() : ($('roleSel')?.value || 'gm');
+  const modal = document.getElementById('uppdragModal');
+  const rubrik = document.getElementById('uppdragRubrik');
+  const text   = document.getElementById('uppdragText');
+  if (role === 'blue') {
+    rubrik.textContent = '📋 Blue — Mitt uppdrag';
+    text.textContent   = SCENARIO_ORDER.blue || '(Inget uppdrag definierat)';
+  } else if (role === 'red') {
+    rubrik.textContent = '📋 Red — Mitt uppdrag';
+    text.textContent   = SCENARIO_ORDER.red  || '(Inget uppdrag definierat)';
+  } else {
+    rubrik.textContent = '📋 Uppdrag (GM-vy)';
+    text.textContent   = `BLUE:\n${SCENARIO_ORDER.blue || '—'}\n\nRED:\n${SCENARIO_ORDER.red || '—'}`;
+  }
+  modal.style.display = 'flex';
+};
+document.getElementById('uppdragStangBtn').onclick = () => {
+  document.getElementById('uppdragModal').style.display = 'none';
+};
+
 document.getElementById('scenarioLokalBtn').onclick = () => {
   document.getElementById('scenarioModal').style.display = 'none';
   $('paketFile').click();
 };
+
+// Uppdrag per sida — laddas från scenariot
+let SCENARIO_ORDER = { blue: '', red: '' };
 
 function laddaPaket(paket) {
   if (!paket.version || !paket.map || !paket.units || !paket.scenario) {
@@ -3815,6 +3850,8 @@ function laddaPaket(paket) {
   MAP = normMap(paket.map);
   UNITS = paket.units;
   SC = paket.scenario;
+  SCENARIO_ORDER.blue = paket.scenario?.order?.blue || '';
+  SCENARIO_ORDER.red  = paket.scenario?.order?.red  || '';
   $('status').textContent = 'Spelpaket inläst: ' + (SC.title || 'okänt');
   autoloadBoards();
   if (typeof refreshBoardsInfo === 'function') refreshBoardsInfo();
