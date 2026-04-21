@@ -1991,7 +1991,11 @@ function applyStateFromGM(payload) {
   autoloadBoards();
 }
   if (payload.unitsDef) UNITS = payload.unitsDef;
-  if (payload.scenario) SC    = payload.scenario;
+  if (payload.scenario) {
+    SC = payload.scenario;
+    SCENARIO_ORDER.blue = payload.scenario?.order?.blue || '';
+    SCENARIO_ORDER.red  = payload.scenario?.order?.red  || '';
+  }
   if (typeof payload.currentRound === 'number') {
     currentRound = payload.currentRound;
   }
