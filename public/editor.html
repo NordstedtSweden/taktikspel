@@ -334,6 +334,10 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       </div>
       <label>Segervillkor<textarea id="scVC" placeholder="Ex: Ta och håll E9 tre rundor; minimera förluster."></textarea></label>
 
+      <h4>Uppdrag per sida</h4>
+      <label>Blue order<textarea id="scBlueOrder" placeholder="Skriv Blue-lagets uppdrag och order här…" rows="4"></textarea></label>
+      <label>Red order<textarea id="scRedOrder" placeholder="Skriv Red-lagets uppdrag och order här…" rows="4"></textarea></label>
+
       <h4>Kartor</h4>
       <div class="s">Hämta in från Karteditorn (inkl. grid-offset/rot och koordinatstil)</div>
       <div id="boardList" class="list" style="max-height:180px"></div>
@@ -921,7 +925,7 @@ $('uExport').addEventListener('click',()=>{
 });
 
 /* ================= SCENARIO ================= */
-let SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', boards:[], map:{hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, gridOffX:80, gridOffY:80, terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}};
+let SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, gridOffX:80, gridOffY:80, terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}};
 function refreshPools(){
   const mk=(arr,side)=>{
     const box=$(side+'Pool'); box.innerHTML='';
@@ -966,14 +970,17 @@ function fillScenarioForm(){
   $('scTitle').value=SC.title||''; $('scDesc').value=SC.desc||'';
   $('scRounds').value=SC.rounds||6; $('scInit').value=SC.initiative||'Blue'; $('scSetupMin').value=SC.setupMin||0;
   $('scVC').value=SC.vc||''; $('scBlueZones').value=SC.setup?.blue||''; $('scRedZones').value=SC.setup?.red||'';
+  $('scBlueOrder').value=SC.order?.blue||''; $('scRedOrder').value=SC.order?.red||'';
   refreshBoardList(); refreshUnitPicker(); refreshPools();
 }
 function readScenarioForm(){
   SC.title=$('scTitle').value||''; SC.desc=$('scDesc').value||'';
   SC.rounds=+($('scRounds').value||6); SC.initiative=$('scInit').value||'Blue'; SC.setupMin=+($('scSetupMin').value||0);
   SC.vc=$('scVC').value||''; SC.setup.blue=$('scBlueZones').value||''; SC.setup.red=$('scRedZones').value||'';
+  if (!SC.order) SC.order={blue:'',red:''};
+  SC.order.blue=$('scBlueOrder').value||''; SC.order.red=$('scRedOrder').value||'';
 }
-$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}}; fillScenarioForm(); alert('Nytt scenario.'); };
 $('scImport').onclick=()=>$('scFile').click();
 $('scFile').onchange=(ev)=>{
   const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
