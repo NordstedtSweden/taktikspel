@@ -1071,6 +1071,14 @@
           "startZone": "",
           "startRound": 0,
           "startHex": "J6"
+        },
+        {
+          "id": "BLUE_Inf_GA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "P7"
         }
       ],
       "red": [
