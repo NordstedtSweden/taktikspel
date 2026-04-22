@@ -1061,21 +1061,16 @@
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "L4"
         },
         {
           "id": "BLUE_Inf_FA",
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
-        },
-        {
-          "id": "BLUE_Inf_GA",
-          "count": 1,
-          "state": "full",
-          "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "J6"
         }
       ],
       "red": [
