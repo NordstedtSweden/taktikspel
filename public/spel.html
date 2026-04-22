@@ -929,6 +929,9 @@ function eliminateUnit(u, opts){
     );
   }
 
+  // Stoppa eldanimationer som riktar sig mot denna enhet
+  if (typeof stopFireAnimsTargeting === 'function') stopFireAnimsTargeting(u);
+
   // Rensa ev. gamla eldfx
   document.querySelectorAll('.fx-line').forEach(n => n.remove());
 
@@ -1270,6 +1273,16 @@ function stopAllFireAnims() {
   ACTIVE_FIRE_ANIMS.clear();
 }
 
+function stopFireAnimsTargeting(defender) {
+  for (const [key, entry] of ACTIVE_FIRE_ANIMS) {
+    if (entry.defender === defender) {
+      if (entry.stopBurst) entry.stopBurst();
+      if (entry.lineEl && entry.lineEl.parentNode) entry.lineEl.remove();
+      ACTIVE_FIRE_ANIMS.delete(key);
+    }
+  }
+}
+
 // 4) Kombinerad FX: linje SKYTT→MÅL + 💥 på MÅLET
 function fireFX(attacker, defender) {
   // Stoppa ev. pågående animation för samma skytt innan ny startas
@@ -1285,9 +1298,9 @@ function fireFX(attacker, defender) {
   showBangOnUnit(defender);
   defender._bangActive = true;
 
-  // Spara stopp-referenser
+  // Spara stopp-referenser (inkl. försvarare för att kunna stoppa vid eliminering)
   const key = attacker.uid || (attacker.side + '_' + attacker.id);
-  ACTIVE_FIRE_ANIMS.set(key, { stopBurst, lineEl });
+  ACTIVE_FIRE_ANIMS.set(key, { stopBurst, lineEl, defender });
 }
 /*
 // === BROADCASTED FIRE FX (v2.16.6) =============================
