@@ -929,8 +929,11 @@ function eliminateUnit(u, opts){
     );
   }
 
-  // Stoppa eldanimationer som riktar sig mot denna enhet
-  if (typeof stopFireAnimsTargeting === 'function') stopFireAnimsTargeting(u);
+  // Stoppa eldanimationer mot denna enhet efter 3s (så sista salvan hinner synas)
+  if (typeof stopFireAnimsTargeting === 'function') {
+    const elimTarget = u;
+    setTimeout(() => stopFireAnimsTargeting(elimTarget), 3000);
+  }
 
   // Rensa ev. gamla eldfx
   document.querySelectorAll('.fx-line').forEach(n => n.remove());
