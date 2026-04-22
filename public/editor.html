@@ -313,6 +313,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <div class="grid3">
         <button class="btn pri" id="scNew">Nytt</button>
         <button class="btn" id="scImport">Importera</button>
+        <button class="btn" id="scHamtaServer">Hämta från server…</button>
         <div class="row"><label class="s">Scenario filnamn</label><input id="scFileName" type="text" placeholder="scenario.json"></div>
         <button class="btn ok" id="scExport">Exportera</button>
         <button class="btn pri" id="scPublicera">Publicera på server</button>
@@ -1226,6 +1227,62 @@ document.getElementById('ikonFil').onchange = async function() {
   }
   alert(ok + ' av ' + filer.length + ' ikoner uppladdade!');
 };
+
+// Hämta scenario från server
+const SERVER_URL = 'https://taktikspel.onrender.com';
+
+$('scHamtaServer').onclick = async () => {
+  const modal = document.getElementById('serverScenarioModal');
+  const lista = document.getElementById('serverScenarioLista');
+  modal.style.display = 'flex';
+  lista.innerHTML = '<div style="color:#9fb1d4">Hämtar scenarios från servern…</div>';
+  try {
+    const res  = await fetch(SERVER_URL + '/api/paket');
+    const data = await res.json();
+    if (!data.paket || !data.paket.length) {
+      lista.innerHTML = '<div style="color:#9fb1d4">Inga scenarios på servern.</div>';
+      return;
+    }
+    lista.innerHTML = '';
+    data.paket.forEach(filnamn => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style = 'width:100%;margin-bottom:8px;text-align:left';
+      btn.textContent = filnamn.replace('.json', '');
+      btn.onclick = async () => {
+        modal.style.display = 'none';
+        const paketRes = await fetch(SERVER_URL + '/paket/' + filnamn);
+        const paket    = await paketRes.json();
+        // Ladda in alla delar av paketet i editorn
+        if (paket.map)      { M = paket.map; }
+        if (paket.scenario) { SC = paket.scenario; if (!SC.order) SC.order = {blue:'',red:''}; }
+        if (paket.units)    { UNITS = paket.units; }
+        $('scFileName').value = filnamn;
+        fillScenarioForm();
+        if (typeof refreshUnitPicker === 'function') refreshUnitPicker();
+        if (typeof refreshPools      === 'function') refreshPools();
+        if (typeof drawAll           === 'function') drawAll();
+        alert('Scenario "' + filnamn.replace('.json','') + '" hämtat från servern.');
+      };
+      lista.appendChild(btn);
+    });
+  } catch(e) {
+    lista.innerHTML = '<div style="color:#ff6b6b">Kunde inte nå servern: ' + e.message + '</div>';
+  }
+};
+document.getElementById('serverScenarioStangBtn').onclick = () => {
+  document.getElementById('serverScenarioModal').style.display = 'none';
+};
 </script>
+
+<!-- Modal: hämta scenario från server -->
+<div id="serverScenarioModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:400px;max-width:90vw;">
+    <h3 style="margin:0 0 16px;color:#e8eefc">Hämta scenario från server</h3>
+    <div id="serverScenarioLista" style="margin-bottom:16px;max-height:320px;overflow:auto"></div>
+    <button class="btn" id="serverScenarioStangBtn" style="float:right">Stäng</button>
+  </div>
+</div>
+
 </body>
 </html>

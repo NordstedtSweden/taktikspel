@@ -297,6 +297,31 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   </div>
 </div>
 
+<!-- Segervillkors-modal (GM) -->
+<div id="segerModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:480px;max-width:92vw;">
+    <h3 style="margin:0 0 12px;color:#f2c94c">🏆 Segervillkor</h3>
+    <pre id="segerVCText" style="white-space:pre-wrap;font-family:inherit;color:#e8eefc;margin:0 0 20px;line-height:1.6;background:#0a0f24;padding:12px;border-radius:8px">—</pre>
+    <p style="color:#9fb1d4;margin:0 0 16px;font-size:13px">Bedöm striden och deklarera vinnare:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ok" id="segerBlueBtn" style="flex:1">🔵 Blue vinner</button>
+      <button class="btn bad" id="segerRedBtn" style="flex:1">🔴 Red vinner</button>
+      <button class="btn" id="segerStangBtn">Stäng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Spelslut-overlay (alla spelare) -->
+<div id="spelslutOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;flex-direction:column;text-align:center;">
+  <div style="background:#0f1832;border:2px solid #f2c94c;border-radius:16px;padding:40px;max-width:500px;width:92vw;">
+    <div id="spelslutEmoji" style="font-size:64px;margin-bottom:16px">🏆</div>
+    <h2 id="spelslutRubrik" style="margin:0 0 12px;font-size:28px;color:#f2c94c">Spelet är slut</h2>
+    <p id="spelslutVinnare" style="font-size:20px;margin:0 0 20px;color:#e8eefc"></p>
+    <pre id="spelslutVC" style="white-space:pre-wrap;font-family:inherit;color:#9fb1d4;font-size:14px;margin:0 0 24px;line-height:1.6"></pre>
+    <button class="btn" id="spelslutStangBtn">Stäng</button>
+  </div>
+</div>
+
 <!-- Scenarioväljare -->
 <div id="scenarioModal" style="
   display:none;position:fixed;inset:0;z-index:9999;
@@ -326,6 +351,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
       </label>
     </span>
     <button id="uppdragBtn" class="btn" style="background:#17224a;border-color:#4da6ff;color:#4da6ff">📋 Mitt uppdrag</button>
+    <button id="segerBtn" class="btn gm-only" style="background:#17224a;border-color:#f2c94c;color:#f2c94c">🏆 Segervillkor</button>
     <label>Visa terräng <input type="checkbox" id="showTerrain"></label>
     <label>Visa grid <input type="checkbox" id="showGrid" checked></label>
     <label id="gmLosToggle" class="hidden">Visa LOS <input type="checkbox" id="toggleLOS" checked></label>
@@ -1856,6 +1882,16 @@ if (gameChannel) {
         // ======================================================
     // 2) ORDER — klient skickar → GM applicerar
     // ======================================================
+    // ======================================================
+    // GAMEOVER — GM deklarerar vinnare → alla ser spelslut
+    // ======================================================
+    if (msg.type === 'gameover') {
+      if (role !== 'gm' && typeof visaSpelslut === 'function') {
+        visaSpelslut(msg.vinnare);
+      }
+      return;
+    }
+
     if (msg.type === 'order') {
       // Endast GM får tolka och applicera order
       if (role !== 'gm') return;
@@ -3836,6 +3872,39 @@ document.getElementById('uppdragBtn').onclick = () => {
 };
 document.getElementById('uppdragStangBtn').onclick = () => {
   document.getElementById('uppdragModal').style.display = 'none';
+};
+
+// Segervillkor — GM-modal
+function visaSpelslut(vinnare) {
+  const vc = SC?.vc || '(Inga segervillkor definierade)';
+  const overlay = document.getElementById('spelslutOverlay');
+  document.getElementById('spelslutEmoji').textContent   = vinnare === 'blue' ? '🔵' : '🔴';
+  document.getElementById('spelslutRubrik').textContent  = 'Spelet är slut!';
+  document.getElementById('spelslutVinnare').textContent = vinnare === 'blue' ? 'BLUE vinner! 🎉' : 'RED vinner! 🎉';
+  document.getElementById('spelslutVC').textContent      = vc;
+  overlay.style.display = 'flex';
+}
+
+document.getElementById('segerBtn').onclick = () => {
+  const vc = SC?.vc || '(Inga segervillkor definierade)';
+  document.getElementById('segerVCText').textContent = vc;
+  document.getElementById('segerModal').style.display = 'flex';
+};
+document.getElementById('segerStangBtn').onclick = () => {
+  document.getElementById('segerModal').style.display = 'none';
+};
+document.getElementById('segerBlueBtn').onclick = () => {
+  document.getElementById('segerModal').style.display = 'none';
+  visaSpelslut('blue');
+  if (gameChannel) gameChannel.postMessage({ type: 'gameover', vinnare: 'blue' });
+};
+document.getElementById('segerRedBtn').onclick = () => {
+  document.getElementById('segerModal').style.display = 'none';
+  visaSpelslut('red');
+  if (gameChannel) gameChannel.postMessage({ type: 'gameover', vinnare: 'red' });
+};
+document.getElementById('spelslutStangBtn').onclick = () => {
+  document.getElementById('spelslutOverlay').style.display = 'none';
 };
 
 document.getElementById('scenarioLokalBtn').onclick = () => {
