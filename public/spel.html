@@ -2031,6 +2031,7 @@ function applyStateFromGM(payload) {
     SC = payload.scenario;
     SCENARIO_ORDER.blue = payload.scenario?.order?.blue || '';
     SCENARIO_ORDER.red  = payload.scenario?.order?.red  || '';
+    SCENARIO_VC         = payload.scenario?.vc          || '';
   }
   if (typeof payload.currentRound === 'number') {
     currentRound = payload.currentRound;
@@ -3876,7 +3877,7 @@ document.getElementById('uppdragStangBtn').onclick = () => {
 
 // Segervillkor — GM-modal
 function visaSpelslut(vinnare) {
-  const vc = SC?.vc || '(Inga segervillkor definierade)';
+  const vc = SCENARIO_VC || '(Inga segervillkor definierade)';
   const overlay = document.getElementById('spelslutOverlay');
   document.getElementById('spelslutEmoji').textContent   = vinnare === 'blue' ? '🔵' : '🔴';
   document.getElementById('spelslutRubrik').textContent  = 'Spelet är slut!';
@@ -3886,7 +3887,7 @@ function visaSpelslut(vinnare) {
 }
 
 document.getElementById('segerBtn').onclick = () => {
-  const vc = SC?.vc || '(Inga segervillkor definierade)';
+  const vc = SCENARIO_VC || '(Inga segervillkor definierade)';
   document.getElementById('segerVCText').textContent = vc;
   document.getElementById('segerModal').style.display = 'flex';
 };
@@ -3912,8 +3913,9 @@ document.getElementById('scenarioLokalBtn').onclick = () => {
   $('paketFile').click();
 };
 
-// Uppdrag per sida — laddas från scenariot
+// Uppdrag och segervillkor — laddas från scenariot
 let SCENARIO_ORDER = { blue: '', red: '' };
+let SCENARIO_VC    = '';
 
 function laddaPaket(paket) {
   if (!paket.version || !paket.map || !paket.units || !paket.scenario) {
@@ -3925,6 +3927,7 @@ function laddaPaket(paket) {
   SC = paket.scenario;
   SCENARIO_ORDER.blue = paket.scenario?.order?.blue || '';
   SCENARIO_ORDER.red  = paket.scenario?.order?.red  || '';
+  SCENARIO_VC         = paket.scenario?.vc          || '';
   $('status').textContent = 'Spelpaket inläst: ' + (SC.title || 'okänt');
   autoloadBoards();
   if (typeof refreshBoardsInfo === 'function') refreshBoardsInfo();
