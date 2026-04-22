@@ -364,9 +364,10 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
             <select id="unitStartState"><option value="full">full</option><option value="reduced">reduced</option></select>
           </label>
         </div>
-        <div class="grid3">
+        <div class="grid4">
           <label>Startzon/område<input id="unitStartZone" type="text" placeholder="t.ex. A1-A4, C3"></label>
           <label>Startrunda<input id="unitStartRound" type="number" value="0"></label>
+          <label>Fördefinierad starthex<input id="unitStartHex" type="text" placeholder="t.ex. C5 (valfritt)"></label>
           <label>Side
             <select id="unitSide"><option value="blue">Blue</option><option value="red">Red</option></select>
           </label>
@@ -933,7 +934,7 @@ function refreshPools(){
     arr.forEach((p,i)=>{
       const d=document.createElement('div'); d.className='uitem';
       d.innerHTML=`<b>${p.id}</b> <span class="badge">x${p.count}</span> <span class="badge">${p.state}</span>
-      <div class="s">zon:${p.startZone||'-'} • runda:${p.startRound}</div>`;
+      <div class="s">zon:${p.startZone||'-'} • runda:${p.startRound}${p.startHex?' • starthex:'+p.startHex:''}</div>`;
       d.onclick=()=>{ if(confirm('Ta bort?')){ arr.splice(i,1); refreshPools(); } };
       box.appendChild(d);
     });
@@ -962,9 +963,10 @@ $('addUnitToScenario').onclick=()=>{
   const id = $('unitPicker').value.trim(); if(!id){ alert('Välj enhet (id)'); return; }
   const side=$('unitSide').value; const count=+($('unitCount').value||1);
   const state=$('unitStartState').value; const startZone=$('unitStartZone').value.trim(); const startRound=+($('unitStartRound').value||0);
-  const item={id,count,state,startZone,startRound};
+  const startHex=$('unitStartHex').value.trim().toUpperCase();
+  const item={id,count,state,startZone,startRound,...(startHex?{startHex}:{})};
   if(side==='blue'){ SC.orbat.blue.push(item); } else { SC.orbat.red.push(item); }
-  $('unitPicker').value=''; refreshPools();
+  $('unitPicker').value=''; $('unitStartHex').value=''; refreshPools();
 };
 
 function fillScenarioForm(){

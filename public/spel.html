@@ -350,6 +350,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
         </select>
       </label>
     </span>
+    <button id="autoPlaceBtn" class="btn gm-only" style="background:#17224a;border-color:#7ed321;color:#7ed321" title="Placera ut alla enheter med fördefinierad starthex automatiskt">⚡ Auto-placera</button>
     <button id="uppdragBtn" class="btn" style="background:#17224a;border-color:#4da6ff;color:#4da6ff">📋 Mitt uppdrag</button>
     <button id="segerBtn" class="btn gm-only" style="background:#17224a;border-color:#f2c94c;color:#f2c94c">🏆 Segervillkor</button>
     <label>Visa terräng <input type="checkbox" id="showTerrain"></label>
@@ -3937,6 +3938,73 @@ function laddaPaket(paket) {
   if (typeof renderOrders      === 'function') renderOrders();
   if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
 }
+
+/* ===== Auto-placera enheter med fördefinierad starthex ===== */
+function autoPlaceFromOrbat() {
+  if (!SC?.orbat) { alert('Ladda ett scenario först.'); return; }
+
+  const placerade = [];
+  const felmeddelanden = [];
+
+  ['blue','red'].forEach(sida => {
+    (SC.orbat[sida] || []).forEach(rad => {
+      if (!rad.startHex) return; // Hoppa över rader utan starthex
+      const hex = rad.startHex.toUpperCase();
+      const rc = keyToRC(hex);
+      if (!rc) { felmeddelanden.push(`Okänd hex "${hex}" för ${rad.id}`); return; }
+
+      // Placera så många exemplar som räknas i "count" på starthex
+      const antal = rad.count || 1;
+      for (let i = 0; i < antal; i++) {
+        // Kolla om det redan finns en enhet av samma sida på den hexen
+        const upptagen = PLACED.some(u =>
+          u.side === sida && u.hex === hex && !u.eliminated &&
+          String(u.state||'').toLowerCase() !== 'eliminated'
+        );
+        if (upptagen) {
+          felmeddelanden.push(`Hex ${hex} redan upptagen — ${rad.id} (${sida}) placerades inte`);
+          continue;
+        }
+        // Kolla om det finns kvar i poolen
+        if (remainingCountGrouped(sida, rad.id, rad.state || 'full') <= 0) {
+          felmeddelanden.push(`Inga ${rad.id} (${rad.state||'full'}) kvar för ${sida}`);
+          continue;
+        }
+        const obj = {
+          side: sida,
+          id: rad.id,
+          hex,
+          state: rad.state || 'full',
+          order: null,
+          orderTarget: null,
+          suppressed: null,
+          suppressedRounds: 0,
+          eliminated: false,
+          hasFired: false,
+          fireTarget: null,
+          spottedBy: { blue: false, red: false }
+        };
+        backfillRuntime(obj);
+        PLACED.push(obj);
+        placerade.push(`${rad.id} (${sida}) → ${hex}`);
+      }
+    });
+  });
+
+  renderPools();
+  drawAll();
+  renderOrders();
+  if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+
+  let meddelande = `Auto-placering klar. ${placerade.length} enhet(er) placerade.`;
+  if (felmeddelanden.length) meddelande += '\n\nVarningar:\n' + felmeddelanden.join('\n');
+  alert(meddelande);
+}
+
+$('autoPlaceBtn').onclick = () => {
+  if (!confirm('Auto-placera alla enheter med fördefinierad starthex?\nEnheter som redan är placerade berörs inte.')) return;
+  autoPlaceFromOrbat();
+};
 
 $('paketFile').onchange = e => {
   const f = e.target.files?.[0];
