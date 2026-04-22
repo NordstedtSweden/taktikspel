@@ -1108,12 +1108,11 @@ function drawFireBurst(attacker, defender) {
   const baseLen = Math.hypot(dx, dy);
   const baseAng = Math.atan2(dy, dx);
 
-  const BURST_TOTAL_MS = 2000;    // ≈ 2 sekunder
   const TICK_MS        = 90;      // hur ofta vi kan skjuta “salvor”
   const MIN_ROF        = 1;       // min antal spår per tick
   const MAX_ROF        = 4;       // max antal spår per tick
 
-  const start = performance.now();
+  let stoppad = false; // sätts till true utifrån för att avbryta
 
   // liten hjälpare: skapa EN tracer
   function spawnTracer() {
@@ -1151,21 +1150,14 @@ function drawFireBurst(attacker, defender) {
   }
 
   function tick() {
-    const now = performance.now();
-    const elapsed = now - start;
-    if (elapsed >= BURST_TOTAL_MS) return;
+    if (stoppad) return; // avbryt om stoppad utifrån
 
-    const tNorm = elapsed / BURST_TOTAL_MS; // 0..1
-
-    // Slumpad rate-of-fire:
-    // - varierar mellan MIN_ROF och MAX_ROF
-    // - chewed upp/ner lite över tiden (så det inte är helt konstant)
+    // Slumpad rate-of-fire med liten variation
     const rofBase = MIN_ROF + Math.random() * (MAX_ROF - MIN_ROF);
-    const pulse   = 0.7 + 0.4 * Math.sin(tNorm * Math.PI * 3); // lite vågor under 2 sek
+    const pulse   = 0.7 + 0.4 * Math.random(); // lite variation
     const shotsThisTick = Math.max(0, Math.round(rofBase * pulse));
 
     for (let i = 0; i < shotsThisTick; i++) {
-      // sprid ut inom tick-fönstret (så allt inte triggas exakt samtidigt)
       const delay = Math.random() * (TICK_MS * 0.7);
       setTimeout(spawnTracer, delay);
     }
@@ -1174,6 +1166,7 @@ function drawFireBurst(attacker, defender) {
   }
 
   tick();
+  return function() { stoppad = true; }; // returnera stopp-funktion
 }
 
 const FIRE_STATIC_MS = 2500; // hur länge den fasta linjen ligger kvar
@@ -1211,9 +1204,7 @@ function drawPersistentFireLine(attacker, defender) {
   line.style.transform = `rotate(${angle}deg)`;
 
   boardContainer.appendChild(line);
-
-  // Ta bort efter ett par sekunder så kartan inte blir överfull
-  setTimeout(() => line.remove(), FIRE_STATIC_MS);
+  return line; // returneras för att kunna tas bort utifrån
 }
 
 /*const FIRE_BURST_MS = 2000; // 2 sekunder eldstridsanimation
@@ -1259,17 +1250,44 @@ function drawPersistentFireLine(attacker, defender) {
 
 
 
+// Aktiva eldanimationer: attackerKey → { stopBurst, lineEl }
+const ACTIVE_FIRE_ANIMS = new Map();
+
+function stopFireAnimForUnit(unit) {
+  const key = unit.uid || (unit.side + '_' + unit.id);
+  const entry = ACTIVE_FIRE_ANIMS.get(key);
+  if (!entry) return;
+  if (entry.stopBurst) entry.stopBurst();
+  if (entry.lineEl && entry.lineEl.parentNode) entry.lineEl.remove();
+  ACTIVE_FIRE_ANIMS.delete(key);
+}
+
+function stopAllFireAnims() {
+  for (const entry of ACTIVE_FIRE_ANIMS.values()) {
+    if (entry.stopBurst) entry.stopBurst();
+    if (entry.lineEl && entry.lineEl.parentNode) entry.lineEl.remove();
+  }
+  ACTIVE_FIRE_ANIMS.clear();
+}
+
 // 4) Kombinerad FX: linje SKYTT→MÅL + 💥 på MÅLET
 function fireFX(attacker, defender) {
-  // 1) Kortsiktig kulsprute-burst
-  drawFireBurst(attacker, defender);
+  // Stoppa ev. pågående animation för samma skytt innan ny startas
+  stopFireAnimForUnit(attacker);
 
-  // 2) Långsammare, statisk linje som ligger kvar en stund
-  drawPersistentFireLine(attacker, defender);
+  // 1) Kulsprute-burst — körs tills stoppad utifrån
+  const stopBurst = drawFireBurst(attacker, defender);
+
+  // 2) Statisk linje — behålls tills stoppad utifrån
+  const lineEl = drawPersistentFireLine(attacker, defender);
 
   // 3) 💥 på målet
   showBangOnUnit(defender);
   defender._bangActive = true;
+
+  // Spara stopp-referenser
+  const key = attacker.uid || (attacker.side + '_' + attacker.id);
+  ACTIVE_FIRE_ANIMS.set(key, { stopBurst, lineEl });
 }
 /*
 // === BROADCASTED FIRE FX (v2.16.6) =============================
@@ -6479,6 +6497,9 @@ function animateMovementBatch(segments){
     if (!u._anim) u._anim = { active:true, pos:{x:p0.x, y:p0.y} };
     else { u._anim.active = true; u._anim.pos = {x:p0.x, y:p0.y}; }
 
+    // Avbryt eldanimation för enheten när den börjar röra sig
+    if (typeof stopFireAnimForUnit === 'function') stopFireAnimForUnit(u);
+
     ch.__lastStep = 0; // <-- NEW: spåra senast inträdda delsteg (för LOS-keyframes)
   }
 
@@ -6657,6 +6678,9 @@ if (stepChanged || liveChanged) {
 
     if (typeof updateLOS === "function") updateLOS();
     if (typeof drawAll  === "function") drawAll();
+
+    // Stoppa alla kvarvarande eldanimationer när all rörelse är klar
+    if (typeof stopAllFireAnims === 'function') stopAllFireAnims();
 
     // 🔥 NYTT: lös ut närstrid där blå & röd hamnat i samma hex
     if (typeof resolveCloseCombatAllHexes === 'function') {
