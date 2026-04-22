@@ -1755,6 +1755,12 @@ socket.on('state', function(msg) {
 
 socket.on('ansluten', function(data) {
   console.log('Välkommen till spel:', data.kod, 'som', data.roll);
+  // Blue/Red begär automatisk synk från GM direkt vid anslutning
+  if (data.roll === 'blue' || data.roll === 'red') {
+    setTimeout(() => {
+      socket.emit('state', { type: 'begär-synk', kod: window.spelKod });
+    }, 500);
+  }
 });
 
 document.getElementById('anslutBtn').onclick = function() {
@@ -1889,6 +1895,16 @@ if (gameChannel) {
     if (msg.type === 'gameover') {
       if (role !== 'gm' && typeof visaSpelslut === 'function') {
         visaSpelslut(msg.vinnare);
+      }
+      return;
+    }
+
+    // ======================================================
+    // BEGÄR-SYNK — klient ansluter → GM broadcastar direkt
+    // ======================================================
+    if (msg.type === 'begär-synk') {
+      if (role === 'gm' && typeof broadcastStateFromGM === 'function') {
+        broadcastStateFromGM();
       }
       return;
     }
@@ -3942,6 +3958,17 @@ function laddaPaket(paket) {
 /* ===== Auto-placera enheter med fördefinierad starthex ===== */
 function autoPlaceFromOrbat() {
   if (!SC?.orbat) { alert('Ladda ett scenario först.'); return; }
+
+  // Diagnostik: räkna hur många rader som har startHex
+  const diagBlue = (SC.orbat.blue||[]).map(r => r.id + (r.startHex ? ' → ' + r.startHex : ' (ingen starthex)'));
+  const diagRed  = (SC.orbat.red||[]).map(r => r.id + (r.startHex ? ' → ' + r.startHex : ' (ingen starthex)'));
+  console.log('Auto-placera: Blue orbat:', diagBlue, 'Red orbat:', diagRed);
+
+  const medStartHex = [...(SC.orbat.blue||[]),...(SC.orbat.red||[])].filter(r=>r.startHex).length;
+  if (medStartHex === 0) {
+    alert('Inga enheter i orbaten har en fördefinierad starthex.\n\nSe till att du skapat scenariot i den uppdaterade editorn och angett en starthex (t.ex. "C5") för enheterna.');
+    return;
+  }
 
   const placerade = [];
   const felmeddelanden = [];
