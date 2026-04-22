@@ -813,11 +813,11 @@
   },
   "scenario": {
     "title": "Ta och försvara byn",
-    "desc": "",
+    "desc": "Anfall och försvar av byn",
     "rounds": 6,
     "initiative": "Blue",
     "setupMin": 0,
-    "vc": "",
+    "vc": "Blå vinner om håller byn eller om röd bara 1:3 enheter kvar i förhållande till blå.\n\nRöd vinner om de håller höghuset mer än 4 rundor i rad eller om blå alla blå enheter nedkämpas",
     "boards": [
       {
         "name": "Map40.jpg",
@@ -1107,49 +1107,59 @@
       "blue": [
         {
           "id": "BLUE_Inf_EA",
-          "count": 2,
+          "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "L4"
         },
         {
           "id": "BLUE_Inf_FA",
-          "count": 2,
+          "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "I6"
         },
         {
           "id": "BLUE_Inf_GA",
-          "count": 2,
+          "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "P7"
         }
       ],
       "red": [
         {
           "id": "RED_Inf_EA",
-          "count": 2,
+          "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
-        },
-        {
-          "id": "RED_Inf_FA",
-          "count": 2,
-          "state": "full",
-          "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "L12"
         },
         {
           "id": "RED_Inf_GA",
-          "count": 2,
+          "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "N12"
+        },
+        {
+          "id": "RED_Inf_FA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "P12"
         }
       ]
+    },
+    "order": {
+      "blue": "Du är AQ!\n\nKompaniorder KO 01 — QA\n\nKarta: 1:50 000 NORDBY\n261800B\nO — Orientering\nFientligt infanteri, bedömt kompanis styrka, framrycker från söder mot NORDBY (AB4562) med troligast anfall längs vägen, farligast flankerande rörelse via skogspartierna.\nBataljonen håller linjen längs ån — QA kompani försvarar centralsektorn NORDBY.\nAvgörande terräng: byns södra infart och bron (AB4561) — den som kontrollerar dessa kontrollerar sektorn.\nB — Beslut\n\"QA kompani ska försvara NORDBY (AB4562) mot anfall från söder, minst intill TNR 271200B, i syfte att förhindra motståndaren att erövra byn och framrycka norrut över ån.\"\nInledningsvis intar kompaniet försvarsgruppering med tyngdpunkt mot byns södra infart och flanksäkring mot skogspartierna.\nDärefter slår kompaniet fientliga anfall med samordnad direkt och indirekt eld — motståndaren tillåts inte tränga in i byn.\nSlutligen håller kompaniet NORDBY tills ny order — vid urdragning drar kompaniet norrut i ordningen CQ – BQ – AQ.\nO — Order\nAQ pluton försvarar NORDBY — längs byns södra husrad med riktverkan mot öppet fält söderut. Beredd undsätta BQ på östra flanken.\n\nBQ pluton flanksäkrar skogspartierna öster och väster om byn — hindrar fientlig infiltration mot byns flanker. Beredd förstärka AQ vid anfall mot byn.\n\nCQ pluton utgör kompanireserv NV NORDBY. Beredd förstärka AQ i byn alternativt nedkämpa flankerande motståndare väster byn.\n\nGranatkastarpluton understödjer kompaniet — eldledare grupperar med AQ, \n\nSamordning: Stridsberedskap 1 intas TNR 262100B. Bron sprängs ej utan order.\nLogistik: samlingsplats skadade vid byns norra sida. Ammunitionspåfyllnad via kvm AB4460.\nLedning: kompanichef rörlig, primärt vid AQ. Samband primär KAN 3, alt KAN 7. Lägesrapport var 2:e timme.",
+      "red": "Du är BR!\n\nKompaniorder KO 02 — RA\n\nKarta: 1:50 000 NORDBY\n261800B\n\nO — Orientering\nFientligt infanteri, bedömt plutonsstyrka, försvarar NORDBY (AB4562) med tyngdpunkt längs byns södra husrad. Motståndaren bedöms vilja hålla byn som uppmarschområde och utnyttja ån som bakre skyddslinje. Bataljonen avvärjer fientlig framryckning norrut längs hela fronten — RA kompani har uppgift att ta NORDBY i centralsektorn.\n\nB — Beslut\n\"RA kompani ska ta NORDBY (AB4562) med anfall från söder, senast TNR 271200B, i syfte att erövra byn och säkra övergången över ån för bataljonens fortsatta framryckning norrut.\" \n\nInledningsvis binder en pluton motståndaren väster om byn och tar fram djupt intill ån för att avskära motståndaren från norr, samtidigt som en pluton anfaller och tar byn söderifrån. \nDärefter rensar en pluton NORDBY under skydd av en plutons gruppering vid ån. \nSlutligen passerar en pluton förbi byn och tar fälten nordost om NORDBY i syfte att exploatera framgången.\n\nO — Order\n- AR tar terrängen väster om NORDBY djupt intill ån — beredd störa motståndarens urdragning norrut med direkt eld. \n\n- BR tar NORDBY söderifrån, rensar byn och håller den — beredd överlämna till CR.\n \n- CR utgör anfallsreserv, grupperar bakom BR — beredd ta fälten nordost om NORDBY då BR löst sin uppgift. \n\nSamordning: anfallet påbörjas TNR 270600B, AR och BR framrycker samtidigt. Bron sprängs ej utan order från bataljonschef.\n \nLogistik: samlingsplats skadade längs vägen söder om byn, ammunitionspåfyllnad via kvm bakom CRs utgångsläge. \n\nLedning: kompanichef rörlig bakom BR, följer med in i byn vid stormning, samband primär KAN 4 alternativ KAN 8, lägesrapport vid varje skedesbyte.\n"
     }
   }
 }
