@@ -1951,7 +1951,32 @@ function placeraResurs(hex) {
   const { side, defId, def } = pendingResurs;
   const uid = 'res_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
   const ext = def.typeExt?.[def.type] || {};
-  PLACERADE_RESURSER.push({ uid, type: def.type, side, defId, hex, ...ext });
+
+  if (def.type === 'dronare') {
+    // Drönare läggs in som en enhet i PLACED
+    const allTerrain = Object.keys(TERRA?.effects || {});
+    const droneUnit = {
+      uid, side, id: defId, name: def.name || 'Drönare',
+      isDrone: true, type: 'dronare', defId, hex,
+      state: 'full', order: null, orderTarget: null,
+      eliminated: false, suppression: 'none', suppressed: 'none', suppressionLevel: 0,
+      losRadie: ext.losRadie ?? 3,
+      kanBekämpas: ext.kanBekämpas !== false,
+      stats: {
+        full:    { move: ext.rörelsePRunda ?? 6, range_hex: 1, fp_normal: 0, fp_opfire: 0, morale: { normal:10, yellow:10, red:10 } },
+        reduced: { move: ext.rörelsePRunda ?? 6, range_hex: 1, fp_normal: 0, fp_opfire: 0, morale: { normal:10, yellow:10, red:10 } },
+        los_height: 2
+      },
+      movement: { allowedTerrain: allTerrain, mpOverrides: {} },
+      display: def.display || {}
+    };
+    PLACED.push(droneUnit);
+    if (typeof logEvent === 'function') logEvent(`GM: Drönare (${side.toUpperCase()}) placerad på ${hex}`);
+  } else {
+    PLACERADE_RESURSER.push({ uid, type: def.type, side, defId, hex, ...ext });
+    if (typeof logEvent === 'function') logEvent(`GM: ${RESURS_ETIKETT[def.type]||def.type} (${side.toUpperCase()}) placerad på ${hex}`);
+  }
+
   const post = GM_RESURSER[side].find(r => r.id === defId);
   if (post) post.kvar--;
   pendingResurs = null;
@@ -1959,7 +1984,6 @@ function placeraResurs(hex) {
   refreshResursPool();
   if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
   if (typeof drawAll === 'function') drawAll();
-  if (typeof logEvent === 'function') logEvent(`GM: ${RESURS_ETIKETT[def.type]||def.type} (${side.toUpperCase()}) placerad på ${hex}`);
 }
 
 function hexarInomRadie(centrumHex, radie) {
@@ -2269,7 +2293,12 @@ function buildAuthoritativeState() {
         hasFiredThisRound: u.hasFiredThisRound === true,
         revealedFor: typeof u.revealedFor === 'number' ? u.revealedFor : 0,
         spottedBy: u.spottedBy || { blue:false, red:false },
-        _bangActive: !!u._bangActive   // 🔹 NYTT: skicka med om enheten är under eld
+        _bangActive: !!u._bangActive,
+        isDrone: !!u.isDrone,
+        losRadie: u.losRadie ?? 0,
+        kanBekämpas: u.kanBekämpas !== false,
+        stats: u.stats || null,
+        display: u.display || null
       }))
     : [];
 
@@ -2499,7 +2528,12 @@ function applyStateFromGM(payload) {
 
         revealedFor: typeof src.revealedFor === 'number' ? src.revealedFor : 0,
         spottedBy: src.spottedBy || { blue:false, red:false },
-        moving: !!src.moving      // rörelseindikator från GM
+        moving: !!src.moving,
+        isDrone: !!src.isDrone,
+        losRadie: src.losRadie ?? 0,
+        kanBekämpas: src.kanBekämpas !== false,
+        stats: src.stats || null,
+        display: src.display || null
       };
 
       // 🔹 NYTT: ta emot om enheten är markerad som under eldgivning
@@ -4786,7 +4820,20 @@ orderMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
 
 
 function openOrderMenuAt(x,y,unit){
-  orderTargetUnit=unit; orderMenu.style.left=x+'px'; orderMenu.style.top=y+'px'; orderMenu.classList.remove('hidden');
+  orderTargetUnit=unit;
+  // Visa rätt knappar beroende på enhetstyp
+  orderMenu.querySelectorAll('button').forEach(b => {
+    if (unit?.isDrone) {
+      // Drönare: bara "flyg till" (take) och rensa
+      b.style.display = (b.dataset.order === 'take' || b.dataset.order === 'none') ? '' : 'none';
+      if (b.dataset.order === 'take') b.textContent = '🚁 Flyg till';
+    } else {
+      b.style.display = '';
+      // Återställ originaltext för take-knappen
+      if (b.dataset.order === 'take') b.textContent = '🎯 Take (Ta)';
+    }
+  });
+  orderMenu.style.left=x+'px'; orderMenu.style.top=y+'px'; orderMenu.classList.remove('hidden');
 }
 function showHint(t){ const h=$('hint'); h.textContent=t; h.classList.remove('hidden'); }
 function hideHint(){ $('hint').classList.add('hidden'); }
@@ -5254,19 +5301,47 @@ function dist2BetweenHexes(hexA, hexB){
   return dx*dx + dy*dy;
 }
 // --- Välj närmsta mål i LOS (ignorerar eliminerade) ---
+const DRONE_MAX_RANGE_HEX = 2; // max hex-räckvidd för att bekämpa drönare
+
 function chooseNearestTarget(shooter){
-  const enemies = PLACED.filter(e => e.side !== shooter.side && !e.eliminated && !e.spanarNu);
+  const enemies = PLACED.filter(e => {
+    if (e.side === shooter.side || e.eliminated || e.spanarNu) return false;
+    if (!e.kanBekämpas && e.isDrone) return false; // obekämpbar drönare
+    return true;
+  });
   let best = null, bestD2 = Infinity;
   for(const e of enemies){
     if(hasLOS(shooter.hex, e.hex)){
       const d2 = dist2BetweenHexes(shooter.hex, e.hex);
-      if(d2 < bestD2){
-        bestD2 = d2;
-        best = e;
+      // Drönare kan bara bekämpas på kort räckvidd
+      if (e.isDrone) {
+        const hexDist = Math.sqrt(d2 / (typeof hexSize !== 'undefined' ? hexSize*hexSize : 1));
+        const approxHexes = d2 > 0 ? Math.round(Math.sqrt(d2) / (typeof hexToScreen === 'function' ? 1 : 1)) : 0;
+        // Använd hexavstånd via grannar-BFS (enkel räknare)
+        if (!isWithinHexRange(shooter.hex, e.hex, DRONE_MAX_RANGE_HEX)) continue;
       }
+      if(d2 < bestD2){ bestD2 = d2; best = e; }
     }
   }
-  return best; // kan vara null
+  return best;
+}
+
+function isWithinHexRange(fromHex, toHex, maxRange) {
+  if (fromHex === toHex) return true;
+  let front = new Set([fromHex]);
+  const besökt = new Set([fromHex]);
+  for (let steg = 0; steg < maxRange; steg++) {
+    const nästa = new Set();
+    for (const h of front) {
+      const grannar = typeof hexNeighbors === 'function' ? hexNeighbors(h) : [];
+      for (const g of grannar) {
+        if (g === toHex) return true;
+        if (!besökt.has(g)) { besökt.add(g); nästa.add(g); }
+      }
+    }
+    front = nästa;
+  }
+  return false;
 }
 
 /* ===== Info / orders ===== */
@@ -5466,6 +5541,27 @@ function computeVisibleHexes(side){
     u.state !== 'eliminated' &&
     u.side === mySide
   );
+
+  // Drönare: lägg till alla hexar inom losRadie direkt (flyger över terräng)
+  for (const s of spotters) {
+    if (!s.isDrone) continue;
+    const sHex = liveHex(s);
+    if (!sHex) continue;
+    const radie = s.losRadie ?? 3;
+    // Enkel BFS/ring-expansion inom radie
+    const besökta = new Set([sHex]);
+    let front = [sHex];
+    for (let steg = 0; steg < radie; steg++) {
+      const nästa = [];
+      for (const h of front) {
+        const grannar = typeof hexNeighbors === 'function' ? hexNeighbors(h) : [];
+        for (const g of grannar) {
+          if (!besökta.has(g)) { besökta.add(g); nästa.push(g); vis.add(g); }
+        }
+      }
+      front = nästa;
+    }
+  }
 
   // LOS-minne per sida
   const seenSet = VIS_SEEN[mySide] || new Set();
@@ -6611,6 +6707,7 @@ function getTerrainCostPips(label){
   return terrainMpToPips(mp);
 }
 function computeSegmentCostPips(unit, fromHex, toHex){
+  if (unit?.isDrone) return 3; // drönare flyger — alltid 1 MP (3 pips)
   const cf = getTerrainCostPips(fromHex);
   const ct = getTerrainCostPips(toHex);
   return Math.max(cf, ct);
