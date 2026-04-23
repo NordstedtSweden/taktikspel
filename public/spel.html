@@ -1971,24 +1971,14 @@ function hexarInomRadie(centrumHex, radie) {
 }
 
 function kontrolleraMintriggers(besöktaHexar) {
-  if (!Array.isArray(PLACERADE_RESURSER) || !Array.isArray(PLACED)) return;
-  if (!PLACERADE_RESURSER.length) return;
+  if (!Array.isArray(PLACED)) return;
   const attTrigga = [];
 
-  for (const mina of PLACERADE_RESURSER) {
-    if (mina.type !== 'minor' && mina.type !== 'larmminor') continue;
-    const radie = mina.triggerRadie ?? 0;
-    const påverkadeHexar = hexarInomRadie(mina.hex, radie);
-
-    for (const u of PLACED) {
-      if (u.eliminated) continue;
-      if (u.side === mina.side) continue; // minan triggar bara fienden
-      // Kontrollera slutposition OCH alla hexar enheten passerade under rörelsen
-      const besökta = besöktaHexar?.get(u) || new Set();
-      const alleHexar = [...besökta, u.hex];
-      if (alleHexar.some(h => påverkadeHexar.includes(h))) {
-        attTrigga.push({ mina, enhet: u });
-      }
+  // Hämta enheter som stoppades av mina under animationen
+  for (const u of PLACED) {
+    if (u._väntandeMina) {
+      attTrigga.push({ mina: u._väntandeMina, enhet: u });
+      u._väntandeMina = null;
     }
   }
 
@@ -6769,9 +6759,11 @@ function startMovementPhase(){
     ensureUnitUID(u);
     u.mpRemaining = computeUnitPips(u);
     u._mpBudgetAtStart = u.mpRemaining;
- // 🔄 NYTT: nolla OP-fire-flaggor vid ny rörelsefas
+ // Nolla OP-fire-flaggor och mintrigger-spår vid ny rörelsefas
     u._opfireStop    = false;
     u._opfireLockHex = null;
+    u._minaTriggrad  = null;
+    u._väntandeMina  = null;
     u._opfLastHex    = null;
     if (!u.orderTarget) continue;
     // Support-order: enheten stannar kvar och understödjer — ingen rörelse
@@ -6950,7 +6942,36 @@ if (stepChanged || liveChanged) {
       }
     }
 
-    // 4) Därefter: ev. OP-fire på just det här steget
+    // 4a) Kontrollera om enheten kliver in i en mina
+    if (Array.isArray(PLACERADE_RESURSER) && PLACERADE_RESURSER.length) {
+      const träffadMina = PLACERADE_RESURSER.find(mina => {
+        if (mina.type !== 'minor' && mina.type !== 'larmminor') return false;
+        if (mina.side === u.side) return false; // egna minor triggas inte
+        const påverkade = hexarInomRadie(mina.hex, mina.triggerRadie ?? 0);
+        return påverkade.includes(newLiveHex);
+      });
+      if (träffadMina && !u._minaTriggrad?.has(träffadMina.uid)) {
+        if (!u._minaTriggrad) u._minaTriggrad = new Set();
+        u._minaTriggrad.add(träffadMina.uid);
+        // Stoppa enheten på minhexen
+        u._opfireStop    = true;
+        u._opfireLockHex = träffadMina.hex;
+        ch._forcedDone   = true;
+        const fin = hexToScreen(träffadMina.hex);
+        if (!u._anim) u._anim = { active:false, pos:{ x:fin.x, y:fin.y } };
+        else { u._anim.active = false; u._anim.pos = { x:fin.x, y:fin.y }; }
+        const node = getUnitNode(u);
+        if (node) { node.style.left = fin.x + 'px'; node.style.top = fin.y + 'px'; }
+        // Spela upp animation direkt
+        if (träffadMina.type === 'minor') visaExplosionsAnimation(träffadMina.hex);
+        else visaLarmAnimation(träffadMina.hex);
+        // Spara för att appliceraMinEffekt körs i slutfasen
+        u._väntandeMina = träffadMina;
+        continue;
+      }
+    }
+
+    // 4b) Därefter: ev. OP-fire på just det här steget
     if (typeof maybeResolveOpFireFor === "function") {
 
       // Spara läget före OP-fire (för att undvika dubbla skott)
