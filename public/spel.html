@@ -375,6 +375,13 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <div id="unitPoolRed" class="list" style="display:none"></div>
     <hr>
     <div class="s">Dra en enhet till en giltig setup-hex för att placera den. Utan scenario: placera var som helst.</div>
+    <div id="resursPoolPanel" style="display:none;margin-top:10px">
+      <h3 class="h">Resurser</h3>
+      <div id="gmResBlueHdr" class="s" style="display:none"><b>BLUE</b></div>
+      <div id="gmResBlue" class="list" style="display:none;min-height:40px"></div>
+      <div id="gmResRedHdr" class="s" style="margin-top:8px;display:none"><b>RED</b></div>
+      <div id="gmResRed" class="list" style="display:none;min-height:40px"></div>
+    </div>
   </div>
 
   <!-- Mitten: karta -->
@@ -1887,6 +1894,98 @@ let MAP={hexSize:50,orient:'flat',coordStyle:'rowLetters',gridAngle:0,gridOffX:8
 let UNITS={units:[]};
 let SC=null;
 let PLACED=[];
+let PLACERADE_RESURSER = [];
+let GM_RESURSER = { blue: [], red: [] };
+let pendingResurs = null;
+
+function initResursPool() {
+  if (!SC?.resurser) return;
+  GM_RESURSER = { blue: [], red: [] };
+  ['blue','red'].forEach(side => {
+    (SC.resurser[side]||[]).forEach(r => {
+      const def = UNITS?.units?.find(u => u.id === r.id);
+      if (!def) return;
+      const placerade = PLACERADE_RESURSER.filter(p => p.side === side && p.defId === r.id).length;
+      GM_RESURSER[side].push({ id: r.id, count: r.count, kvar: r.count - placerade, def });
+    });
+  });
+  refreshResursPool();
+}
+
+const RESURS_ETIKETT = { larmminor:'Larmminor', minor:'Minor', dronare:'Drönare', indirektEld:'Indirekt eld' };
+
+function refreshResursPool() {
+  const panel = document.getElementById('resursPoolPanel'); if (!panel) return;
+  const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
+  const harNågon = GM_RESURSER.blue.length + GM_RESURSER.red.length > 0;
+  panel.style.display = (role === 'gm' && harNågon) ? 'block' : 'none';
+  ['blue','red'].forEach(side => {
+    const hdrId = side === 'blue' ? 'gmResBlueHdr' : 'gmResRedHdr';
+    const boxId = side === 'blue' ? 'gmResBlue' : 'gmResRed';
+    const hdr = document.getElementById(hdrId), box = document.getElementById(boxId);
+    const arr = GM_RESURSER[side];
+    if (!hdr || !box) return;
+    hdr.style.display = arr.length ? 'block' : 'none';
+    box.style.display = arr.length ? 'block' : 'none';
+    box.innerHTML = '';
+    arr.forEach(r => {
+      const d = document.createElement('div');
+      d.className = 'uitem';
+      d.style.opacity = r.kvar <= 0 ? '0.4' : '1';
+      d.style.cursor = r.kvar <= 0 ? 'default' : 'pointer';
+      d.innerHTML = `<b>${r.def?.name||r.id}</b> <span class="badge">${RESURS_ETIKETT[r.def?.type]||r.def?.type}</span><span class="badge" style="float:right">${r.kvar}/${r.count} kvar</span>`;
+      if (r.kvar > 0) d.onclick = () => aktiveraPendingResurs(r, side);
+      box.appendChild(d);
+    });
+  });
+}
+
+function aktiveraPendingResurs(resursPost, side) {
+  pendingResurs = { side, defId: resursPost.id, def: resursPost.def };
+  if (typeof showHint === 'function') showHint(`Klicka på en hex för att placera ${RESURS_ETIKETT[resursPost.def?.type]||resursPost.def?.type}: ${resursPost.def?.name||resursPost.id}. Esc = avbryt.`);
+}
+
+function placeraResurs(hex) {
+  if (!pendingResurs) return;
+  const { side, defId, def } = pendingResurs;
+  const uid = 'res_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  const ext = def.typeExt?.[def.type] || {};
+  PLACERADE_RESURSER.push({ uid, type: def.type, side, defId, hex, ...ext });
+  const post = GM_RESURSER[side].find(r => r.id === defId);
+  if (post) post.kvar--;
+  pendingResurs = null;
+  if (typeof hideHint === 'function') hideHint();
+  refreshResursPool();
+  if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+  if (typeof drawAll === 'function') drawAll();
+  if (typeof logEvent === 'function') logEvent(`GM: ${RESURS_ETIKETT[def.type]||def.type} (${side.toUpperCase()}) placerad på ${hex}`);
+}
+
+function drawResurser() {
+  if (!Array.isArray(PLACERADE_RESURSER) || !PLACERADE_RESURSER.length) return;
+  const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
+  ctx.save();
+  if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
+  PLACERADE_RESURSER.forEach(item => {
+    if (role !== 'gm' && (item.type==='minor'||item.type==='larmminor') && item.side !== role) return;
+    const rc = typeof keyToRC === 'function' ? keyToRC(item.hex) : null; if (!rc) return;
+    if (typeof centerHex !== 'function') return;
+    centerHex(rc.ri, rc.ci, (cx, cy, r) => {
+      ctx.save();
+      const färg = item.side === 'blue' ? '#4da6ff' : '#ff6b6b';
+      ctx.beginPath(); ctx.arc(cx, cy, r*0.38, 0, Math.PI*2);
+      ctx.fillStyle = item.side==='blue' ? 'rgba(77,166,255,0.2)' : 'rgba(255,107,107,0.2)'; ctx.fill();
+      ctx.strokeStyle = item.type==='larmminor' ? '#f2c94c' : färg; ctx.lineWidth = 2; ctx.stroke();
+      const symbol = { larmminor:'⚠', minor:'✕', dronare:'🚁', indirektEld:'🎯' }[item.type] || '?';
+      ctx.font = `bold ${Math.round(r*0.45)}px Segoe UI`;
+      ctx.fillStyle = item.type==='larmminor' ? '#f2c94c' : färg;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(symbol, cx, cy);
+      ctx.restore();
+    });
+  });
+  ctx.restore();
+}
 // === SOCKET.IO SYNC (ersätter BroadcastChannel) =======================
 
 window.spelKod = null;
@@ -2021,9 +2120,10 @@ function buildAuthoritativeState() {
     unitsDef: UNITS,
     scenario: SC,
     placed: safePlaced,
+    placeradeResurser: PLACERADE_RESURSER,
     blueReady,
     redReady,
-    autoNextEnabled   // 🔹 NYTT: skicka med auto-next-flaggan
+    autoNextEnabled
   };
 }
 // === CENTRAL BROADCASTCHANNEL HANDLER (v2_16_9) ===
@@ -2255,6 +2355,10 @@ function applyStateFromGM(payload) {
 
     // Återinstallera hex-guards i klientfönster
     if (typeof installHexGuardsOnAll === 'function') installHexGuardsOnAll();
+  }
+
+  if (Array.isArray(payload.placeradeResurser)) {
+    PLACERADE_RESURSER = payload.placeradeResurser;
   }
     // Klient: spela upp elimineringsanimation (skalle + fade) för nya eliminerade enheter
   if (Array.isArray(PLACED) && typeof eliminateUnit === 'function') {
@@ -4100,6 +4204,7 @@ function laddaPaket(paket) {
   if (typeof refreshBoardsInfo === 'function') refreshBoardsInfo();
   if (typeof refreshZonesInfo  === 'function') refreshZonesInfo();
   if (typeof renderPools       === 'function') renderPools();
+  if (typeof initResursPool    === 'function') initResursPool();
   if (typeof drawAll           === 'function') drawAll();
   if (typeof renderOrders      === 'function') renderOrders();
   if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
@@ -4609,6 +4714,7 @@ if ($('roleSel')?.value === 'gm' && showLOS && typeof drawLOSOverlay === 'functi
 
 
 
+  drawResurser();
   drawUnitsAndOrders();
 }
 function drawUnitsAndOrders(){
@@ -5329,6 +5435,12 @@ window.addEventListener('mousemove',e=>{
   if(cam.pan){ const dx=e.clientX-cam.lx,dy=e.clientY-cam.ly; cam.vx-=dx/cam.z; cam.vy-=dy/cam.z; cam.lx=e.clientX; cam.ly=e.clientY; drawAll(); }
 });
 window.addEventListener('mouseup',()=>cam.pan=false);
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && pendingResurs) {
+    pendingResurs = null;
+    if (typeof hideHint === 'function') hideHint();
+  }
+});
 cv.addEventListener('wheel',e=>{
   if(!(e.ctrlKey||e.altKey||e.metaKey)) return; e.preventDefault();
   const rect=cv.getBoundingClientRect(); const mx=e.clientX-rect.left,my=e.clientY-rect.top;
@@ -5396,7 +5508,17 @@ cv.addEventListener('touchend', e => {
 }, { passive: false });
 
 cv.addEventListener('click', e => {
- 
+
+  // 0) GM-resursplacering
+  if (pendingResurs) {
+    const m = mousePosOnCanvas(e);
+    const ws = screenToWorld(m.x, m.y);
+    const p = invRot(ws.x, ws.y, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
+    const hit = nearestHex(p.x, p.y);
+    if (hit) placeraResurs(hexKey(hit.ri, hit.ci));
+    return;
+  }
+
     // 1) Om vi är i målvalsläge (pendingTarget) – välj målhex eller vänlig enhet
  if (pendingTarget && pendingTarget.unitRef) {
   const u   = pendingTarget.unitRef;
