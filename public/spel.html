@@ -1970,11 +1970,9 @@ function hexarInomRadie(centrumHex, radie) {
   return result;
 }
 
-function kontrolleraMintriggers() {
-  console.log('[MINA] körs — minor:', PLACERADE_RESURSER.length, 'enheter:', PLACED.length);
-  PLACERADE_RESURSER.forEach(m => console.log('  mina:', m.type, m.side, m.hex, 'triggerRadie:', m.triggerRadie));
-  PLACED.forEach(u => console.log('  enhet:', u.side, u.id, 'hex:', u.hex, 'elim:', u.eliminated));
+function kontrolleraMintriggers(besöktaHexar) {
   if (!Array.isArray(PLACERADE_RESURSER) || !Array.isArray(PLACED)) return;
+  if (!PLACERADE_RESURSER.length) return;
   const attTrigga = [];
 
   for (const mina of PLACERADE_RESURSER) {
@@ -1985,7 +1983,10 @@ function kontrolleraMintriggers() {
     for (const u of PLACED) {
       if (u.eliminated) continue;
       if (u.side === mina.side) continue; // minan triggar bara fienden
-      if (påverkadeHexar.includes(u.hex)) {
+      // Kontrollera slutposition OCH alla hexar enheten passerade under rörelsen
+      const besökta = besöktaHexar?.get(u) || new Set();
+      const alleHexar = [...besökta, u.hex];
+      if (alleHexar.some(h => påverkadeHexar.includes(h))) {
         attTrigga.push({ mina, enhet: u });
       }
     }
@@ -7044,8 +7045,13 @@ if (stepChanged || liveChanged) {
       touched.add(u);
     }
 
+    // Bygg karta med alla hexar varje enhet besökte under rörelsen
+    const besöktaHexar = new Map();
+    for (const ch of chains.values()) {
+      besöktaHexar.set(ch.u, new Set(ch.hexes));
+    }
     // Kontrollera mintriggers
-    if (typeof kontrolleraMintriggers === 'function') kontrolleraMintriggers();
+    if (typeof kontrolleraMintriggers === 'function') kontrolleraMintriggers(besöktaHexar);
 
     // Spana: enhet som nått sitt mål går in i dolt spaningsläge
     for (const u of PLACED) {
