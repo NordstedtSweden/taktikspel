@@ -1412,7 +1412,9 @@ function startContinuousFireAnim(attacker, defender) {
   }
 
   requestAnimationFrame(raf);
-  return function stop() { stopped = true; if (line.parentNode) line.remove(); };
+  const stopFn = function stop() { stopped = true; if (line.parentNode) line.remove(); };
+  setTimeout(stopFn, 10000); // maxtid 10s — täcker fallet när inga enheter rör sig
+  return stopFn;
 }
 
 // 4) Kombinerad FX: linje SKYTT→MÅL + 💥 på MÅLET
