@@ -1898,6 +1898,7 @@ let PLACERADE_RESURSER = [];
 let GM_RESURSER = { blue: [], red: [] };
 let pendingResurs = null;
 let LARM_MARKÖRER = []; // {hex, sida} — kvar tills nästa runda
+let VÄNTANDE_ARTILLERI = []; // {hex, ext, side, def} — löses ut vid nästa rundbyte
 
 function initResursPool() {
   if (!SC?.resurser) return;
@@ -1957,11 +1958,13 @@ function placeraResurs(hex) {
   const ext = def.typeExt?.[def.type] || {};
 
   if (def.type === 'indirektEld') {
-    lösUtIndirektEld(hex, ext, side, def);
+    // Köa ordern — löses ut vid nästa rundbyte
+    VÄNTANDE_ARTILLERI.push({ hex, ext, side, def });
     const post = GM_RESURSER[side].find(r => r.id === defId);
     if (post) post.kvar--;
     pendingResurs = null;
     if (typeof hideHint === 'function') hideHint();
+    if (typeof logEvent === 'function') logEvent(`🎯 ${def.name||'Indirekt eld'} (${side.toUpperCase()}) inriktad mot ${hex} — verkan vid nästa rundbyte`);
     refreshResursPool();
     if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
     if (typeof drawAll === 'function') drawAll();
@@ -2190,19 +2193,25 @@ function visaExplosionsAnimation(hex) {
   const rc = typeof keyToRC === 'function' ? keyToRC(hex) : null; if (!rc) return;
   if (typeof centerHex !== 'function') return;
   centerHex(rc.ri, rc.ci, (cx, cy, r) => {
-    if (typeof showBangAt === 'function') { showBangAt(cx, cy); return; }
-    // Enkel fallback: orange cirkel som tonar ut
-    let alpha = 0.9;
+    // Stor 💥-emoji som tonar ut långsamt
+    const fontSize = Math.round(r * 1.6);
+    let alpha = 1.0;
+    const steps = 12;
+    let tick = 0;
     const fade = setInterval(() => {
       if (typeof drawAll === 'function') drawAll();
       ctx.save();
       if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
-      ctx.beginPath(); ctx.arc(cx, cy, r*0.7, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,140,0,${alpha})`; ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.font = `${fontSize}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💥', cx, cy);
       ctx.restore();
-      alpha -= 0.15;
-      if (alpha <= 0) clearInterval(fade);
-    }, 80);
+      tick++;
+      alpha = 1 - tick / steps;
+      if (tick >= steps) clearInterval(fade);
+    }, 120);
   });
 }
 
@@ -2226,6 +2235,27 @@ function drawResurser() {
       ctx.restore();
     });
   });
+
+  // Rita artilleri-målmarkörer (köade order för nästa runda)
+  if (Array.isArray(VÄNTANDE_ARTILLERI)) {
+    VÄNTANDE_ARTILLERI.forEach(order => {
+      const rc = typeof keyToRC === 'function' ? keyToRC(order.hex) : null; if (!rc) return;
+      if (typeof centerHex !== 'function') return;
+      centerHex(rc.ri, rc.ci, (cx, cy, r) => {
+        ctx.save();
+        const färg = order.side === 'blue' ? '#4da6ff' : '#ff6b6b';
+        // Krysshår
+        ctx.strokeStyle = färg; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, r*0.5, 0, Math.PI*2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx - r*0.6, cy); ctx.lineTo(cx + r*0.6, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, cy - r*0.6); ctx.lineTo(cx, cy + r*0.6); ctx.stroke();
+        ctx.font = `${Math.round(r*0.55)}px serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('🎯', cx, cy - r*0.7);
+        ctx.restore();
+      });
+    });
+  }
 
   PLACERADE_RESURSER.forEach(item => {
     if (role !== 'gm' && (item.type==='minor'||item.type==='larmminor') && item.side !== role) return;
@@ -4054,6 +4084,15 @@ function nextRound () {
   if (typeof currentRound === 'number') currentRound++; else currentRound = 1;
   if (typeof logEvent === 'function') logEvent(`--- Runda ${currentRound} ---`);
   LARM_MARKÖRER = []; // Rensa larmmarkörer från föregående runda
+
+  // Lös ut köat artilleri från föregående runda
+  if (VÄNTANDE_ARTILLERI.length > 0) {
+    const köat = VÄNTANDE_ARTILLERI.slice();
+    VÄNTANDE_ARTILLERI = [];
+    köat.forEach((order, i) => {
+      setTimeout(() => lösUtIndirektEld(order.hex, order.ext, order.side, order.def), i * 800);
+    });
+  }
 
   // Sätt spanarNu för spanare som redan är på plats (innan skjutfasen)
   if (Array.isArray(PLACED)) {
