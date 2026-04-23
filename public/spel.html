@@ -1943,7 +1943,11 @@ function refreshResursPool() {
 
 function aktiveraPendingResurs(resursPost, side) {
   pendingResurs = { side, defId: resursPost.id, def: resursPost.def };
-  if (typeof showHint === 'function') showHint(`Klicka på en hex för att placera ${RESURS_ETIKETT[resursPost.def?.type]||resursPost.def?.type}: ${resursPost.def?.name||resursPost.id}. Esc = avbryt.`);
+  const typ = resursPost.def?.type;
+  const hint = typ === 'indirektEld'
+    ? `Klicka på MÅLHEX för ${resursPost.def?.name||'indirekt eld'} (${side.toUpperCase()}). Esc = avbryt.`
+    : `Klicka på en hex för att placera ${RESURS_ETIKETT[typ]||typ}: ${resursPost.def?.name||resursPost.id}. Esc = avbryt.`;
+  if (typeof showHint === 'function') showHint(hint);
 }
 
 function placeraResurs(hex) {
@@ -1951,6 +1955,18 @@ function placeraResurs(hex) {
   const { side, defId, def } = pendingResurs;
   const uid = 'res_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
   const ext = def.typeExt?.[def.type] || {};
+
+  if (def.type === 'indirektEld') {
+    lösUtIndirektEld(hex, ext, side, def);
+    const post = GM_RESURSER[side].find(r => r.id === defId);
+    if (post) post.kvar--;
+    pendingResurs = null;
+    if (typeof hideHint === 'function') hideHint();
+    refreshResursPool();
+    if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+    if (typeof drawAll === 'function') drawAll();
+    return;
+  }
 
   if (def.type === 'dronare') {
     // Drönare läggs in som en enhet i PLACED
@@ -1987,12 +2003,74 @@ function placeraResurs(hex) {
 }
 
 function hexarInomRadie(centrumHex, radie) {
-  // Returnerar array med alla hexar inom radie (inklusive centrum)
-  const result = [centrumHex];
-  if (radie < 1) return result;
-  const grannar = typeof hexNeighbors === 'function' ? hexNeighbors(centrumHex) : [];
-  grannar.forEach(h => { if (!result.includes(h)) result.push(h); });
-  return result;
+  // BFS — returnerar array med alla hexar inom radie (inklusive centrum)
+  const besökta = new Set([centrumHex]);
+  let front = [centrumHex];
+  for (let steg = 0; steg < radie; steg++) {
+    const nästa = [];
+    for (const h of front) {
+      const grannar = typeof hexNeighbors === 'function' ? hexNeighbors(h) : [];
+      for (const g of grannar) {
+        if (!besökta.has(g)) { besökta.add(g); nästa.push(g); }
+      }
+    }
+    front = nästa;
+  }
+  return [...besökta];
+}
+
+function lösUtIndirektEld(målHex, ext, side, def) {
+  const spridning   = ext.spridning    ?? 1;
+  const effektRadie = ext.effektRadie  ?? 1;
+  const effCentrum  = ext.effektCentrum  || 'eliminated';
+  const effPeri     = ext.effektPeriferi || 'suppressed';
+  const namn        = def?.name || 'Indirekt eld';
+
+  // Beräkna faktisk träffhex via slumpmässig spridning
+  let träffHex = målHex;
+  if (spridning > 0) {
+    const offset = Math.floor(Math.random() * (spridning + 1));
+    let nuHex = målHex;
+    for (let i = 0; i < offset; i++) {
+      const grannar = typeof hexNeighbors === 'function' ? hexNeighbors(nuHex) : [];
+      if (!grannar.length) break;
+      nuHex = grannar[Math.floor(Math.random() * grannar.length)];
+    }
+    träffHex = nuHex;
+  }
+
+  const spridText = träffHex !== målHex ? ` (spridning → ${träffHex})` : '';
+  if (typeof logEvent === 'function')
+    logEvent(`💥 ${namn.toUpperCase()} (${side.toUpperCase()}) mot ${målHex}${spridText}`);
+
+  // Dela upp effektområdet i centrum och periferi
+  const allaPåverkade = hexarInomRadie(träffHex, effektRadie);
+  const periHexar     = allaPåverkade.filter(h => h !== träffHex);
+
+  // Explosionsanimationer
+  visaExplosionsAnimation(träffHex);
+  periHexar.forEach((h, i) => setTimeout(() => visaExplosionsAnimation(h), 200 + i * 80));
+
+  // Applicera effekt på alla enheter i området
+  if (Array.isArray(PLACED)) {
+    PLACED.forEach(u => {
+      if (!u || u.eliminated || u.state === 'eliminated') return;
+      const uHex = (typeof liveHex === 'function' ? liveHex(u) : null) || u.hex;
+      if (!uHex) return;
+
+      if (uHex === träffHex) {
+        appliceraMinEffekt(u, effCentrum);
+        if (typeof logEvent === 'function')
+          logEvent(`  ↳ ${u.side?.toUpperCase()} ${u.name||u.id} träffas i centrum: ${effCentrum.toUpperCase()}`);
+      } else if (periHexar.includes(uHex)) {
+        appliceraMinEffekt(u, effPeri);
+        if (typeof logEvent === 'function')
+          logEvent(`  ↳ ${u.side?.toUpperCase()} ${u.name||u.id} träffas i periferi: ${effPeri.toUpperCase()}`);
+      }
+    });
+  }
+
+  if (typeof updateLOS === 'function') updateLOS();
 }
 
 function kontrolleraMintriggers(besöktaHexar) {
@@ -4830,7 +4908,7 @@ function openOrderMenuAt(x,y,unit){
     if (unit?.isDrone) {
       // Drönare: bara "flyg till" (scout-ikon) och rensa
       b.style.display = (b.dataset.order === 'take' || b.dataset.order === 'none') ? '' : 'none';
-      if (b.dataset.order === 'take') b.textContent = '🔭 Flyg till';
+      if (b.dataset.order === 'take') b.textContent = '🚁 Flyg till';
     } else {
       b.style.display = '';
       // Återställ originaltext för take-knappen
