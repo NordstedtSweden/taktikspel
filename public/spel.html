@@ -2199,8 +2199,8 @@ function visaEnSmäll(hex) {
   centerHex(rc.ri, rc.ci, (cx, cy, r) => {
     const fontSize = Math.round(r * 0.9);
     let tick = 0;
-    const synligSteg = 4;  // 4 × 80ms = 320ms fullt synlig
-    const fadSteg    = 3;  // 3 × 80ms = 240ms tonar ut
+    const synligSteg = 6;  // 6 × 80ms = 480ms ≈ 500ms fullt synlig
+    const fadSteg    = 4;  // 4 × 80ms = 320ms tonar ut (totalt ~800ms)
     const totalSteg  = synligSteg + fadSteg;
     const anim = setInterval(() => {
       if (typeof drawAll === 'function') drawAll();
