@@ -1277,8 +1277,16 @@ function stopAllFireAnims() {
 }
 
 function stopFireAnimsTargeting(defender) {
+  const defUid  = defender.uid;
+  const defSide = defender.side;
+  const defId   = defender.id;
   for (const [key, entry] of ACTIVE_FIRE_ANIMS) {
-    if (entry.defender === defender) {
+    const d = entry.defender;
+    if (!d) continue;
+    const match = defUid
+      ? (d.uid === defUid)
+      : (d.side === defSide && d.id === defId);
+    if (match) {
       if (entry.stopBurst) entry.stopBurst();
       if (entry.lineEl && entry.lineEl.parentNode) entry.lineEl.remove();
       ACTIVE_FIRE_ANIMS.delete(key);
@@ -1296,6 +1304,21 @@ function startContinuousFireAnim(attacker, defender) {
   const line = document.createElement('div');
   line.className = 'fx-line-static';
   container.appendChild(line);
+
+  // Spara identifierare — inte direktreferenser, eftersom applyStateFromGM
+  // ersätter alla objekt i PLACED med nya. Slå upp enheten varje frame.
+  const attackerUid  = attacker.uid;
+  const attackerSide = attacker.side;
+  const attackerId   = attacker.id;
+  const defenderUid  = defender.uid;
+  const defenderSide = defender.side;
+  const defenderId   = defender.id;
+
+  function findLiveUnit(uid, side, id) {
+    if (!Array.isArray(PLACED)) return null;
+    if (uid) { const u = PLACED.find(u => u.uid === uid); if (u) return u; }
+    return PLACED.find(u => u.side === side && u.id === id) || null;
+  }
 
   let stopped = false;
   let lastTracerTick = 0;
@@ -1340,12 +1363,17 @@ function startContinuousFireAnim(attacker, defender) {
 
   function raf(now) {
     if (stopped) return;
-    if (attacker.eliminated || defender.eliminated) {
+
+    // Slå upp aktuella objekt varje frame (applyStateFromGM ersätter dem)
+    const atk = findLiveUnit(attackerUid, attackerSide, attackerId);
+    const def = findLiveUnit(defenderUid, defenderSide, defenderId);
+
+    if (!atk || !def || atk.eliminated || def.eliminated) {
       stopped = true; if (line.parentNode) line.remove(); return;
     }
 
-    const A = getLivePos(attacker);
-    const B = getLivePos(defender);
+    const A = getLivePos(atk);
+    const B = getLivePos(def);
 
     // Uppdatera linjen mot live-position
     const dxv = B.x - A.x, dyv = B.y - A.y;
@@ -1360,12 +1388,11 @@ function startContinuousFireAnim(attacker, defender) {
     losTickCounter++;
     if (losTickCounter >= LOS_INTERVAL) {
       losTickCounter = 0;
-      const fromHex = getLiveHex(attacker);
-      const toHex   = getLiveHex(defender);
+      const fromHex = getLiveHex(atk);
+      const toHex   = getLiveHex(def);
       if (typeof hasLOS === 'function' && fromHex && toHex && !hasLOS(fromHex, toHex)) {
         stopped = true; if (line.parentNode) line.remove();
-        const key = attacker.uid || (attacker.side + '_' + attacker.id);
-        ACTIVE_FIRE_ANIMS.delete(key);
+        ACTIVE_FIRE_ANIMS.delete(attackerUid || (attackerSide + '_' + attackerId));
         return;
       }
     }
