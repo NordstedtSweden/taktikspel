@@ -1961,6 +1961,124 @@ function placeraResurs(hex) {
   if (typeof logEvent === 'function') logEvent(`GM: ${RESURS_ETIKETT[def.type]||def.type} (${side.toUpperCase()}) placerad på ${hex}`);
 }
 
+function hexarInomRadie(centrumHex, radie) {
+  // Returnerar array med alla hexar inom radie (inklusive centrum)
+  const result = [centrumHex];
+  if (radie < 1) return result;
+  const grannar = typeof hexNeighbors === 'function' ? hexNeighbors(centrumHex) : [];
+  grannar.forEach(h => { if (!result.includes(h)) result.push(h); });
+  return result;
+}
+
+function kontrolleraMintriggers() {
+  if (!Array.isArray(PLACERADE_RESURSER) || !Array.isArray(PLACED)) return;
+  const attTrigga = [];
+
+  for (const mina of PLACERADE_RESURSER) {
+    if (mina.type !== 'minor' && mina.type !== 'larmminor') continue;
+    const radie = mina.triggerRadie ?? 0;
+    const påverkadeHexar = hexarInomRadie(mina.hex, radie);
+
+    for (const u of PLACED) {
+      if (u.eliminated) continue;
+      if (u.side === mina.side) continue; // minan triggar bara fienden
+      if (påverkadeHexar.includes(u.hex)) {
+        attTrigga.push({ mina, enhet: u });
+      }
+    }
+  }
+
+  if (!attTrigga.length) return;
+
+  const triggadeUid = new Set();
+  for (const { mina, enhet } of attTrigga) {
+    if (triggadeUid.has(mina.uid)) continue; // varje mina triggar max en gång
+    triggadeUid.add(mina.uid);
+
+    if (mina.type === 'larmminor') {
+      // Larmmina — bara loggmeddelande, ingen skada
+      if (typeof logEvent === 'function') {
+        logEvent(`⚠ LARM: ${fmtSide(enhet)} ${fmtName(enhet)} har passerat larmmina (${mina.side.toUpperCase()}) på ${mina.hex}!`);
+      }
+      visaLarmAnimation(mina.hex);
+    } else if (mina.type === 'minor') {
+      // Stridsmina — skada
+      const effekt = mina.effekt || 'suppressed';
+      if (typeof logEvent === 'function') {
+        logEvent(`💥 MINA: ${fmtSide(enhet)} ${fmtName(enhet)} träffad av mina på ${mina.hex}! Effekt: ${effekt.toUpperCase()}`);
+      }
+      visaExplosionsAnimation(mina.hex);
+      appliceraMinEffekt(enhet, effekt);
+    }
+
+    // Ta bort minan efter att den triggat
+    const idx = PLACERADE_RESURSER.indexOf(mina);
+    if (idx !== -1) PLACERADE_RESURSER.splice(idx, 1);
+  }
+
+  if (triggadeUid.size > 0) {
+    if (typeof refreshResursPool === 'function') refreshResursPool();
+    if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+  }
+}
+
+function appliceraMinEffekt(enhet, effekt) {
+  if (effekt === 'suppressed') {
+    enhet.suppression = 'yellow';
+    enhet.suppressed = 'yellow';
+    enhet.suppressionLevel = Math.max(enhet.suppressionLevel||0, 1);
+  } else if (effekt === 'reduced') {
+    if (enhet.state === 'full') {
+      enhet.state = 'reduced';
+    } else {
+      if (typeof eliminateUnit === 'function') eliminateUnit(enhet);
+      else enhet.eliminated = true;
+    }
+  } else if (effekt === 'eliminated') {
+    if (typeof eliminateUnit === 'function') eliminateUnit(enhet);
+    else enhet.eliminated = true;
+  }
+}
+
+function visaLarmAnimation(hex) {
+  // Röda blinkningar på hexen i 3 sekunder
+  const rc = typeof keyToRC === 'function' ? keyToRC(hex) : null; if (!rc) return;
+  let blinkar = 0;
+  const interval = setInterval(() => {
+    if (typeof centerHex !== 'function' || typeof drawAll !== 'function') { clearInterval(interval); return; }
+    centerHex(rc.ri, rc.ci, (cx, cy, r) => {
+      ctx.save();
+      if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
+      ctx.beginPath(); ctx.arc(cx, cy, r*0.6, 0, Math.PI*2);
+      ctx.fillStyle = blinkar % 2 === 0 ? 'rgba(242,201,76,0.55)' : 'rgba(242,201,76,0.0)';
+      ctx.fill();
+      ctx.restore();
+    });
+    blinkar++;
+    if (blinkar >= 6) { clearInterval(interval); if (typeof drawAll === 'function') drawAll(); }
+  }, 300);
+}
+
+function visaExplosionsAnimation(hex) {
+  const rc = typeof keyToRC === 'function' ? keyToRC(hex) : null; if (!rc) return;
+  if (typeof centerHex !== 'function') return;
+  centerHex(rc.ri, rc.ci, (cx, cy, r) => {
+    if (typeof showBangAt === 'function') { showBangAt(cx, cy); return; }
+    // Enkel fallback: orange cirkel som tonar ut
+    let alpha = 0.9;
+    const fade = setInterval(() => {
+      if (typeof drawAll === 'function') drawAll();
+      ctx.save();
+      if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
+      ctx.beginPath(); ctx.arc(cx, cy, r*0.7, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,140,0,${alpha})`; ctx.fill();
+      ctx.restore();
+      alpha -= 0.15;
+      if (alpha <= 0) clearInterval(fade);
+    }, 80);
+  });
+}
+
 function drawResurser() {
   if (!Array.isArray(PLACERADE_RESURSER) || !PLACERADE_RESURSER.length) return;
   const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
@@ -6922,6 +7040,9 @@ if (stepChanged || liveChanged) {
       if (u._anim) u._anim.active = false;
       touched.add(u);
     }
+
+    // Kontrollera mintriggers
+    if (typeof kontrolleraMintriggers === 'function') kontrolleraMintriggers();
 
     // Spana: enhet som nått sitt mål går in i dolt spaningsläge
     for (const u of PLACED) {
