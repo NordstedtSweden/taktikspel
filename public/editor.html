@@ -181,7 +181,11 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <div class="grid3">
         <label>Typ
           <select id="uType">
-            <option>infantry</option><option>vehicle</option><option>gun</option><option>boat</option><option>mine</option><option>other</option>
+            <option>infantry</option><option>vehicle</option><option>gun</option><option>boat</option><option>other</option>
+            <option value="larmminor">larmminor</option>
+            <option value="minor">minor</option>
+            <option value="dronare">dronare</option>
+            <option value="indirektEld">indirekt eld</option>
           </select>
         </label>
         <label>Storlek<input id="uSize" type="text" placeholder="squad/team/section/vehicle"></label>
@@ -200,6 +204,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
         </div>
       </div>
 
+      <div id="statsSection">
       <h4 style="margin-top:10px">Stats – Full</h4>
       <div class="grid3">
         <label>Move<input id="uMoveF" type="number" value="5"></label>
@@ -233,6 +238,8 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
         <div></div><div></div>
       </div>
 
+      </div><!-- /statsSection -->
+
       <div id="type-infantry" class="p" style="margin:12px 0">
         <h4>Infantry – Anti-tank</h4>
         <div class="grid3">
@@ -246,6 +253,74 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
           <label>AT Range (hex)<input id="infATrange" type="number" value="0"></label>
           <label>AT Shots/turn<input id="infATshots" type="number" value="1"></label>
           <label>AT Noteringar<input id="infATnotes" type="text" placeholder="ex. Panzerfaust engångs"></label>
+        </div>
+      </div>
+
+      <div id="type-larmminor" class="p" style="margin:12px 0;display:none">
+        <h4>Larmminor</h4>
+        <div class="grid2">
+          <label>Triggerradie
+            <select id="alarmRadius">
+              <option value="0">0 – bara hexen</option>
+              <option value="1">1 – hexen + angränsande</option>
+            </select>
+          </label>
+          <div class="s" style="padding-top:20px">Osynlig för motståndaren. Larmar ägaren i loggen när en fiendeenhet passerar.</div>
+        </div>
+      </div>
+
+      <div id="type-minor" class="p" style="margin:12px 0;display:none">
+        <h4>Minor</h4>
+        <div class="grid2">
+          <label>Triggerradie
+            <select id="mineRadius">
+              <option value="0">0 – bara hexen</option>
+              <option value="1">1 – hexen + angränsande</option>
+            </select>
+          </label>
+          <label>Effekt vid träff
+            <select id="mineEffect">
+              <option value="suppressed">Suppressed</option>
+              <option value="reduced">Reduced</option>
+              <option value="eliminated">Eliminated</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="type-dronare" class="p" style="margin:12px 0;display:none">
+        <h4>Drönare</h4>
+        <div class="grid3">
+          <label>Rörelse per runda (hex)<input id="droneMove" type="number" value="6" min="1"></label>
+          <label>LOS-radie (hex)<input id="droneLos" type="number" value="3" min="1"></label>
+          <label>Kan bekämpas
+            <select id="droneVulnerable">
+              <option value="yes">Ja</option>
+              <option value="no">Nej</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="type-indirektEld" class="p" style="margin:12px 0;display:none">
+        <h4>Indirekt eld</h4>
+        <div class="grid2">
+          <label>Spridning max (hex)<input id="artSpread" type="number" value="1" min="0" max="3"></label>
+          <label>Effektradius (hex)<input id="artRadius" type="number" value="1" min="0" max="2"></label>
+          <label>Effekt centrum
+            <select id="artEffectCenter">
+              <option value="eliminated">Eliminated</option>
+              <option value="reduced">Reduced</option>
+              <option value="suppressed">Suppressed</option>
+            </select>
+          </label>
+          <label>Effekt periferi
+            <select id="artEffectEdge">
+              <option value="suppressed">Suppressed</option>
+              <option value="reduced">Reduced</option>
+              <option value="eliminated">Eliminated</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -340,18 +415,30 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <label>Red order<textarea id="scRedOrder" placeholder="Skriv Red-lagets uppdrag och order här…" rows="4"></textarea></label>
 
       <h4>Resurser per sida</h4>
-      <div class="s" style="margin-bottom:6px">Ange hur många av varje resurs varje sida har tillgång till i scenariot.</div>
-      <div class="grid2" style="gap:4px">
-        <div style="font-weight:700;color:var(--accent);padding:4px">Blue</div>
-        <div style="font-weight:700;color:#ff6b6b;padding:4px">Red</div>
-        <label>Larmminor<input id="resBlueAlarm" type="number" value="0" min="0"></label>
-        <label>Larmminor<input id="resRedAlarm" type="number" value="0" min="0"></label>
-        <label>Minor<input id="resBlueMinor" type="number" value="0" min="0"></label>
-        <label>Minor<input id="resRedMinor" type="number" value="0" min="0"></label>
-        <label>Drönare<input id="resBlueDrone" type="number" value="0" min="0"></label>
-        <label>Drönare<input id="resRedDrone" type="number" value="0" min="0"></label>
-        <label>Indirekt eld<input id="resBlueArtillery" type="number" value="0" min="0"></label>
-        <label>Indirekt eld<input id="resRedArtillery" type="number" value="0" min="0"></label>
+      <div class="p" style="margin:0 0 8px">
+        <div class="grid3">
+          <label>Välj resurs
+            <input id="resPicker" list="resList" placeholder="börja skriva…">
+            <datalist id="resList"></datalist>
+          </label>
+          <label>Antal<input id="resCount" type="number" value="1" min="1"></label>
+          <label>Side
+            <select id="resSide"><option value="blue">Blue</option><option value="red">Red</option></select>
+          </label>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn pri" id="addResToScenario">+ Lägg till resurs</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <div style="font-weight:700;color:var(--accent);margin-bottom:4px">Blue resurser</div>
+          <div id="blueResPool" class="list" style="min-height:80px"></div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#ff6b6b;margin-bottom:4px">Red resurser</div>
+          <div id="redResPool" class="list" style="min-height:80px"></div>
+        </div>
       </div>
 
       <h4>Kartor</h4>
@@ -456,7 +543,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     t.classList.add('active');
     document.getElementById('view-'+t.dataset.view).classList.add('active');
     if(t.dataset.view==='units'){ ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); }
-    if(t.dataset.view==='scenario'){ refreshBoardList(); refreshUnitPicker(); refreshPools(); }
+    if(t.dataset.view==='scenario'){ refreshBoardList(); refreshUnitPicker(); refreshPools(); refreshResPicker(); refreshResPools(); }
   });
 });
 const tip=document.getElementById('tip');
@@ -684,7 +771,17 @@ function defaultAllowedForType(t){ const out=[]; for(const [tid,e] of Object.ent
 function autoId(name,faction){ const n=(name||'unit').replace(/\s+/g,'_').replace(/[^A-Za-z0-9_]/g,''); const f=(faction||'').replace(/\s+/g,'').toUpperCase(); let base=(f?f+'_':'')+n; let id=base, i=1; while(UNITS.units.some(u=>u.id===id)) id=base+'_'+(++i); return id; }
 
 function ensureTerrainTable(){ const table = $('terrainMatrix'); if(!table){ console.error('Terrain table saknas.'); return null; } let tb = table.querySelector('tbody'); if(!tb){ tb=document.createElement('tbody'); table.appendChild(tb); } return tb; }
-function showTypePanels(){ const t=$('uType').value; $('type-infantry').style.display = (t==='infantry') ? 'block' : 'none'; }
+function showTypePanels(){
+  const t=$('uType').value;
+  const specials=['larmminor','minor','dronare','indirektEld'];
+  const arSpecial = specials.includes(t);
+  $('statsSection').style.display   = arSpecial ? 'none' : 'block';
+  $('type-infantry').style.display  = (t==='infantry')   ? 'block' : 'none';
+  $('type-larmminor').style.display = (t==='larmminor')  ? 'block' : 'none';
+  $('type-minor').style.display     = (t==='minor')      ? 'block' : 'none';
+  $('type-dronare').style.display   = (t==='dronare')    ? 'block' : 'none';
+  $('type-indirektEld').style.display=(t==='indirektEld')? 'block' : 'none';
+}
 function buildTerrainMatrix(){
   const tb=ensureTerrainTable(); if(!tb) return; tb.innerHTML='';
   const utype=$('uType').value || 'infantry';
@@ -747,6 +844,18 @@ function formToUnit(readMatrix=true){
       notes:$('infATnotes').value||''
     };
   }
+  if(t==='larmminor'){
+    obj.typeExt.larmminor={ triggerRadie:+($('alarmRadius').value||0) };
+  }
+  if(t==='minor'){
+    obj.typeExt.minor={ triggerRadie:+($('mineRadius').value||0), effekt:$('mineEffect').value||'suppressed' };
+  }
+  if(t==='dronare'){
+    obj.typeExt.dronare={ rörelsePRunda:+($('droneMove').value||6), losRadie:+($('droneLos').value||3), kanBekämpas:$('droneVulnerable').value==='yes' };
+  }
+  if(t==='indirektEld'){
+    obj.typeExt.indirektEld={ spridning:+($('artSpread').value||1), effektRadie:+($('artRadius').value||1), effektCentrum:$('artEffectCenter').value||'eliminated', effektPeriferi:$('artEffectEdge').value||'suppressed' };
+  }
   return obj;
 }
 function loadUnitToForm(){
@@ -765,6 +874,18 @@ function loadUnitToForm(){
   if(u.type==='infantry'){
     const at=u.typeExt?.infantryAT||{enabled:false,fp_normal:0,fp_opfire:0,range_hex:0,shots_per_turn:1,notes:''};
     $('infATon').value=at.enabled?'yes':'no'; $('infATfpN').value=at.fp_normal||0; $('infATfpO').value=at.fp_opfire||0; $('infATrange').value=at.range_hex||0; $('infATshots').value=at.shots_per_turn||1; $('infATnotes').value=at.notes||'';
+  }
+  if(u.type==='larmminor'){
+    const lm=u.typeExt?.larmminor||{}; $('alarmRadius').value=lm.triggerRadie??0;
+  }
+  if(u.type==='minor'){
+    const mn=u.typeExt?.minor||{}; $('mineRadius').value=mn.triggerRadie??0; $('mineEffect').value=mn.effekt||'suppressed';
+  }
+  if(u.type==='dronare'){
+    const dr=u.typeExt?.dronare||{}; $('droneMove').value=dr.rörelsePRunda??6; $('droneLos').value=dr.losRadie??3; $('droneVulnerable').value=dr.kanBekämpas?'yes':'no';
+  }
+  if(u.type==='indirektEld'){
+    const ie=u.typeExt?.indirektEld||{}; $('artSpread').value=ie.spridning??1; $('artRadius').value=ie.effektRadie??1; $('artEffectCenter').value=ie.effektCentrum||'eliminated'; $('artEffectEdge').value=ie.effektPeriferi||'suppressed';
   }
 
   buildTerrainMatrix();
@@ -942,8 +1063,7 @@ $('uExport').addEventListener('click',()=>{
 });
 
 /* ================= SCENARIO ================= */
-const tomResurser = () => ({ larmminor:0, minor:0, dronare:0, indirektEld:0 });
-let SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, gridOffX:80, gridOffY:80, terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:tomResurser(),red:tomResurser()}};
+let SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, gridOffX:80, gridOffY:80, terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}};
 function refreshPools(){
   const mk=(arr,side)=>{
     const box=$(side+'Pool'); box.innerHTML='';
@@ -975,6 +1095,41 @@ function refreshUnitPicker(){
     const opt=document.createElement('option'); opt.value=u.id; opt.label=`${u.name||u.id} [${u.type}]`; dl.appendChild(opt);
   });
 }
+const specialTyper = ['larmminor','minor','dronare','indirektEld'];
+
+function refreshResPicker(){
+  const dl=$('resList'); dl.innerHTML='';
+  UNITS.units.filter(u=>specialTyper.includes(u.type)).forEach(u=>{
+    const opt=document.createElement('option'); opt.value=u.id; opt.label=`${u.name||u.id} [${u.type}]`; dl.appendChild(opt);
+  });
+}
+
+function refreshResPools(){
+  const mk=(arr,side)=>{
+    const box=$(side+'ResPool'); box.innerHTML='';
+    if(!arr||!arr.length){ box.innerHTML='<div class="s">— Inga resurser —</div>'; return; }
+    arr.forEach((p,i)=>{
+      const def=UNITS.units.find(u=>u.id===p.id);
+      const d=document.createElement('div'); d.className='uitem';
+      d.innerHTML=`<b>${p.id}</b> <span class="badge">x${p.count}</span> <span class="badge">${def?.type||'?'}</span>`;
+      d.onclick=()=>{ if(confirm('Ta bort?')){ arr.splice(i,1); refreshResPools(); } };
+      box.appendChild(d);
+    });
+  };
+  if(!SC.resurser) SC.resurser={blue:[],red:[]};
+  mk(SC.resurser.blue,'blue'); mk(SC.resurser.red,'red');
+}
+
+$('addResToScenario').onclick=()=>{
+  const id=$('resPicker').value.trim(); if(!id){ alert('Välj en resurs'); return; }
+  const def=UNITS.units.find(u=>u.id===id);
+  if(!def||!specialTyper.includes(def.type)){ alert('Enheten finns inte eller är inte en specialresurs'); return; }
+  const side=$('resSide').value; const count=+($('resCount').value||1);
+  if(!SC.resurser) SC.resurser={blue:[],red:[]};
+  SC.resurser[side].push({id,count});
+  $('resPicker').value=''; refreshResPools();
+};
+
 $('addUnitToScenario').onclick=()=>{
   const id = $('unitPicker').value.trim(); if(!id){ alert('Välj enhet (id)'); return; }
   const side=$('unitSide').value; const count=+($('unitCount').value||1);
@@ -990,12 +1145,7 @@ function fillScenarioForm(){
   $('scRounds').value=SC.rounds||6; $('scInit').value=SC.initiative||'Blue'; $('scSetupMin').value=SC.setupMin||0;
   $('scVC').value=SC.vc||''; $('scBlueZones').value=SC.setup?.blue||''; $('scRedZones').value=SC.setup?.red||'';
   $('scBlueOrder').value=SC.order?.blue||''; $('scRedOrder').value=SC.order?.red||'';
-  const rb=SC.resurser?.blue||{}; const rr=SC.resurser?.red||{};
-  $('resBlueAlarm').value=rb.larmminor||0; $('resRedAlarm').value=rr.larmminor||0;
-  $('resBlueMinor').value=rb.minor||0;    $('resRedMinor').value=rr.minor||0;
-  $('resBlueDrone').value=rb.dronare||0;  $('resRedDrone').value=rr.dronare||0;
-  $('resBlueArtillery').value=rb.indirektEld||0; $('resRedArtillery').value=rr.indirektEld||0;
-  refreshBoardList(); refreshUnitPicker(); refreshPools();
+  refreshBoardList(); refreshUnitPicker(); refreshPools(); refreshResPicker(); refreshResPools();
 }
 function readScenarioForm(){
   SC.title=$('scTitle').value||''; SC.desc=$('scDesc').value||'';
@@ -1003,11 +1153,9 @@ function readScenarioForm(){
   SC.vc=$('scVC').value||''; SC.setup.blue=$('scBlueZones').value||''; SC.setup.red=$('scRedZones').value||'';
   if (!SC.order) SC.order={blue:'',red:''};
   SC.order.blue=$('scBlueOrder').value||''; SC.order.red=$('scRedOrder').value||'';
-  if (!SC.resurser) SC.resurser={blue:tomResurser(),red:tomResurser()};
-  SC.resurser.blue={larmminor:+($('resBlueAlarm').value||0), minor:+($('resBlueMinor').value||0), dronare:+($('resBlueDrone').value||0), indirektEld:+($('resBlueArtillery').value||0)};
-  SC.resurser.red ={larmminor:+($('resRedAlarm').value||0),  minor:+($('resRedMinor').value||0),  dronare:+($('resRedDrone').value||0),  indirektEld:+($('resRedArtillery').value||0)};
+  if (!SC.resurser) SC.resurser={blue:[],red:[]};
 }
-$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:tomResurser(),red:tomResurser()}}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}}; fillScenarioForm(); alert('Nytt scenario.'); };
 $('scImport').onclick=()=>$('scFile').click();
 $('scFile').onchange=(ev)=>{
   const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
