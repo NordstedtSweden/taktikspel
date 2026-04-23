@@ -82,6 +82,10 @@ button{cursor:pointer}
 .orderMenu{position:absolute;z-index:20;background:#0f1832;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .orderMenu button{display:block;width:200px;border:0;border-bottom:1px solid var(--line);text-align:left;padding:8px 10px;background:#0e1730}
 .orderMenu button:hover{background:#17224a}
+#orderMenuResurser:not(:empty){border-top:2px solid var(--line);margin-top:0}
+#orderMenuResurser button{background:#0b1228;color:#c8d8ff}
+#orderMenuResurser button:disabled{opacity:0.4;cursor:default}
+#orderMenuResurser .res-header{padding:5px 10px;font-size:11px;color:#7a8fbb;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--line)}
 .hidden{display:none}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 hr{border:0;border-top:1px solid var(--line);margin:10px 0}
@@ -375,12 +379,12 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <div id="unitPoolRed" class="list" style="display:none"></div>
     <hr>
     <div class="s">Dra en enhet till en giltig setup-hex för att placera den. Utan scenario: placera var som helst.</div>
-    <div id="resursPoolPanel" style="display:none;margin-top:10px">
-      <h3 class="h">Resurser</h3>
-      <div id="gmResBlueHdr" class="s" style="display:none"><b>BLUE</b></div>
-      <div id="gmResBlue" class="list" style="display:none;min-height:40px"></div>
-      <div id="gmResRedHdr" class="s" style="margin-top:8px;display:none"><b>RED</b></div>
-      <div id="gmResRed" class="list" style="display:none;min-height:40px"></div>
+    <!-- Resurspanel dold — resurser visas i ordermenyn istället -->
+    <div id="resursPoolPanel" style="display:none!important">
+      <div id="gmResBlueHdr" style="display:none"></div>
+      <div id="gmResBlue" style="display:none"></div>
+      <div id="gmResRedHdr" style="display:none"></div>
+      <div id="gmResRed" style="display:none"></div>
     </div>
   </div>
 
@@ -457,6 +461,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   <button data-order="scout">🔭 Scout (Spana)</button>
   <button data-order="support">🤝 Support (Understödja)</button>
   <button data-order="none">✖ Rensa order</button>
+  <div id="orderMenuResurser"></div>
 </div>
 
 <script>
@@ -1901,6 +1906,7 @@ let LARM_MARKÖRER = []; // {hex, sida} — kvar tills nästa runda
 let VÄNTANDE_ARTILLERI = []; // {hex, ext, side, def} — löses ut vid nästa rundbyte
 let AKTIVA_SMÄLLAR = []; // {hex, startMs, synligMs, totalMs} — ritas i drawAll
 let PENDING_ARTILLERI_ANIM = []; // {träffHex, periHexar} — skickas med nästa state-broadcast
+let INDIREKT_ELD_ANVÄNT = { blue: false, red: false }; // återställs varje runda
 
 function initResursPool() {
   if (!SC?.resurser) return;
@@ -1922,15 +1928,21 @@ function refreshResursPool() {
   const panel = document.getElementById('resursPoolPanel'); if (!panel) return;
   const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
   const harNågon = GM_RESURSER.blue.length + GM_RESURSER.red.length > 0;
-  panel.style.display = (role === 'gm' && harNågon) ? 'block' : 'none';
+  const klientSida = (role === 'blue' || role === 'red') ? role : null;
+  // GM ser alla, Blue/Red ser bara sin sida
+  const visaFörRoll = role === 'gm' ? harNågon
+    : klientSida ? GM_RESURSER[klientSida]?.length > 0 : false;
+  panel.style.display = visaFörRoll ? 'block' : 'none';
   ['blue','red'].forEach(side => {
     const hdrId = side === 'blue' ? 'gmResBlueHdr' : 'gmResRedHdr';
     const boxId = side === 'blue' ? 'gmResBlue' : 'gmResRed';
     const hdr = document.getElementById(hdrId), box = document.getElementById(boxId);
     const arr = GM_RESURSER[side];
     if (!hdr || !box) return;
-    hdr.style.display = arr.length ? 'block' : 'none';
-    box.style.display = arr.length ? 'block' : 'none';
+    // Klienter ser bara sin egen sida
+    const synlig = arr.length && (role === 'gm' || role === side);
+    hdr.style.display = synlig ? 'block' : 'none';
+    box.style.display = synlig ? 'block' : 'none';
     box.innerHTML = '';
     arr.forEach(r => {
       const d = document.createElement('div');
@@ -1951,6 +1963,25 @@ function aktiveraPendingResurs(resursPost, side) {
     ? `Klicka på MÅLHEX för ${resursPost.def?.name||'indirekt eld'} (${side.toUpperCase()}). Esc = avbryt.`
     : `Klicka på en hex för att placera ${RESURS_ETIKETT[typ]||typ}: ${resursPost.def?.name||resursPost.id}. Esc = avbryt.`;
   if (typeof showHint === 'function') showHint(hint);
+}
+
+function skickaResursOrder(hex) {
+  // Klient skickar resursorder till GM
+  if (!pendingResurs) return;
+  const { side, defId } = pendingResurs;
+  if (typeof gameChannel !== 'undefined' && gameChannel.postMessage) {
+    gameChannel.postMessage({
+      type: 'resurs',
+      side,
+      payload: { defId, hex }
+    });
+  }
+  // Minska kvar lokalt (optimistisk UI-uppdatering)
+  const post = GM_RESURSER[side]?.find(r => r.id === defId);
+  if (post) post.kvar--;
+  pendingResurs = null;
+  if (typeof hideHint === 'function') hideHint();
+  refreshResursPool();
 }
 
 function placeraResurs(hex) {
@@ -2447,7 +2478,9 @@ function buildAuthoritativeState() {
     blueReady,
     redReady,
     autoNextEnabled,
-    artilleriAnim: animationer
+    artilleriAnim: animationer,
+    gmResurser: GM_RESURSER,
+    indirektEldAnvänt: INDIREKT_ELD_ANVÄNT
   };
 }
 // === CENTRAL BROADCASTCHANNEL HANDLER (v2_16_9) ===
@@ -2557,6 +2590,29 @@ if (gameChannel) {
       return;
     }
 
+
+    // ======================================================
+    // RESURS — klient placerar resurs → GM applicerar
+    // ======================================================
+    if (msg.type === 'resurs') {
+      if (role !== 'gm') return;
+      const { side, payload } = msg;
+      const { defId, hex } = payload || {};
+      if (!defId || !hex) return;
+
+      // Hitta resursdefinitionen
+      const post = GM_RESURSER[side]?.find(r => r.id === defId);
+      if (!post || post.kvar <= 0) return;
+
+      // Blockera om indirekt eld redan använts denna runda
+      if (post.def?.type === 'indirektEld' && INDIREKT_ELD_ANVÄNT[side]) return;
+      if (post.def?.type === 'indirektEld') INDIREKT_ELD_ANVÄNT[side] = true;
+
+      // Simulera pendingResurs och anropa placeraResurs
+      pendingResurs = { side, defId, def: post.def };
+      placeraResurs(hex);
+      return;
+    }
 
     // ======================================================
     // 3) READY — klient skickar → GM uppdaterar → broadcastar
@@ -2700,6 +2756,13 @@ function applyStateFromGM(payload) {
 
   if (Array.isArray(payload.placeradeResurser)) {
     PLACERADE_RESURSER = payload.placeradeResurser;
+  }
+  if (payload.gmResurser) {
+    GM_RESURSER = payload.gmResurser;
+    if (typeof refreshResursPool === 'function') refreshResursPool();
+  }
+  if (payload.indirektEldAnvänt) {
+    INDIREKT_ELD_ANVÄNT = payload.indirektEldAnvänt;
   }
     // Klient: spela upp elimineringsanimation (skalle + fade) för nya eliminerade enheter
   if (Array.isArray(PLACED) && typeof eliminateUnit === 'function') {
@@ -4133,6 +4196,7 @@ function nextRound () {
   if (typeof currentRound === 'number') currentRound++; else currentRound = 1;
   if (typeof logEvent === 'function') logEvent(`--- Runda ${currentRound} ---`);
   LARM_MARKÖRER = []; // Rensa larmmarkörer från föregående runda
+  INDIREKT_ELD_ANVÄNT = { blue: false, red: false }; // återladda indirekt eld
 
   // Lös ut köat artilleri från föregående runda
   if (VÄNTANDE_ARTILLERI.length > 0) {
@@ -4996,17 +5060,45 @@ orderMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
 function openOrderMenuAt(x,y,unit){
   orderTargetUnit=unit;
   // Visa rätt knappar beroende på enhetstyp
-  orderMenu.querySelectorAll('button').forEach(b => {
+  orderMenu.querySelectorAll('button[data-order]').forEach(b => {
     if (unit?.isDrone) {
-      // Drönare: bara "flyg till" (scout-ikon) och rensa
       b.style.display = (b.dataset.order === 'take' || b.dataset.order === 'none') ? '' : 'none';
       if (b.dataset.order === 'take') b.textContent = '🚁 Flyg till';
     } else {
       b.style.display = '';
-      // Återställ originaltext för take-knappen
       if (b.dataset.order === 'take') b.textContent = '🎯 Take (Ta)';
     }
   });
+
+  // Fyll resurssektionen
+  const resDiv = document.getElementById('orderMenuResurser');
+  resDiv.innerHTML = '';
+  if (!unit?.isDrone) {
+    const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
+    const side = unit?.side;
+    const resurser = GM_RESURSER[side] || [];
+    if (resurser.length) {
+      const hdr = document.createElement('div');
+      hdr.className = 'res-header';
+      hdr.textContent = 'Resurser';
+      resDiv.appendChild(hdr);
+      resurser.forEach(r => {
+        const typ = r.def?.type;
+        const ikon = { larmminor:'⚠️', minor:'💣', dronare:'🚁', indirektEld:'💥' }[typ] || '📦';
+        const btn = document.createElement('button');
+        btn.textContent = `${ikon} ${r.def?.name||r.id}  (${r.kvar}/${r.count})`;
+        const indirektBlockad = typ === 'indirektEld' && INDIREKT_ELD_ANVÄNT[side];
+        btn.disabled = r.kvar <= 0 || indirektBlockad;
+        if (indirektBlockad) btn.title = 'Redan använd denna runda';
+        btn.onclick = () => {
+          orderMenu.classList.add('hidden');
+          aktiveraPendingResurs(r, side);
+        };
+        resDiv.appendChild(btn);
+      });
+    }
+  }
+
   orderMenu.style.left=x+'px'; orderMenu.style.top=y+'px'; orderMenu.classList.remove('hidden');
 }
 function showHint(t){ const h=$('hint'); h.textContent=t; h.classList.remove('hidden'); }
@@ -5953,13 +6045,21 @@ cv.addEventListener('touchend', e => {
 
 cv.addEventListener('click', e => {
 
-  // 0) GM-resursplacering
+  // 0) Resursplacering (GM direkt, klienter via socket)
   if (pendingResurs) {
     const m = mousePosOnCanvas(e);
     const ws = screenToWorld(m.x, m.y);
     const p = invRot(ws.x, ws.y, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
     const hit = nearestHex(p.x, p.y);
-    if (hit) placeraResurs(hexKey(hit.ri, hit.ci));
+    if (hit) {
+      const hexId = hexKey(hit.ri, hit.ci);
+      const roleNow = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
+      if (roleNow === 'gm') {
+        placeraResurs(hexId);
+      } else {
+        skickaResursOrder(hexId);
+      }
+    }
     return;
   }
 
