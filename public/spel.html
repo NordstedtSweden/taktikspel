@@ -3877,7 +3877,10 @@ function resolveHitWithMorale(attacker, defender, opts){
 
   let effect = 'none';
 
-  if (effHits >= HITS_TO_KILL) {
+  // Drönare elimineras direkt vid träff — kan inte reduceras
+  if (defender.isDrone) {
+    effect = 'eliminated';
+  } else if (effHits >= HITS_TO_KILL) {
     effect = 'eliminated';
   } else if (effHits >= HITS_TO_REDUCE || String(defender.state||'full').toLowerCase() === 'reduced') {
     effect = 'reduced';
@@ -4825,9 +4828,9 @@ function openOrderMenuAt(x,y,unit){
   // Visa rätt knappar beroende på enhetstyp
   orderMenu.querySelectorAll('button').forEach(b => {
     if (unit?.isDrone) {
-      // Drönare: bara "flyg till" (take) och rensa
+      // Drönare: bara "flyg till" (scout-ikon) och rensa
       b.style.display = (b.dataset.order === 'take' || b.dataset.order === 'none') ? '' : 'none';
-      if (b.dataset.order === 'take') b.textContent = '🚁 Flyg till';
+      if (b.dataset.order === 'take') b.textContent = '🔭 Flyg till';
     } else {
       b.style.display = '';
       // Återställ originaltext för take-knappen
@@ -5195,7 +5198,8 @@ function addOrderBubble(node, p){
 
   // GM ser alla order, respektive sida ser bara egna order
   if (role === 'gm' || p.side === role) {
-    icon = ORDER_ICONS[p.order || 'none'] || '';
+    // Drönare visar alltid spaningssymbol oavsett order
+    icon = p.isDrone ? '🔭' : (ORDER_ICONS[p.order || 'none'] || '');
   } else {
     // Motståndaren: inga uppgifter ska avslöjas
     icon = ''; // ev. sätt till '•' eller liknande om du vill visa "något" men inte typ
@@ -5953,7 +5957,6 @@ function maybeResolveOpFireFor(movingUnit, liveHexNow, chainCtx){
   try{
     if (!movingUnit || !liveHexNow) return;
     if (!Array.isArray(PLACED)) return;
-    if (movingUnit.isDrone) return; // drönare triggar inte OP-fire
 
     const moverSide = (movingUnit.side || movingUnit.faction || '').toLowerCase();
     const enemySide = (moverSide === 'blue') ? 'red' :
@@ -5978,10 +5981,10 @@ function maybeResolveOpFireFor(movingUnit, liveHexNow, chainCtx){
       // LOS
       if (typeof hasLOS === 'function' && !hasLOS(dHex, liveHexNow)) return false;
 
-      // räckvidd
-      if (typeof hexDist === 'function' &&
-          typeof getUnitRangeHex === 'function' &&
-          hexDist(dHex, liveHexNow) > getUnitRangeHex(d)) return false;
+      // räckvidd — drönare kräver max 2 hex
+      const maxRng = movingUnit.isDrone ? 2
+        : (typeof getUnitRangeHex === 'function' ? getUnitRangeHex(d) : 5);
+      if (typeof hexDist === 'function' && hexDist(dHex, liveHexNow) > maxRng) return false;
 
       // har redan skjutit OP-fire denna runda?
       if (d.hasFiredThisRound) return false;
@@ -6631,7 +6634,6 @@ function pickOpFireDefender(mover, liveHex){
 window.maybeResolveOpFireFor = function(mover, liveHex, ctx){
   try {
     if (!mover || !liveHex || !Array.isArray(PLACED)) return;
-    if (mover.isDrone) return; // drönare triggar inte OP-fire
 
     const mySide   = (mover.side || mover.faction || '').toLowerCase();
     const enemySide = (mySide === 'blue') ? 'red'
@@ -6656,9 +6658,9 @@ window.maybeResolveOpFireFor = function(mover, liveHex, ctx){
       if (!dHex) return false;
       if (typeof hasLOS === 'function' && !hasLOS(dHex, liveHex)) return false;
 
-      // inom räckvidd
-      const rng = (typeof getUnitRangeHex === 'function') ? getUnitRangeHex(d) : 5;
-      if (typeof hexDist === 'function' && hexDist(dHex, liveHex) > rng) return false;
+      // inom räckvidd — drönare kräver max 2 hex
+      const maxRng = mover.isDrone ? 2 : (typeof getUnitRangeHex === 'function') ? getUnitRangeHex(d) : 5;
+      if (typeof hexDist === 'function' && hexDist(dHex, liveHex) > maxRng) return false;
 
       return true;
     });
