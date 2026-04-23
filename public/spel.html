@@ -2197,7 +2197,7 @@ function visaEnSmäll(hex) {
   const rc = typeof keyToRC === 'function' ? keyToRC(hex) : null; if (!rc) return;
   if (typeof centerHex !== 'function') return;
   centerHex(rc.ri, rc.ci, (cx, cy, r) => {
-    const fontSize = Math.round(r * 1.8);
+    const fontSize = Math.round(r * 0.9);
     let tick = 0;
     const synligSteg = 4;  // 4 × 80ms = 320ms fullt synlig
     const fadSteg    = 3;  // 3 × 80ms = 240ms tonar ut
