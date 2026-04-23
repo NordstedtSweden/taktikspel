@@ -1669,22 +1669,24 @@ const TERRA={
   },
   // 👇 Detta saknades tidigare – utan detta blockerar inget LOS
   effects:{
-    open:{     mp:{inf:1,veh:1,gun:2,boat:1}, los:{blocks:false,conceal:0}},
-    field:{    mp:{inf:1,veh:2,gun:3,boat:1}, los:{blocks:false,conceal:1}},
-    orchard:{  mp:{inf:1,veh:2,gun:3,boat:1}, los:{blocks:false,conceal:1}},
-    woods:{    mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'}, los:{blocks:true, conceal:2}},
-    wood_building:{ mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'}, los:{blocks:true, conceal:2}},
-    stone_building:{ mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'}, los:{blocks:true, conceal:3}},
-    road:{     mp:{inf:'2/3',veh:'1/2',gun:1,boat:'N/A'}, los:{blocks:false,conceal:0}},
-    trail:{    mp:{inf:1,veh:2,gun:2,boat:'N/A'},        los:{blocks:false,conceal:0}},
-    river:{    mp:{inf:'N/A',veh:'N/A',gun:'N/A',boat:1},los:{blocks:false,conceal:0}},
-    marsh:{    mp:{inf:3,veh:'N/A',gun:'N/A',boat:1},    los:{blocks:false,conceal:1}},
-    hedge:{    mp:{inf:2,veh:3,gun:'N/A',boat:'N/A'},    los:{blocks:true, conceal:1}},
-    bocage:{   mp:{inf:2,veh:4,gun:'N/A',boat:'N/A'},    los:{blocks:true, conceal:3}},
-    hill:{     mp:{inf:2,veh:2,gun:3,boat:'N/A'},        los:{blocks:false,conceal:2}},
-    rough:{    mp:{inf:2,veh:3,gun:3,boat:'N/A'},        los:{blocks:false,conceal:0}},
-    crater:{   mp:{inf:2,veh:3,gun:3,boat:'N/A'},        los:{blocks:false,conceal:1}},
-    smoke:{    mp:{inf:1,veh:1,gun:1,boat:1},            los:{blocks:true, conceal:3}}
+    // defense: modifier för angriparen (negativt = svårare att träffa försvararen)
+    // attack:  modifier för enheten som skjuter härifrån (positivt = bättre verkan)
+    open:          { mp:{inf:1,veh:1,gun:2,boat:1},              los:{blocks:false,conceal:0}, defense: 0, attack: 0  },
+    field:         { mp:{inf:1,veh:2,gun:3,boat:1},              los:{blocks:false,conceal:1}, defense: 0, attack: 0  },
+    orchard:       { mp:{inf:1,veh:2,gun:3,boat:1},              los:{blocks:false,conceal:1}, defense:-1, attack: 0  },
+    woods:         { mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},  los:{blocks:true, conceal:2}, defense:-2, attack:-1  },
+    wood_building: { mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},  los:{blocks:true, conceal:2}, defense:-2, attack: 0  },
+    stone_building:{ mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},  los:{blocks:true, conceal:3}, defense:-3, attack:+1  },
+    road:          { mp:{inf:'2/3',veh:'1/2',gun:1,boat:'N/A'},  los:{blocks:false,conceal:0}, defense: 0, attack: 0  },
+    trail:         { mp:{inf:1,veh:2,gun:2,boat:'N/A'},          los:{blocks:false,conceal:0}, defense: 0, attack: 0  },
+    river:         { mp:{inf:'N/A',veh:'N/A',gun:'N/A',boat:1},  los:{blocks:false,conceal:0}, defense: 0, attack:-1  },
+    marsh:         { mp:{inf:3,veh:'N/A',gun:'N/A',boat:1},      los:{blocks:false,conceal:1}, defense:-1, attack:-1  },
+    hedge:         { mp:{inf:2,veh:3,gun:'N/A',boat:'N/A'},      los:{blocks:true, conceal:1}, defense:-1, attack: 0  },
+    bocage:        { mp:{inf:2,veh:4,gun:'N/A',boat:'N/A'},      los:{blocks:true, conceal:3}, defense:-3, attack: 0  },
+    hill:          { mp:{inf:2,veh:2,gun:3,boat:'N/A'},          los:{blocks:false,conceal:2}, defense:-1, attack:+1  },
+    rough:         { mp:{inf:2,veh:3,gun:3,boat:'N/A'},          los:{blocks:false,conceal:0}, defense:-2, attack: 0  },
+    crater:        { mp:{inf:2,veh:3,gun:3,boat:'N/A'},          los:{blocks:false,conceal:1}, defense:-2, attack: 0  },
+    smoke:         { mp:{inf:1,veh:1,gun:1,boat:1},              los:{blocks:true, conceal:3}, defense: 0, attack:-2  }
   }
 };
 // ===============================================
@@ -3754,55 +3756,43 @@ if (Array.isArray(PLACED)) {
       // Samla ihop modifikationer
       let mod = (typeof getCombatModifier === 'function') ? getCombatModifier(u, target, combatState) : 0;
 
-      // Om du har befintliga modfunktioner för räckvidd/cover, använd dem. Annars 0.
-      let rangeMod = 0, coverMod = 0;
-      if (typeof computeRangeMod === 'function') rangeMod = computeRangeMod(u, target) || 0;
-      if (typeof computeCoverMod === 'function') coverMod = computeCoverMod(u, target) || 0;
-      mod += rangeMod + coverMod;
+      let rangeMod  = (typeof computeRangeMod          === 'function') ? (computeRangeMod(u, target)         || 0) : 0;
+      let coverMod  = (typeof computeCoverMod           === 'function') ? (computeCoverMod(u, target)          || 0) : 0;
+      let attackMod = (typeof computeAttackerTerrainMod === 'function') ? (computeAttackerTerrainMod(u)        || 0) : 0;
+      mod += rangeMod + coverMod + attackMod;
 
       const finalRoll = roll + mod;
-      // ...
-      let toHit = 6;
-      if (typeof getToHitThreshold === 'function') {
-        toHit = getToHitThreshold(u, target);
-      }
-
+      let toHit = (typeof getToHitThreshold === 'function') ? getToHitThreshold(u, target) : 5;
       const hit = finalRoll >= toHit;
+
+      // Bygg logg-text med terränginfo
+      const defTerrId  = (MAP?.terrain?.[target._losHex || target.hex]) || 'open';
+      const atkTerrId  = (MAP?.terrain?.[u._losHex || u.hex]) || 'open';
+      const terrainInfo = [];
+      if (coverMod  !== 0) terrainInfo.push(`skydd:${defTerrId}(${coverMod > 0 ? '+' : ''}${coverMod})`);
+      if (attackMod !== 0) terrainInfo.push(`verkan:${atkTerrId}(${attackMod > 0 ? '+' : ''}${attackMod})`);
+      if (rangeMod  !== 0) terrainInfo.push(`avstånd(${rangeMod > 0 ? '+' : ''}${rangeMod})`);
+      const terrainStr = terrainInfo.length ? ` [${terrainInfo.join(', ')}]` : '';
 
       // 🔶 LOS 2.0 – markera eld före FX (avslöjar skytten även vid miss)
       u.hasFired = true;
       u.hasFiredThisRound = true;
 
-      if (typeof updateLOS === 'function') {
-        updateLOS();
-      }
+      if (typeof updateLOS === 'function') updateLOS();
       try {
         const roleNow = (typeof getCurrentRole === 'function')
           ? getCurrentRole()
           : (document.getElementById('roleSel')?.value || 'gm');
-        if (roleNow === 'gm' && typeof broadcastStateFromGM === 'function') {
-          // GM pushar ny synlighet innan FX-broadcast
-          broadcastStateFromGM();
-        }
-      } catch (e) {
-        console.warn('broadcast after normal fire failed:', e);
-      }
+        if (roleNow === 'gm' && typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+      } catch (e) { console.warn('broadcast after normal fire failed:', e); }
 
-      // FX: röd linje SKYTT -> MÅL (nu efter reveal/broadcast)
-      if (typeof playFireFX === 'function') {
-        playFireFX(u, target);
-      } else if (typeof fireFX === 'function') {
-        fireFX(u, target);
-      }
+      if (typeof playFireFX === 'function') playFireFX(u, target);
+      else if (typeof fireFX === 'function') fireFX(u, target);
       target._bangActive = true;
-
-      // Markera eld (för recovery-logik m.m.)
       u.underFireThisRound = true;
 
-
-      // Logg (valfritt, byt till din stil)
       if (typeof logEvent === 'function') {
-        logEvent(`${u.side} ${u.name} skjuter mot ${target.side} ${target.name} — slag: ${roll} ${mod>=0?'+':''}${mod} = ${finalRoll} vs ${toHit} ⇒ ${hit ? 'TRÄFF' : 'MISS'}`);
+        logEvent(`${fmtSide(u)} ${fmtName(u)} skjuter mot ${fmtSide(target)} ${fmtName(target)}${terrainStr} — slag: ${roll} ${mod>=0?'+':''}${mod} = ${finalRoll} vs ${toHit} ⇒ ${hit ? 'TRÄFF' : 'MISS'}`);
       }
 
       // Påverkan vid träff: suppression + reduced/eliminated-kedja
@@ -5872,16 +5862,22 @@ function getUnderstödsbonus(attacker, defender){
   return supporter ? -1 : 0;
 }
 
-// Cover-mod baserat på terräng på försvararens hex
+// Försvararens terrängskydd — negativt värde = svårare att träffa
 function computeCoverMod(attacker, defender){
   const h = (defender._losHex || defender.hex);
   if (!h) return 0;
-  const terrId = (MAP && MAP.terrain && MAP.terrain[h]) || 'open';
-  const eff = TERRA && TERRA.effects && TERRA.effects[terrId];
-  const conceal = eff && eff.los ? (eff.los.conceal || 0) : 0;
+  const terrId = (MAP?.terrain?.[h]) || 'open';
+  const eff = TERRA?.effects?.[terrId];
+  return eff?.defense ?? 0;
+}
 
-  // varje conceal-nivå ger -1 för skytten
-  return -conceal;
+// Angriparens terrängverkan — positivt = bättre (stenhus/höjd), negativt = sämre (skog/rök)
+function computeAttackerTerrainMod(attacker){
+  const h = attacker._losHex || attacker.hex;
+  if (!h) return 0;
+  const terrId = (MAP?.terrain?.[h]) || 'open';
+  const eff = TERRA?.effects?.[terrId];
+  return eff?.attack ?? 0;
 }
 
 function getToHitThreshold(attacker, defender, mode){
@@ -5900,8 +5896,11 @@ function getToHitMod(attacker, defender, mode){
   // Avstånd
   mod += computeRangeMod(attacker, defender);
 
-  // Skydd/terräng
+  // Skydd/terräng (försvararens terräng)
   mod += computeCoverMod(attacker, defender);
+
+  // Verkan/terräng (skyttens terräng)
+  if (typeof computeAttackerTerrainMod === 'function') mod += computeAttackerTerrainMod(attacker);
 
   // Suppression på skytten
   const s = (attacker.suppression || attacker.suppressed || '').toLowerCase();
