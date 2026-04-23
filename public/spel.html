@@ -1286,24 +1286,119 @@ function stopFireAnimsTargeting(defender) {
   }
 }
 
+// Kontinuerlig eldanimation som följer enheternas live-position
+function startContinuousFireAnim(attacker, defender) {
+  const container = document.querySelector('#mapWrap') ||
+                    document.querySelector('#board')   ||
+                    document.querySelector('.board')   ||
+                    document.body;
+
+  const line = document.createElement('div');
+  line.className = 'fx-line-static';
+  container.appendChild(line);
+
+  let stopped = false;
+  let lastTracerTick = 0;
+  let losTickCounter = 0;
+  const TICK_MS = 90;
+  const LOS_INTERVAL = 8; // kontrollera LOS var 8:e tracer-tick
+
+  function getLivePos(unit) {
+    if (unit._anim && unit._anim.active && unit._anim.pos) {
+      return { x: unit._anim.pos.x, y: unit._anim.pos.y };
+    }
+    return hexToScreen(unit.hex) || { x: 0, y: 0 };
+  }
+
+  function getLiveHex(unit) {
+    return unit._losHex || unit.hex;
+  }
+
+  function spawnTracer(ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay;
+    const baseLen = Math.hypot(dx, dy);
+    if (baseLen < 5) return;
+    const baseAng = Math.atan2(dy, dx);
+    const tracer = document.createElement('div');
+    tracer.className = 'fx-line fx-line-tracer';
+    const segLen = baseLen * (0.15 + Math.random() * 0.20);
+    const jitterAng = baseAng + (Math.random() - 0.5) * 0.20;
+    const startFrac = Math.random() * 0.2;
+    const bx2 = ax + Math.cos(baseAng) * (baseLen * startFrac);
+    const by2 = ay + Math.sin(baseAng) * (baseLen * startFrac);
+    const side = (Math.random() - 0.5) * 6;
+    const px = bx2 + Math.cos(baseAng + Math.PI / 2) * side;
+    const py = by2 + Math.sin(baseAng + Math.PI / 2) * side;
+    Object.assign(tracer.style, {
+      left: px + 'px', top: py + 'px',
+      width: segLen + 'px',
+      transform: `rotate(${jitterAng}rad)`
+    });
+    container.appendChild(tracer);
+    setTimeout(() => tracer.remove(), 300);
+  }
+
+  function raf(now) {
+    if (stopped) return;
+    if (attacker.eliminated || defender.eliminated) {
+      stopped = true; if (line.parentNode) line.remove(); return;
+    }
+
+    const A = getLivePos(attacker);
+    const B = getLivePos(defender);
+
+    // Uppdatera linjen mot live-position
+    const dxv = B.x - A.x, dyv = B.y - A.y;
+    const len = Math.hypot(dxv, dyv);
+    const angle = Math.atan2(dyv, dxv) * 180 / Math.PI;
+    line.style.left  = A.x + 'px';
+    line.style.top   = A.y + 'px';
+    line.style.width = len + 'px';
+    line.style.transform = `rotate(${angle}deg)`;
+
+    // LOS-kontroll med glesare intervall
+    losTickCounter++;
+    if (losTickCounter >= LOS_INTERVAL) {
+      losTickCounter = 0;
+      const fromHex = getLiveHex(attacker);
+      const toHex   = getLiveHex(defender);
+      if (typeof hasLOS === 'function' && fromHex && toHex && !hasLOS(fromHex, toHex)) {
+        stopped = true; if (line.parentNode) line.remove();
+        const key = attacker.uid || (attacker.side + '_' + attacker.id);
+        ACTIVE_FIRE_ANIMS.delete(key);
+        return;
+      }
+    }
+
+    // Tracers från live-position
+    if (now - lastTracerTick >= TICK_MS) {
+      lastTracerTick = now;
+      const shots = Math.max(0, Math.round((1 + Math.random() * 3) * (0.7 + 0.4 * Math.random())));
+      const ax = A.x, ay = A.y, bx = B.x, by = B.y;
+      for (let i = 0; i < shots; i++) {
+        const delay = Math.random() * (TICK_MS * 0.7);
+        setTimeout(() => { if (!stopped) spawnTracer(ax, ay, bx, by); }, delay);
+      }
+    }
+
+    requestAnimationFrame(raf);
+  }
+
+  requestAnimationFrame(raf);
+  return function stop() { stopped = true; if (line.parentNode) line.remove(); };
+}
+
 // 4) Kombinerad FX: linje SKYTT→MÅL + 💥 på MÅLET
 function fireFX(attacker, defender) {
-  // Stoppa ev. pågående animation för samma skytt innan ny startas
   stopFireAnimForUnit(attacker);
 
-  // 1) Kulsprute-burst — körs tills stoppad utifrån
-  const stopBurst = drawFireBurst(attacker, defender);
+  const stopAnim = startContinuousFireAnim(attacker, defender);
 
-  // 2) Statisk linje — behålls tills stoppad utifrån
-  const lineEl = drawPersistentFireLine(attacker, defender);
-
-  // 3) 💥 på målet
   showBangOnUnit(defender);
   defender._bangActive = true;
 
-  // Spara stopp-referenser (inkl. försvarare för att kunna stoppa vid eliminering)
   const key = attacker.uid || (attacker.side + '_' + attacker.id);
-  ACTIVE_FIRE_ANIMS.set(key, { stopBurst, lineEl, defender });
+  ACTIVE_FIRE_ANIMS.set(key, { stopBurst: stopAnim, lineEl: null, defender });
 }
 /*
 // === BROADCASTED FIRE FX (v2.16.6) =============================
@@ -6512,9 +6607,6 @@ function animateMovementBatch(segments){
     const p0 = ch.points[0];
     if (!u._anim) u._anim = { active:true, pos:{x:p0.x, y:p0.y} };
     else { u._anim.active = true; u._anim.pos = {x:p0.x, y:p0.y}; }
-
-    // Avbryt eldanimation för enheten när den börjar röra sig
-    if (typeof stopFireAnimForUnit === 'function') stopFireAnimForUnit(u);
 
     ch.__lastStep = 0; // <-- NEW: spåra senast inträdda delsteg (för LOS-keyframes)
   }
