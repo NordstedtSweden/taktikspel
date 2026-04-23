@@ -4028,6 +4028,7 @@ if (Array.isArray(PLACED)) {
     try {
       // Hoppa över icke-stridsdugliga enheter
       if (u.eliminated) return;
+      if (u.isDrone) return;             // drönare skjuter aldrig
       if (!u.order) return;              // saknar order
       if (u.hasFired) return;            // redan skjutit denna runda
       if ((u.order||'').toLowerCase() === 'scout') return; // spaningsorder — skjuter aldrig
@@ -5534,21 +5535,23 @@ function computeVisibleHexes(side){
     if (hx) vis.add(hx);
   }
 
-  // 2) Bygg lista över egna observatörer
+  // 2) Bygg lista över egna observatörer (drönare hanteras separat via BFS nedan)
   const spotters = PLACED.filter(u =>
     u &&
     !u.eliminated &&
     u.state !== 'eliminated' &&
-    u.side === mySide
+    u.side === mySide &&
+    !u.isDrone
   );
 
-  // Drönare: lägg till alla hexar inom losRadie direkt (flyger över terräng)
-  for (const s of spotters) {
-    if (!s.isDrone) continue;
-    const sHex = liveHex(s);
+  // Egna drönare: lägg till alla hexar inom losRadie direkt (flyger över terräng)
+  const egnaDrönare = PLACED.filter(u =>
+    u && !u.eliminated && u.state !== 'eliminated' && u.side === mySide && u.isDrone
+  );
+  for (const drone of egnaDrönare) {
+    const sHex = liveHex(drone);
     if (!sHex) continue;
-    const radie = s.losRadie ?? 3;
-    // Enkel BFS/ring-expansion inom radie
+    const radie = drone.losRadie ?? 3;
     const besökta = new Set([sHex]);
     let front = [sHex];
     for (let steg = 0; steg < radie; steg++) {
@@ -5572,6 +5575,17 @@ function computeVisibleHexes(side){
     if (!v || v.eliminated || v.state === 'eliminated') continue;
     if (v.side !== enemySide) continue;
     if (v.spanarNu) continue; // i spaningsläge — syns inte för fienden
+    // Drönare syns bara om en fiende är inom 2 hex (litet mål, svårt att se)
+    if (v.isDrone) {
+      const vHex2 = liveHex(v);
+      if (!vHex2) continue;
+      const nära = spotters.some(s => {
+        const sHex = liveHex(s);
+        return sHex && typeof hexDist === 'function' && hexDist(sHex, vHex2) <= 2;
+      });
+      if (nära) vis.add(vHex2);
+      continue;
+    }
 
     const vHex = liveHex(v);
     if (!vHex) continue;
@@ -5939,6 +5953,7 @@ function maybeResolveOpFireFor(movingUnit, liveHexNow, chainCtx){
   try{
     if (!movingUnit || !liveHexNow) return;
     if (!Array.isArray(PLACED)) return;
+    if (movingUnit.isDrone) return; // drönare triggar inte OP-fire
 
     const moverSide = (movingUnit.side || movingUnit.faction || '').toLowerCase();
     const enemySide = (moverSide === 'blue') ? 'red' :
@@ -5948,6 +5963,7 @@ function maybeResolveOpFireFor(movingUnit, liveHexNow, chainCtx){
     // Plocka fram ALLA försvarare som kan skjuta
     const shooters = PLACED.filter(d => {
       if (d.side !== enemySide) return false;
+      if (d.isDrone) return false; // drönare skjuter aldrig OP-fire
       if (d.eliminated || d.state === 'eliminated' || d.hidden) return false;
 
       const ord = (d.order || '').toLowerCase();
@@ -6615,6 +6631,7 @@ function pickOpFireDefender(mover, liveHex){
 window.maybeResolveOpFireFor = function(mover, liveHex, ctx){
   try {
     if (!mover || !liveHex || !Array.isArray(PLACED)) return;
+    if (mover.isDrone) return; // drönare triggar inte OP-fire
 
     const mySide   = (mover.side || mover.faction || '').toLowerCase();
     const enemySide = (mySide === 'blue') ? 'red'
@@ -6625,6 +6642,7 @@ window.maybeResolveOpFireFor = function(mover, liveHex, ctx){
     // Plocka alla FIENDER som KAN skjuta OP-fire
     const candidates = PLACED.filter(d => {
       if (!d || d.side !== enemySide) return false;
+      if (d.isDrone) return false; // drönare skjuter aldrig OP-fire
       if (d.eliminated || d.state === 'eliminated' || d.hidden) return false;
 
       const ord = String(d.order||'').toLowerCase();
