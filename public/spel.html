@@ -1992,7 +1992,8 @@ function buildAuthoritativeState() {
         id: u.id,
         uid: u.uid,
         name: u.name,
-        hex: u.hex,
+        hex: u._losHex || u.hex,   // live-hex under rörelse, annars vilohex
+        moving: !!u._losHex,       // true om enheten rör sig just nu
         state: u.state,
         order: u.order,
         orderTarget: u.orderTarget,
@@ -2234,7 +2235,8 @@ function applyStateFromGM(payload) {
         hasFiredLastRound: !!src.hasFiredLastRound,
 
         revealedFor: typeof src.revealedFor === 'number' ? src.revealedFor : 0,
-        spottedBy: src.spottedBy || { blue:false, red:false }
+        spottedBy: src.spottedBy || { blue:false, red:false },
+        moving: !!src.moving      // rörelseindikator från GM
       };
 
       // 🔹 NYTT: ta emot om enheten är markerad som under eldgivning
@@ -5248,9 +5250,8 @@ function computeVisibleHexes(side){
     // Har fienden skjutit nyligen? (avslöjad vid eld)
     const firedRecently = !!(v.hasFiredThisRound || v.hasFiredLastRound);
 
-    // 🔴 NYTT: rör sig enheten just nu (under animation)?
-    // En rörlig fiende som är i LOS räknas som spotted även i conceal.
-    const movingNow = !!(v._anim && v._anim.active);
+    // Rörlig fiende i LOS syns även i conceal — fungerar på GM (_anim) och klienter (moving-flagga)
+    const movingNow = !!(v._anim && v._anim.active) || !!v.moving;
 
     const keyId = (v.uid || v.id || v.name || '?');
     const key   = `${v.side}:${keyId}@${vHex}`;
