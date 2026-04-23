@@ -1897,6 +1897,7 @@ let PLACED=[];
 let PLACERADE_RESURSER = [];
 let GM_RESURSER = { blue: [], red: [] };
 let pendingResurs = null;
+let LARM_MARKÖRER = []; // {hex, sida} — kvar tills nästa runda
 
 function initResursPool() {
   if (!SC?.resurser) return;
@@ -1974,12 +1975,29 @@ function kontrolleraMintriggers(besöktaHexar) {
   if (!Array.isArray(PLACED)) return;
   const attTrigga = [];
 
-  // Hämta enheter som stoppades av mina under animationen
+  // Hämta enheter som stoppades av stridsmina under animationen
   for (const u of PLACED) {
     if (u._väntandeMina) {
       attTrigga.push({ mina: u._väntandeMina, enhet: u });
       u._väntandeMina = null;
     }
+  }
+
+  // Hämta utlösta larmminor
+  const utlöstaLarm = PLACERADE_RESURSER.filter(m => m.type === 'larmminor' && m._utlöst);
+  for (const mina of utlöstaLarm) {
+    const enhet = mina._utlöstAv;
+    if (typeof logEvent === 'function') {
+      logEvent(`⚠ LARM: ${fmtSide(enhet)} ${fmtName(enhet)} har passerat larmmina (${mina.side.toUpperCase()}) på ${mina.hex}!`);
+    }
+    // Röd blinkning i 5s, sedan kvarliggande röd markör
+    visaLarmAnimationRöd(mina.hex, mina.side);
+    // Ta bort minan från kartan
+    const idx = PLACERADE_RESURSER.indexOf(mina);
+    if (idx !== -1) PLACERADE_RESURSER.splice(idx, 1);
+  }
+  if (utlöstaLarm.length) {
+    if (typeof refreshResursPool === 'function') refreshResursPool();
   }
 
   if (!attTrigga.length) return;
@@ -2035,22 +2053,37 @@ function appliceraMinEffekt(enhet, effekt) {
 }
 
 function visaLarmAnimation(hex) {
-  // Röda blinkningar på hexen i 3 sekunder
+  // Behålls för bakåtkompatibilitet — anropar nya röda varianten
+  visaLarmAnimationRöd(hex, 'blue');
+}
+
+function visaLarmAnimationRöd(hex, side) {
   const rc = typeof keyToRC === 'function' ? keyToRC(hex) : null; if (!rc) return;
   let blinkar = 0;
+  const totalBlink = 10; // 10 blink × 500ms = 5s
   const interval = setInterval(() => {
-    if (typeof centerHex !== 'function' || typeof drawAll !== 'function') { clearInterval(interval); return; }
+    if (typeof centerHex !== 'function') { clearInterval(interval); return; }
+    if (typeof drawAll === 'function') drawAll();
     centerHex(rc.ri, rc.ci, (cx, cy, r) => {
       ctx.save();
       if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
-      ctx.beginPath(); ctx.arc(cx, cy, r*0.6, 0, Math.PI*2);
-      ctx.fillStyle = blinkar % 2 === 0 ? 'rgba(242,201,76,0.55)' : 'rgba(242,201,76,0.0)';
+      ctx.beginPath(); ctx.arc(cx, cy, r*0.55, 0, Math.PI*2);
+      ctx.fillStyle = blinkar % 2 === 0 ? 'rgba(255,50,50,0.65)' : 'rgba(255,50,50,0.0)';
       ctx.fill();
+      ctx.strokeStyle = '#ff3232'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(r*0.5)}px Segoe UI`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('!', cx, cy);
       ctx.restore();
     });
     blinkar++;
-    if (blinkar >= 6) { clearInterval(interval); if (typeof drawAll === 'function') drawAll(); }
-  }, 300);
+    if (blinkar >= totalBlink) {
+      clearInterval(interval);
+      // Lägg till kvarliggande markör
+      LARM_MARKÖRER.push({ hex, side });
+      if (typeof drawAll === 'function') drawAll();
+    }
+  }, 500);
 }
 
 function visaExplosionsAnimation(hex) {
@@ -2078,6 +2111,22 @@ function drawResurser() {
   const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
   ctx.save();
   if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
+  // Rita kvarliggande larmmarkörer
+  LARM_MARKÖRER.forEach(larm => {
+    const rc = typeof keyToRC === 'function' ? keyToRC(larm.hex) : null; if (!rc) return;
+    if (typeof centerHex !== 'function') return;
+    centerHex(rc.ri, rc.ci, (cx, cy, r) => {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, r*0.45, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,50,50,0.3)'; ctx.fill();
+      ctx.strokeStyle = '#ff3232'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#ff3232'; ctx.font = `bold ${Math.round(r*0.5)}px Segoe UI`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('!', cx, cy);
+      ctx.restore();
+    });
+  });
+
   PLACERADE_RESURSER.forEach(item => {
     if (role !== 'gm' && (item.type==='minor'||item.type==='larmminor') && item.side !== role) return;
     const rc = typeof keyToRC === 'function' ? keyToRC(item.hex) : null; if (!rc) return;
@@ -3891,6 +3940,7 @@ function nextRound () {
   // === v2.9: ROUND START ===
   if (typeof currentRound === 'number') currentRound++; else currentRound = 1;
   if (typeof logEvent === 'function') logEvent(`--- Runda ${currentRound} ---`);
+  LARM_MARKÖRER = []; // Rensa larmmarkörer från föregående runda
 
   // Sätt spanarNu för spanare som redan är på plats (innan skjutfasen)
   if (Array.isArray(PLACED)) {
@@ -6953,21 +7003,26 @@ if (stepChanged || liveChanged) {
       if (träffadMina && !u._minaTriggrad?.has(träffadMina.uid)) {
         if (!u._minaTriggrad) u._minaTriggrad = new Set();
         u._minaTriggrad.add(träffadMina.uid);
-        // Stoppa enheten på minhexen
-        u._opfireStop    = true;
-        u._opfireLockHex = träffadMina.hex;
-        ch._forcedDone   = true;
-        const fin = hexToScreen(träffadMina.hex);
-        if (!u._anim) u._anim = { active:false, pos:{ x:fin.x, y:fin.y } };
-        else { u._anim.active = false; u._anim.pos = { x:fin.x, y:fin.y }; }
-        const node = getUnitNode(u);
-        if (node) { node.style.left = fin.x + 'px'; node.style.top = fin.y + 'px'; }
-        // Spela upp animation direkt
-        if (träffadMina.type === 'minor') visaExplosionsAnimation(träffadMina.hex);
-        else visaLarmAnimation(träffadMina.hex);
-        // Spara för att appliceraMinEffekt körs i slutfasen
-        u._väntandeMina = träffadMina;
-        continue;
+
+        if (träffadMina.type === 'minor') {
+          // Stridsmina — stoppa enheten, spela explosion, applicera skada i slutfasen
+          u._opfireStop    = true;
+          u._opfireLockHex = träffadMina.hex;
+          ch._forcedDone   = true;
+          const fin = hexToScreen(träffadMina.hex);
+          if (!u._anim) u._anim = { active:false, pos:{ x:fin.x, y:fin.y } };
+          else { u._anim.active = false; u._anim.pos = { x:fin.x, y:fin.y }; }
+          const node = getUnitNode(u);
+          if (node) { node.style.left = fin.x + 'px'; node.style.top = fin.y + 'px'; }
+          visaExplosionsAnimation(träffadMina.hex);
+          u._väntandeMina = träffadMina;
+          continue;
+        } else if (träffadMina.type === 'larmminor') {
+          // Larmmina — enheten fortsätter utan stopp
+          // Märk minan som utlöst (hanteras i slutfasen)
+          träffadMina._utlöst = true;
+          träffadMina._utlöstAv = u;
+        }
       }
     }
 
