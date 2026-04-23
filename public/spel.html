@@ -1900,6 +1900,7 @@ let pendingResurs = null;
 let LARM_MARKÖRER = []; // {hex, sida} — kvar tills nästa runda
 let VÄNTANDE_ARTILLERI = []; // {hex, ext, side, def} — löses ut vid nästa rundbyte
 let AKTIVA_SMÄLLAR = []; // {hex, startMs, synligMs, totalMs} — ritas i drawAll
+let PENDING_ARTILLERI_ANIM = []; // {träffHex, periHexar} — skickas med nästa state-broadcast
 
 function initResursPool() {
   if (!SC?.resurser) return;
@@ -2053,6 +2054,8 @@ function lösUtIndirektEld(målHex, ext, side, def) {
 
   // Explosionsanimationer — 8 smällar över 3s
   visaArtilleriAnfall(träffHex, periHexar);
+  // Köa animation för nästa state-broadcast så Blue/Red också ser den
+  PENDING_ARTILLERI_ANIM.push({ träffHex, periHexar });
 
   // Applicera effekt på alla enheter i området
   if (Array.isArray(PLACED)) {
@@ -2431,7 +2434,10 @@ function buildAuthoritativeState() {
       }))
     : [];
 
-   return {
+  const animationer = PENDING_ARTILLERI_ANIM.slice();
+  PENDING_ARTILLERI_ANIM = []; // töm listan direkt — skickas bara en gång
+
+  return {
     currentRound,
     map: MAP,
     unitsDef: UNITS,
@@ -2440,7 +2446,8 @@ function buildAuthoritativeState() {
     placeradeResurser: PLACERADE_RESURSER,
     blueReady,
     redReady,
-    autoNextEnabled
+    autoNextEnabled,
+    artilleriAnim: animationer
   };
 }
 // === CENTRAL BROADCASTCHANNEL HANDLER (v2_16_9) ===
@@ -2483,6 +2490,18 @@ if (gameChannel) {
     if (msg.type === 'begär-synk') {
       if (role === 'gm' && typeof broadcastStateFromGM === 'function') {
         broadcastStateFromGM();
+      }
+      return;
+    }
+
+    // ======================================================
+    // ARTILLERI-ANIMATION — GM skickar → alla spelar upp
+    // ======================================================
+    if (msg.type === 'artilleri-animation') {
+      if (role !== 'gm') {
+        // Klient: spela upp animationen lokalt
+        const { träffHex, periHexar } = msg;
+        if (träffHex) visaArtilleriAnfall(träffHex, periHexar || []);
       }
       return;
     }
@@ -2693,6 +2712,15 @@ function applyStateFromGM(payload) {
         clientElimFxPlayed.add(key);
         // Kör samma elim-FX som GM, men UTAN extra logik – vi återanvänder eliminateUnit
         eliminateUnit(u);
+      }
+    });
+  }
+
+  // Artilleri-animationer från GM
+  if (Array.isArray(payload.artilleriAnim) && payload.artilleriAnim.length) {
+    payload.artilleriAnim.forEach(a => {
+      if (a.träffHex && typeof visaArtilleriAnfall === 'function') {
+        visaArtilleriAnfall(a.träffHex, a.periHexar || []);
       }
     });
   }
@@ -4111,7 +4139,11 @@ function nextRound () {
     const köat = VÄNTANDE_ARTILLERI.slice();
     VÄNTANDE_ARTILLERI = [];
     köat.forEach((order, i) => {
-      setTimeout(() => lösUtIndirektEld(order.hex, order.ext, order.side, order.def), i * 800);
+      setTimeout(() => {
+        lösUtIndirektEld(order.hex, order.ext, order.side, order.def);
+        // Skicka animationen till Blue/Red direkt efter att den lagts i PENDING
+        if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+      }, i * 800);
     });
   }
 
