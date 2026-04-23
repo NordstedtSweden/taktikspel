@@ -1971,6 +1971,9 @@ function hexarInomRadie(centrumHex, radie) {
 }
 
 function kontrolleraMintriggers() {
+  console.log('[MINA] körs — minor:', PLACERADE_RESURSER.length, 'enheter:', PLACED.length);
+  PLACERADE_RESURSER.forEach(m => console.log('  mina:', m.type, m.side, m.hex, 'triggerRadie:', m.triggerRadie));
+  PLACED.forEach(u => console.log('  enhet:', u.side, u.id, 'hex:', u.hex, 'elim:', u.eliminated));
   if (!Array.isArray(PLACERADE_RESURSER) || !Array.isArray(PLACED)) return;
   const attTrigga = [];
 
