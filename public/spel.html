@@ -1990,8 +1990,6 @@ function kontrolleraMintriggers(besöktaHexar) {
     if (typeof logEvent === 'function') {
       logEvent(`⚠ LARM: ${fmtSide(enhet)} ${fmtName(enhet)} har passerat larmmina (${mina.side.toUpperCase()}) på ${mina.hex}!`);
     }
-    // Röd blinkning i 5s, sedan kvarliggande röd markör
-    visaLarmAnimationRöd(mina.hex, mina.side);
     // Ta bort minan från kartan
     const idx = PLACERADE_RESURSER.indexOf(mina);
     if (idx !== -1) PLACERADE_RESURSER.splice(idx, 1);
@@ -7019,7 +7017,8 @@ if (stepChanged || liveChanged) {
           continue;
         } else if (träffadMina.type === 'larmminor') {
           // Larmmina — enheten fortsätter utan stopp
-          // Märk minan som utlöst (hanteras i slutfasen)
+          // Starta röd blinkning direkt, logg och städning sker i slutfasen
+          visaLarmAnimationRöd(träffadMina.hex, träffadMina.side);
           träffadMina._utlöst = true;
           träffadMina._utlöstAv = u;
         }
