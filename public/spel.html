@@ -2050,9 +2050,8 @@ function lösUtIndirektEld(målHex, ext, side, def) {
   const allaPåverkade = hexarInomRadie(träffHex, effektRadie);
   const periHexar     = allaPåverkade.filter(h => h !== träffHex);
 
-  // Explosionsanimationer
-  visaExplosionsAnimation(träffHex);
-  periHexar.forEach((h, i) => setTimeout(() => visaExplosionsAnimation(h), 200 + i * 80));
+  // Explosionsanimationer — 8 smällar över 3s
+  visaArtilleriAnfall(träffHex, periHexar);
 
   // Applicera effekt på alla enheter i området
   if (Array.isArray(PLACED)) {
@@ -2190,29 +2189,40 @@ function visaLarmAnimationRöd(hex, side) {
 }
 
 function visaExplosionsAnimation(hex) {
+  // Enkel engångsexplosion (används av minor)
+  visaEnSmäll(hex);
+}
+
+function visaEnSmäll(hex) {
   const rc = typeof keyToRC === 'function' ? keyToRC(hex) : null; if (!rc) return;
   if (typeof centerHex !== 'function') return;
   centerHex(rc.ri, rc.ci, (cx, cy, r) => {
-    // Stor 💥-emoji som tonar ut långsamt
-    const fontSize = Math.round(r * 1.6);
-    let alpha = 1.0;
-    const steps = 12;
+    const fontSize = Math.round(r * 1.8);
     let tick = 0;
-    const fade = setInterval(() => {
+    const synligSteg = 4;  // 4 × 80ms = 320ms fullt synlig
+    const fadSteg    = 3;  // 3 × 80ms = 240ms tonar ut
+    const totalSteg  = synligSteg + fadSteg;
+    const anim = setInterval(() => {
       if (typeof drawAll === 'function') drawAll();
       ctx.save();
       if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = tick < synligSteg ? 1.0 : Math.max(0, 1 - (tick - synligSteg) / fadSteg);
       ctx.font = `${fontSize}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('💥', cx, cy);
       ctx.restore();
       tick++;
-      alpha = 1 - tick / steps;
-      if (tick >= steps) clearInterval(fade);
-    }, 120);
+      if (tick >= totalSteg) clearInterval(anim);
+    }, 80);
   });
+}
+
+function visaArtilleriAnfall(träffHex, periHexar) {
+  // 8 smällar utspridda över 3s — centrum + periferi i blandad ordning
+  const pool = [träffHex, ...periHexar, träffHex, ...periHexar, träffHex];
+  const sekvens = pool.slice(0, 8);
+  const mellanrum = Math.round(3000 / sekvens.length); // ~375ms per smäll
+  sekvens.forEach((hex, i) => setTimeout(() => visaEnSmäll(hex), i * mellanrum));
 }
 
 function drawResurser() {
