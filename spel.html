@@ -5271,11 +5271,6 @@ toDraw = toDraw.filter(p => !p.eliminated && String(p.state||'').toLowerCase() !
       const rp = rot(cx,cy, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
       const pos = worldToScreen(rp.x, rp.y);
 
-      // (Behåll gärna din gamla getAnimatedCenter om du vill,
-      //  men vår no-hop override nedan kommer ändå vinna.)
-      // const __anim = (typeof getAnimatedCenter==='function') ? getAnimatedCenter(p) : null;
-      // if (__anim){ pos.x = __anim.x; pos.y = __anim.y; }
-
       const node = document.createElement('div');
       node.className = 'unitIcon';
 
@@ -5289,10 +5284,11 @@ toDraw = toDraw.filter(p => !p.eliminated && String(p.state||'').toLowerCase() !
       node.dataset.unitId   = p.id || p.name || '';
       node.setAttribute('data-hex-label', p.hex || '');
 
-      // Grundposition från hex + skala ikonen med zoom
+      // Grundposition från hex + skala ikonen mot faktisk skärmstorlek på hexen
       node.style.left = pos.x + 'px';
       node.style.top  = pos.y + 'px';
-      const ikonStorlek = Math.round(40 * cam.z);
+      const skärmRadie = r * cam.z; // hex-radien i skärmpixlar
+      const ikonStorlek = Math.round(skärmRadie * 1.1); // ca 55% av hex-diametern
       node.style.setProperty('--icon-size', ikonStorlek + 'px');
 
       // 📌 2) NO-HOP OVERRIDE (om pågående anim finns → använd pixelpos från anim)
