@@ -421,16 +421,25 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     </button>
   </div>
 
+  <div class="readyRow" style="gap:12px;flex-wrap:wrap">
+    <label class="readyAutoLabel">
+      <input type="checkbox" id="blueAutoReadyChk">
+      Blue auto-ready
+    </label>
+    <label class="readyAutoLabel">
+      <input type="checkbox" id="redAutoReadyChk">
+      Red auto-ready
+    </label>
+  </div>
+
   <div class="readyRow readyRow-bottom">
-      <button id="nextRoundBtn" class="btn pri">
+    <button id="nextRoundBtn" class="btn pri">
       ▶ Nästa runda
     </button>
     <label class="readyAutoLabel">
-      <input type="checkbox" id="autoNextChk">
+      <input type="checkbox" id="autoNextChk" checked>
       Auto kör nästa runda
     </label>
-
-  
   </div>
 
   <hr>
@@ -1774,6 +1783,9 @@ function setRedReady(val) {
 // Auto-next: kör runda när båda är ready + auto-checken ikryssad
 function maybeAutoAdvanceRound() {
   if (!autoNextEnabled) return;
+  // Sätt auto-ready sidor om de är ibockade (så de inte blockerar auto-next)
+  if (blueAutoReadyChk && blueAutoReadyChk.checked) blueReady = true;
+  if (redAutoReadyChk  && redAutoReadyChk.checked)  redReady  = true;
   if (!blueReady || !redReady) return;
 
   // Auto-läge: kör nästa runda direkt, oavsett vilken roll som nyss klickade
@@ -1891,6 +1903,35 @@ if (autoNextChk) {
       broadcastStateFromGM();
     }
   });
+}
+
+// Auto-ready: bocka i så sätts den sidan automatiskt till ready vid rundbyte
+const blueAutoReadyChk = document.getElementById('blueAutoReadyChk');
+const redAutoReadyChk  = document.getElementById('redAutoReadyChk');
+
+function tillämpaAutoReady() {
+  const role = getCurrentRole();
+  if (role !== 'gm') return;
+  let ändrat = false;
+  if (blueAutoReadyChk && blueAutoReadyChk.checked && !blueReady) {
+    blueReady = true;
+    ändrat = true;
+  }
+  if (redAutoReadyChk && redAutoReadyChk.checked && !redReady) {
+    redReady = true;
+    ändrat = true;
+  }
+  if (ändrat) {
+    updateReadyUI();
+    if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+  }
+}
+
+if (blueAutoReadyChk) {
+  blueAutoReadyChk.addEventListener('change', tillämpaAutoReady);
+}
+if (redAutoReadyChk) {
+  redAutoReadyChk.addEventListener('change', tillämpaAutoReady);
 }
 
 
@@ -3539,7 +3580,7 @@ let currentRound = 1;
 const D10 = () => Math.floor(Math.random() * 10) + 1;
 
 // auto-next flagga (binds till checkbox)
-let autoNextEnabled = false;
+let autoNextEnabled = true;
 
 // enkel logg (knyts till panelen i steg D om den inte finns)
 function logEvent(t){
@@ -4406,6 +4447,9 @@ if (Array.isArray(PLACED)) {
   } else if (typeof drawUnitsAndOrders === 'function') {
     drawUnitsAndOrders();
   }
+
+  // Sätt auto-ready sidor direkt efter rundbyte
+  if (typeof tillämpaAutoReady === 'function') tillämpaAutoReady();
 }
 
 
@@ -4488,6 +4532,10 @@ function gmTriggerNextRound() {
   // Bara GM får starta runda
   const role = getCurrentRole();
   if (role !== 'gm') return;
+
+  // Sätt auto-ready sidor om de är ibockade
+  if (blueAutoReadyChk && blueAutoReadyChk.checked) blueReady = true;
+  if (redAutoReadyChk  && redAutoReadyChk.checked)  redReady  = true;
 
   // kräver att båda är READY (om du vill tillåta override, lägg in prompt här)
   if (!blueReady || !redReady) {
@@ -5336,6 +5384,17 @@ if (icon){
       if (typeof renderBangBadge === 'function')        renderBangBadge(node, p);
 
            node.addEventListener('click',(e)=>{
+        // Om vi väntar på resursplacering eller hexmål — skicka klicket till canvasen
+        if (pendingResurs) {
+          cv.dispatchEvent(new MouseEvent('click', { bubbles: false, clientX: e.clientX, clientY: e.clientY }));
+          return;
+        }
+        if (pendingTarget && pendingTarget.type !== 'support') {
+          // Simulera ett klick på canvasen med samma koordinater → hexen registreras som mål
+          cv.dispatchEvent(new MouseEvent('click', { bubbles: false, clientX: e.clientX, clientY: e.clientY }));
+          return;
+        }
+
         e.stopPropagation();
 
         // Om vi väntar på att välja understödd enhet — hantera det här
