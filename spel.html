@@ -5311,22 +5311,25 @@ toDraw = toDraw.filter(p => !p.eliminated && String(p.state||'').toLowerCase() !
 if (icon){
   const img = document.createElement('img');
   img.draggable = false; img.alt = p.id;
-  
+  img.style.width = ikonStorlek + 'px';
+  img.style.height = 'auto';
+
   const serverUrl = 'https://taktikspel.onrender.com/' + icon;
   img.src = icon;
-  
+
   img.onerror = ()=>{
     if (img.src !== serverUrl) {
       img.src = serverUrl;
     } else {
       node.innerHTML = '';
-      node.appendChild(makeFallbackCounter(p));
-      addOrderBubble(node, p);
+      const fb = makeFallbackCounter(p, ikonStorlek);
+      node.appendChild(fb);
+      addOrderBubble(node, p, ikonStorlek);
     }
   };
   node.appendChild(img);
 }
-      addOrderBubble(node, p);
+      addOrderBubble(node, p, ikonStorlek);
 
       // suppression + bang-badge (om de funktionerna finns)
       if (typeof renderSuppressionBadge === 'function') renderSuppressionBadge(node, p);
@@ -5439,17 +5442,29 @@ function drawLOSOverlay(){
 
 
 
-function makeFallbackCounter(p){
+function makeFallbackCounter(p, storlek){
   const def=UNITS.units.find(u=>u.id===p.id);
   const initials = (def?.name||p.id||'?').split(/[\s_]+/).map(x=>x[0]).filter(Boolean).slice(0,3).join('').toUpperCase();
   const box=document.createElement('div'); box.className='counterFallback';
   box.style.background = p.side==='blue' ? '#183b6b' : '#6b1b1b';
+  if (storlek) {
+    box.style.width = storlek + 'px';
+    box.style.height = storlek + 'px';
+    box.style.fontSize = Math.round(storlek * 0.35) + 'px';
+  }
   box.textContent=initials;
   return box;
 }
-function addOrderBubble(node, p){
+function addOrderBubble(node, p, storlek){
   const ord = document.createElement('div');
   ord.className = 'order';
+  if (storlek) {
+    const fs = Math.round(storlek * 0.35);
+    const offset = Math.round(storlek * 0.2);
+    ord.style.fontSize = fs + 'px';
+    ord.style.left = -offset + 'px';
+    ord.style.top  = -offset + 'px';
+  }
 
   // Kolla aktuell roll (gm / blue / red)
   const role = getCurrentRole();
