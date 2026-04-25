@@ -1174,7 +1174,7 @@
         "typeExt": {
           "indirektEld": {
             "spridning": 3,
-            "effektRadie": 1,
+            "effektRadie": 0,
             "effektCentrum": "reduced",
             "effektPeriferi": "suppressed"
           }
@@ -1549,7 +1549,7 @@
         },
         {
           "id": "Indirekt_eld",
-          "count": 2
+          "count": 4
         }
       ],
       "red": [
