@@ -96,13 +96,9 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   box-shadow: 0 0 6px red;
 }
 
-/* suppression badges på pjäsen */
+/* suppression badges på pjäsen — storlek sätts dynamiskt via JS */
 .unitIcon .supBadge{
   position:absolute;
-  right:-6px;
-  top:-6px;
-  width:14px;
-  height:14px;
   border-radius:50%;
   border:2px solid rgba(0,0,0,.35);
   box-shadow:0 0 4px rgba(0,0,0,.4);
@@ -1997,24 +1993,35 @@ function refreshResursPool() {
   });
 }
 
-function aktiveraPendingResurs(resursPost, side) {
-  pendingResurs = { side, defId: resursPost.id, def: resursPost.def };
+function aktiveraPendingResurs(resursPost, side, enhet) {
+  pendingResurs = { side, defId: resursPost.id, def: resursPost.def, enhetHex: enhet?.hex || null };
   const typ = resursPost.def?.type;
   const hint = typ === 'indirektEld'
     ? `Klicka på MÅLHEX för ${resursPost.def?.name||'indirekt eld'} (${side.toUpperCase()}). Esc = avbryt.`
-    : `Klicka på en hex för att placera ${RESURS_ETIKETT[typ]||typ}: ${resursPost.def?.name||resursPost.id}. Esc = avbryt.`;
+    : `Klicka på enhetens hex eller angränsande hex för att placera ${RESURS_ETIKETT[typ]||typ}: ${resursPost.def?.name||resursPost.id}. Esc = avbryt.`;
   if (typeof showHint === 'function') showHint(hint);
 }
 
 function skickaResursOrder(hex) {
   // Klient skickar resursorder till GM
   if (!pendingResurs) return;
-  const { side, defId } = pendingResurs;
+  const { side, defId, def, enhetHex } = pendingResurs;
+
+  // Avståndsbegränsning för spelare (ej GM): mina/larmminor/drönare max 1 hex från enheten
+  const typ = def?.type;
+  if (enhetHex && typ !== 'indirektEld') {
+    const avstånd = typeof hexDist === 'function' ? hexDist(enhetHex, hex) : 99;
+    if (avstånd > 1) {
+      if (typeof logEvent === 'function') logEvent(`⛔ ${RESURS_ETIKETT[typ]||typ} måste placeras på enhetens hex eller angränsande hex.`);
+      return;
+    }
+  }
+
   if (typeof gameChannel !== 'undefined' && gameChannel.postMessage) {
     gameChannel.postMessage({
       type: 'resurs',
       side,
-      payload: { defId, hex }
+      payload: { defId, hex, enhetHex }
     });
   }
   // Minska kvar lokalt (optimistisk UI-uppdatering)
@@ -2675,7 +2682,7 @@ if (gameChannel) {
     if (msg.type === 'resurs') {
       if (role !== 'gm') return;
       const { side, payload } = msg;
-      const { defId, hex } = payload || {};
+      const { defId, hex, enhetHex } = payload || {};
       if (!defId || !hex) return;
 
       // Hitta resursdefinitionen
@@ -2685,6 +2692,16 @@ if (gameChannel) {
       // Blockera om indirekt eld redan använts denna runda
       if (post.def?.type === 'indirektEld' && INDIREKT_ELD_ANVÄNT[side]) return;
       if (post.def?.type === 'indirektEld') INDIREKT_ELD_ANVÄNT[side] = true;
+
+      // Avståndsbegränsning: mina/larmminor/drönare max 1 hex från enheten
+      const resTyp = post.def?.type;
+      if (enhetHex && resTyp !== 'indirektEld') {
+        const avstånd = typeof hexDist === 'function' ? hexDist(enhetHex, hex) : 99;
+        if (avstånd > 1) {
+          if (typeof logEvent === 'function') logEvent(`⛔ Ogiltig resursplacering nekad (${side}): för långt från enheten.`);
+          return;
+        }
+      }
 
       // Simulera pendingResurs och anropa placeraResurs
       pendingResurs = { side, defId, def: post.def };
@@ -5177,7 +5194,7 @@ function openOrderMenuAt(x,y,unit){
         if (indirektBlockad) btn.title = 'Redan använd denna runda';
         btn.onclick = () => {
           orderMenu.classList.add('hidden');
-          aktiveraPendingResurs(r, side);
+          aktiveraPendingResurs(r, side, unit);
         };
         resDiv.appendChild(btn);
       });
@@ -5416,6 +5433,9 @@ if (icon){
 }
       addOrderBubble(node, p, ikonStorlek);
 
+      // Spara ikonstorleken på noden så badge-funktioner kan skala sig
+      node.dataset.ikonStorlek = ikonStorlek;
+
       // suppression + bang-badge (om de funktionerna finns)
       if (typeof renderSuppressionBadge === 'function') renderSuppressionBadge(node, p);
       if (typeof renderBangBadge === 'function')        renderBangBadge(node, p);
@@ -5594,6 +5614,16 @@ function renderSuppressionBadge(node, p){
 
   const b = document.createElement('div');
   b.className = 'supBadge ' + (s === 'red' ? 'supRed' : 'supYellow');
+
+  // Skala ringen med enhetsikonens storlek
+  const ikonStorlek = parseFloat(node.dataset.ikonStorlek) || 40;
+  const badgeStorlek = Math.max(8, Math.round(ikonStorlek * 0.28));
+  const badgeOffset  = -Math.round(badgeStorlek * 0.45);
+  b.style.width  = badgeStorlek + 'px';
+  b.style.height = badgeStorlek + 'px';
+  b.style.right  = badgeOffset + 'px';
+  b.style.top    = badgeOffset + 'px';
+
   node.appendChild(b);
 }
 
