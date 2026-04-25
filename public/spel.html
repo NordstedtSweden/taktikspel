@@ -89,7 +89,7 @@ button{cursor:pointer}
 .hidden{display:none}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 hr{border:0;border-top:1px solid var(--line);margin:10px 0}
-.hint{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#17224a;border:1px solid var(--line);padding:6px 10px;border-radius:10px;font-size:13px;z-index:40}
+.hint{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#17224a;border:1px solid var(--line);padding:6px 14px;border-radius:10px;font-size:13px;z-index:40;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .counterFallback{width:var(--icon-size,40px);height:var(--icon-size,40px);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;border:1px solid rgba(255,255,255,.25);font-size:calc(var(--icon-size,40px) * 0.35)}
 .opfire-line {
   transition: opacity 0.5s ease-out;
@@ -362,7 +362,10 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   </div>
 </div>
 
-<div id="hint" class="hint hidden">—</div>
+<div id="hint" class="hint hidden">
+  <span id="hintText">—</span>
+  <button id="hintAvbryt" onclick="avbrytPendingAction()" style="margin-left:12px;padding:2px 10px;border-radius:6px;background:#c0392b;color:#fff;border:none;cursor:pointer;font-size:13px">✕ Avbryt</button>
+</div>
 
 <div class="main">
   <!-- Vänster: enhetspool(er) -->
@@ -5203,8 +5206,15 @@ function openOrderMenuAt(x,y,unit){
 
   orderMenu.style.left=x+'px'; orderMenu.style.top=y+'px'; orderMenu.classList.remove('hidden');
 }
-function showHint(t){ const h=$('hint'); h.textContent=t; h.classList.remove('hidden'); }
+function showHint(t){ const h=$('hint'); const sp=$('hintText'); if(sp) sp.textContent=t; else h.textContent=t; h.classList.remove('hidden'); }
 function hideHint(){ $('hint').classList.add('hidden'); }
+
+function avbrytPendingAction() {
+  pendingResurs = null;
+  if (typeof pendingTarget !== 'undefined') pendingTarget = null;
+  hideHint();
+  if (typeof drawAll === 'function') drawAll();
+}
 // === Hjälpfunktion: höjdnivå per hex ===
 function elevationOfHex(hex){
   const terr = MAP.terrain?.[hex] || 'open';
@@ -5390,7 +5400,7 @@ toDraw = toDraw.filter(p => !p.eliminated && String(p.state||'').toLowerCase() !
       node.style.left = pos.x + 'px';
       node.style.top  = pos.y + 'px';
       const skärmRadie = r * cam.z; // hex-radien i skärmpixlar
-      const ikonStorlek = Math.round(skärmRadie * 1.1); // ca 55% av hex-diametern
+      const ikonStorlek = Math.round(skärmRadie * (p.isDrone ? 0.825 : 1.1)); // drönare 75% av normal storlek
       node.style.setProperty('--icon-size', ikonStorlek + 'px');
 
       // 📌 2) NO-HOP OVERRIDE (om pågående anim finns → använd pixelpos från anim)
@@ -6111,9 +6121,8 @@ window.addEventListener('mousemove',e=>{
 });
 window.addEventListener('mouseup',()=>cam.pan=false);
 window.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && pendingResurs) {
-    pendingResurs = null;
-    if (typeof hideHint === 'function') hideHint();
+  if (e.key === 'Escape' && (pendingResurs || pendingTarget)) {
+    avbrytPendingAction();
   }
 });
 cv.addEventListener('wheel',e=>{
@@ -7516,8 +7525,8 @@ if (stepChanged || liveChanged) {
       }
     }
 
-    // 4a) Kontrollera om enheten kliver in i en mina
-    if (Array.isArray(PLACERADE_RESURSER) && PLACERADE_RESURSER.length) {
+    // 4a) Kontrollera om enheten kliver in i en mina (drönare triggar aldrig minor)
+    if (!u.isDrone && Array.isArray(PLACERADE_RESURSER) && PLACERADE_RESURSER.length) {
       const träffadMina = PLACERADE_RESURSER.find(mina => {
         if (mina.type !== 'minor' && mina.type !== 'larmminor') return false;
         if (mina.side === u.side) return false; // egna minor triggas inte
