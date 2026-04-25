@@ -1174,7 +1174,7 @@
         "typeExt": {
           "indirektEld": {
             "spridning": 1,
-            "effektRadie": 1,
+            "effektRadie": 0,
             "effektCentrum": "reduced",
             "effektPeriferi": "suppressed"
           }
