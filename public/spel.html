@@ -2134,10 +2134,10 @@ function lösUtIndirektEld(målHex, ext, side, def) {
   const allaPåverkade = hexarInomRadie(träffHex, effektRadie);
   const periHexar     = allaPåverkade.filter(h => h !== träffHex);
 
-  // Explosionsanimationer — 8 smällar över 3s
-  visaArtilleriAnfall(träffHex, periHexar);
-  // Köa animation för nästa state-broadcast så Blue/Red också ser den
-  PENDING_ARTILLERI_ANIM.push({ träffHex, periHexar });
+  // effektRadie 0 = granatkastare (liten explosion), 1+ = artilleri (stor explosion)
+  const animSkala = effektRadie === 0 ? 0.55 : 1.0;
+  visaArtilleriAnfall(träffHex, periHexar, animSkala);
+  PENDING_ARTILLERI_ANIM.push({ träffHex, periHexar, skala: animSkala });
 
   // Applicera effekt på alla enheter i området
   if (Array.isArray(PLACED)) {
@@ -2279,23 +2279,29 @@ function visaExplosionsAnimation(hex) {
   visaEnSmäll(hex);
 }
 
-function visaEnSmäll(hex) {
-  // Registrera smällen — ritas i drawAll så att alla smällar samexisterar utan konflikt
-  AKTIVA_SMÄLLAR.push({ hex, startMs: Date.now(), synligMs: 500, totalMs: 800 });
-  // Starta om ritloopen med jämna mellanrum tills smällen är klar
-  const slutMs = Date.now() + 850;
+function visaEnSmäll(hex, skala) {
+  skala = skala ?? 1.0;
+  const antalSpikar = skala >= 0.8 ? 10 : 6;
+  // Förkalkylera spikarnas vinklar och längder en gång — undviker flimmer i draw-loopen
+  const spikarVinklar = Array.from({ length: antalSpikar }, (_, i) =>
+    (i / antalSpikar) * Math.PI * 2 + (Math.random() - 0.5) * 0.35
+  );
+  const spikarLängd = Array.from({ length: antalSpikar }, () => 0.65 + Math.random() * 0.4);
+
+  AKTIVA_SMÄLLAR.push({ hex, startMs: Date.now(), synligMs: 500, totalMs: 820, skala, spikarVinklar, spikarLängd });
+  const slutMs = Date.now() + 870;
   const loop = setInterval(() => {
     if (typeof drawAll === 'function') drawAll();
     if (Date.now() >= slutMs) clearInterval(loop);
   }, 40);
 }
 
-function visaArtilleriAnfall(träffHex, periHexar) {
-  // 8 smällar utspridda över 3s — centrum + periferi i blandad ordning
+function visaArtilleriAnfall(träffHex, periHexar, skala) {
+  skala = skala ?? 1.0;
   const pool = [träffHex, ...periHexar, träffHex, ...periHexar, träffHex];
   const sekvens = pool.slice(0, 8);
-  const mellanrum = Math.round(3000 / sekvens.length); // ~375ms per smäll
-  sekvens.forEach((hex, i) => setTimeout(() => visaEnSmäll(hex), i * mellanrum));
+  const mellanrum = Math.round(3000 / sekvens.length);
+  sekvens.forEach((hex, i) => setTimeout(() => visaEnSmäll(hex, skala), i * mellanrum));
 }
 
 function drawResurser() {
@@ -2307,16 +2313,60 @@ function drawResurser() {
       const rc = typeof keyToRC === 'function' ? keyToRC(s.hex) : null; if (!rc) return;
       if (typeof centerHex !== 'function') return;
       centerHex(rc.ri, rc.ci, (cx, cy, r) => {
-        const elapsed = nu - s.startMs;
-        const alpha = elapsed < s.synligMs
+        const elapsed  = nu - s.startMs;
+        const progress = Math.min(1, elapsed / s.synligMs);
+        const alpha    = elapsed < s.synligMs
           ? 1.0
           : Math.max(0, 1 - (elapsed - s.synligMs) / (s.totalMs - s.synligMs));
+        const skala    = s.skala ?? 1.0;
+        const maxR     = r * 0.9 * skala;
+        const curR     = maxR * (0.18 + progress * 0.82);
+
         ctx.save();
         if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
-        ctx.globalAlpha = alpha;
-        ctx.font = `${Math.round(r * 0.9)}px serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('💥', cx, cy);
+
+        // --- Inre glöd: vit→gul→transparent ---
+        const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, curR * 0.55);
+        g1.addColorStop(0,    `rgba(255,255,200,${alpha})`);
+        g1.addColorStop(0.35, `rgba(255,200,0,${alpha * 0.95})`);
+        g1.addColorStop(1,    `rgba(255,80,0,0)`);
+        ctx.beginPath(); ctx.arc(cx, cy, curR * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = g1; ctx.fill();
+
+        // --- Yttre eldkula: orange→röd→transparent ---
+        const g2 = ctx.createRadialGradient(cx, cy, curR * 0.3, cx, cy, curR);
+        g2.addColorStop(0,   `rgba(255,120,0,${alpha * 0.8})`);
+        g2.addColorStop(0.5, `rgba(200,50,0,${alpha * 0.5})`);
+        g2.addColorStop(1,   `rgba(80,15,0,0)`);
+        ctx.beginPath(); ctx.arc(cx, cy, curR, 0, Math.PI * 2);
+        ctx.fillStyle = g2; ctx.fill();
+
+        // --- Radiella spikar ---
+        if (s.spikarVinklar) {
+          ctx.lineWidth = Math.max(1, curR * 0.08);
+          s.spikarVinklar.forEach((v, i) => {
+            const ytR  = curR * (s.spikarLängd?.[i] ?? 0.85);
+            const inR  = curR * 0.22;
+            const fade = Math.round(160 + progress * 60);
+            ctx.strokeStyle = `rgba(255,${fade},0,${alpha * 0.75})`;
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(v) * inR, cy + Math.sin(v) * inR);
+            ctx.lineTo(cx + Math.cos(v) * ytR,  cy + Math.sin(v) * ytR);
+            ctx.stroke();
+          });
+        }
+
+        // --- Rökmoln i slutfasen ---
+        if (elapsed > s.synligMs * 0.55) {
+          const rökFas    = (elapsed - s.synligMs * 0.55) / (s.synligMs * 0.45);
+          const rökAlpha  = Math.min(rökFas * 0.45, alpha * 0.5);
+          const g3 = ctx.createRadialGradient(cx, cy - curR * 0.15, 0, cx, cy - curR * 0.15, curR * 0.75);
+          g3.addColorStop(0, `rgba(90,80,75,${rökAlpha})`);
+          g3.addColorStop(1, `rgba(60,55,50,0)`);
+          ctx.beginPath(); ctx.arc(cx, cy - curR * 0.15, curR * 0.75, 0, Math.PI * 2);
+          ctx.fillStyle = g3; ctx.fill();
+        }
+
         ctx.restore();
       });
     });
@@ -2881,7 +2931,7 @@ function applyStateFromGM(payload) {
   if (Array.isArray(payload.artilleriAnim) && payload.artilleriAnim.length) {
     payload.artilleriAnim.forEach(a => {
       if (a.träffHex && typeof visaArtilleriAnfall === 'function') {
-        visaArtilleriAnfall(a.träffHex, a.periHexar || []);
+        visaArtilleriAnfall(a.träffHex, a.periHexar || [], a.skala ?? 1.0);
       }
     });
   }
