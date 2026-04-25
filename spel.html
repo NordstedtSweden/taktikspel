@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<title>Tactics — Game Module v3.15.0 Demo (GM/Blue/Red)</title>
+<title>Tactics — Game Module v2.16.0 </title>
 <style>
 :root{--bg:#0b1020;--panel:#0f1832;--line:#243052;--ink:#e8eefc;--muted:#9fb1d4;--accent:#6cb2ff;--ok:#54d18c;--warn:#f2c94c;--bad:#ff6b6b}
 *{box-sizing:border-box}
@@ -2382,9 +2382,46 @@ const socket = io('https://taktikspel.onrender.com', {
   upgrade: false
 });
 
+function visaAnslutningsStatus(ansluten) {
+  let ind = document.getElementById('socketStatusInd');
+  if (!ind) {
+    ind = document.createElement('div');
+    ind.id = 'socketStatusInd';
+    ind.style.cssText = 'position:fixed;top:8px;right:8px;padding:4px 12px;border-radius:6px;font-size:12px;z-index:9999;pointer-events:none;transition:opacity .5s';
+    document.body.appendChild(ind);
+  }
+  if (ansluten) {
+    ind.textContent = '● Ansluten';
+    ind.style.background = '#0e2a0e';
+    ind.style.color = '#4caf50';
+    ind.style.opacity = '1';
+    setTimeout(() => { ind.style.opacity = '0'; }, 2500);
+  } else {
+    ind.style.opacity = '1';
+    ind.textContent = '● Tappad anslutning — försöker återansluta…';
+    ind.style.background = '#2a0e0e';
+    ind.style.color = '#f44336';
+  }
+}
+
 socket.on('connect', () => {
   console.log('Ansluten till server!');
+  visaAnslutningsStatus(true);
+  // Återgå till rummet automatiskt om vi redan hade en aktiv session
+  if (window.spelKod && window.spelRoll) {
+    socket.emit('gå-med', { kod: window.spelKod, roll: window.spelRoll });
+  }
 });
+
+socket.on('disconnect', (reason) => {
+  console.log('Frånkopplad:', reason);
+  visaAnslutningsStatus(false);
+});
+
+// Håll servern vaken var 4:e minut (hindrar Render från att somna)
+setInterval(() => {
+  if (socket.connected) socket.emit('ping-keepalive');
+}, 4 * 60 * 1000);
 
 socket.on('state', function(msg) {
   if (!msg || !msg.type) return;
