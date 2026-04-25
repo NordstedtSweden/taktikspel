@@ -86,7 +86,7 @@ button{cursor:pointer}
 #orderMenuResurser button{background:#0b1228;color:#c8d8ff}
 #orderMenuResurser button:disabled{opacity:0.4;cursor:default}
 #orderMenuResurser .res-header{padding:5px 10px;font-size:11px;color:#7a8fbb;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--line)}
-.hidden{display:none}
+.hidden{display:none!important}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 .hint{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#17224a;border:1px solid var(--line);padding:6px 14px;border-radius:10px;font-size:13px;z-index:40;display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -2299,19 +2299,18 @@ function visaEnSmäll(hex, skala, offset) {
 function visaArtilleriAnfall(träffHex, periHexar, skala) {
   skala = skala ?? 1.0;
   if (skala < 0.8) {
-    // Light (granatkastare): 3 granater nästan samtidigt, spridda inom hexen
-    [0, 90, 180].forEach(delay => {
-      const vinkel   = Math.random() * Math.PI * 2;
-      const avstånd  = 0.18 + Math.random() * 0.32; // 18–50 % av hexradien
-      const offset   = { dx: Math.cos(vinkel) * avstånd, dy: Math.sin(vinkel) * avstånd };
-      setTimeout(() => visaEnSmäll(träffHex, skala, offset), delay);
+    // Light (granatkastare): 6 granater med 80ms mellanrum, spridda inom hexen
+    Array.from({ length: 6 }).forEach((_, i) => {
+      const vinkel  = Math.random() * Math.PI * 2;
+      const avstånd = 0.18 + Math.random() * 0.32;
+      const offset  = { dx: Math.cos(vinkel) * avstånd, dy: Math.sin(vinkel) * avstånd };
+      setTimeout(() => visaEnSmäll(träffHex, skala, offset), i * 80);
     });
   } else {
-    // Heavy (artilleri): 8 smällar utspridda över 3s
+    // Heavy (artilleri): 8 smällar med 150ms mellanrum — överlappar varandra
     const pool = [träffHex, ...periHexar, träffHex, ...periHexar, träffHex];
     const sekvens = pool.slice(0, 8);
-    const mellanrum = Math.round(3000 / sekvens.length);
-    sekvens.forEach((hex, i) => setTimeout(() => visaEnSmäll(hex, skala), i * mellanrum));
+    sekvens.forEach((hex, i) => setTimeout(() => visaEnSmäll(hex, skala), i * 150));
   }
 }
 
