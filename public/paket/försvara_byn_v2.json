@@ -1031,8 +1031,83 @@
         }
       },
       {
-        "id": "ARTILLERI ",
+        "id": "ART",
         "name": "ART",
+        "faction": "",
+        "type": "indirektEld",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/arty-150.png",
+          "icon_reduced": "assets/units/arty-150.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "indirektEld": {
+            "spridning": 3,
+            "effektRadie": 2,
+            "effektCentrum": "eliminated",
+            "effektPeriferi": "reduced"
+          }
+        }
+      },
+      {
+        "id": "Indirekt_eld",
+        "name": "GRK",
         "faction": "",
         "type": "indirektEld",
         "size": "squad",
@@ -1099,9 +1174,9 @@
         "typeExt": {
           "indirektEld": {
             "spridning": 3,
-            "effektRadie": 2,
-            "effektCentrum": "eliminated",
-            "effektPeriferi": "reduced"
+            "effektRadie": 1,
+            "effektCentrum": "reduced",
+            "effektPeriferi": "suppressed"
           }
         }
       }
@@ -1471,11 +1546,19 @@
         {
           "id": "Forsvarsladdning",
           "count": 2
+        },
+        {
+          "id": "Indirekt_eld",
+          "count": 2
         }
       ],
       "red": [
         {
           "id": "RED_Drone",
+          "count": 2
+        },
+        {
+          "id": "ART",
           "count": 2
         }
       ]
