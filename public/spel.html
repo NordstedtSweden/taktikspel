@@ -2279,16 +2279,16 @@ function visaExplosionsAnimation(hex) {
   visaEnSmäll(hex);
 }
 
-function visaEnSmäll(hex, skala) {
-  skala = skala ?? 1.0;
+function visaEnSmäll(hex, skala, offset) {
+  skala  = skala  ?? 1.0;
+  offset = offset ?? { dx: 0, dy: 0 }; // bråkdel av hexradien
   const antalSpikar = skala >= 0.8 ? 10 : 6;
-  // Förkalkylera spikarnas vinklar och längder en gång — undviker flimmer i draw-loopen
   const spikarVinklar = Array.from({ length: antalSpikar }, (_, i) =>
     (i / antalSpikar) * Math.PI * 2 + (Math.random() - 0.5) * 0.35
   );
   const spikarLängd = Array.from({ length: antalSpikar }, () => 0.65 + Math.random() * 0.4);
 
-  AKTIVA_SMÄLLAR.push({ hex, startMs: Date.now(), synligMs: 500, totalMs: 820, skala, spikarVinklar, spikarLängd });
+  AKTIVA_SMÄLLAR.push({ hex, startMs: Date.now(), synligMs: 500, totalMs: 820, skala, spikarVinklar, spikarLängd, offset });
   const slutMs = Date.now() + 870;
   const loop = setInterval(() => {
     if (typeof drawAll === 'function') drawAll();
@@ -2298,10 +2298,21 @@ function visaEnSmäll(hex, skala) {
 
 function visaArtilleriAnfall(träffHex, periHexar, skala) {
   skala = skala ?? 1.0;
-  const pool = [träffHex, ...periHexar, träffHex, ...periHexar, träffHex];
-  const sekvens = pool.slice(0, 8);
-  const mellanrum = Math.round(3000 / sekvens.length);
-  sekvens.forEach((hex, i) => setTimeout(() => visaEnSmäll(hex, skala), i * mellanrum));
+  if (skala < 0.8) {
+    // Light (granatkastare): 3 granater nästan samtidigt, spridda inom hexen
+    [0, 90, 180].forEach(delay => {
+      const vinkel   = Math.random() * Math.PI * 2;
+      const avstånd  = 0.18 + Math.random() * 0.32; // 18–50 % av hexradien
+      const offset   = { dx: Math.cos(vinkel) * avstånd, dy: Math.sin(vinkel) * avstånd };
+      setTimeout(() => visaEnSmäll(träffHex, skala, offset), delay);
+    });
+  } else {
+    // Heavy (artilleri): 8 smällar utspridda över 3s
+    const pool = [träffHex, ...periHexar, träffHex, ...periHexar, träffHex];
+    const sekvens = pool.slice(0, 8);
+    const mellanrum = Math.round(3000 / sekvens.length);
+    sekvens.forEach((hex, i) => setTimeout(() => visaEnSmäll(hex, skala), i * mellanrum));
+  }
 }
 
 function drawResurser() {
@@ -2322,48 +2333,54 @@ function drawResurser() {
         const maxR     = r * 0.9 * skala;
         const curR     = maxR * (0.18 + progress * 0.82);
 
+        // Offset för light-varianten (granater som slår ner på olika ställen inom hexen)
+        const ox = (s.offset?.dx ?? 0) * r;
+        const oy = (s.offset?.dy ?? 0) * r;
+        const ex = cx + ox;
+        const ey = cy + oy;
+
         ctx.save();
         if (MAP.gridAngle) { ctx.translate(MAP.gridOffX,MAP.gridOffY); ctx.rotate(MAP.gridAngle*Math.PI/180); ctx.translate(-MAP.gridOffX,-MAP.gridOffY); }
 
         // --- Inre glöd: vit→gul→transparent ---
-        const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, curR * 0.55);
+        const g1 = ctx.createRadialGradient(ex, ey, 0, ex, ey, curR * 0.55);
         g1.addColorStop(0,    `rgba(255,255,200,${alpha})`);
         g1.addColorStop(0.35, `rgba(255,200,0,${alpha * 0.95})`);
         g1.addColorStop(1,    `rgba(255,80,0,0)`);
-        ctx.beginPath(); ctx.arc(cx, cy, curR * 0.55, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(ex, ey, curR * 0.55, 0, Math.PI * 2);
         ctx.fillStyle = g1; ctx.fill();
 
         // --- Yttre eldkula: orange→röd→transparent ---
-        const g2 = ctx.createRadialGradient(cx, cy, curR * 0.3, cx, cy, curR);
+        const g2 = ctx.createRadialGradient(ex, ey, curR * 0.3, ex, ey, curR);
         g2.addColorStop(0,   `rgba(255,120,0,${alpha * 0.8})`);
         g2.addColorStop(0.5, `rgba(200,50,0,${alpha * 0.5})`);
         g2.addColorStop(1,   `rgba(80,15,0,0)`);
-        ctx.beginPath(); ctx.arc(cx, cy, curR, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(ex, ey, curR, 0, Math.PI * 2);
         ctx.fillStyle = g2; ctx.fill();
 
-        // --- Radiella spikar ---
+        // --- Radiella spikar (tunnare) ---
         if (s.spikarVinklar) {
-          ctx.lineWidth = Math.max(1, curR * 0.08);
+          ctx.lineWidth = Math.max(0.5, curR * 0.04);
           s.spikarVinklar.forEach((v, i) => {
             const ytR  = curR * (s.spikarLängd?.[i] ?? 0.85);
             const inR  = curR * 0.22;
             const fade = Math.round(160 + progress * 60);
-            ctx.strokeStyle = `rgba(255,${fade},0,${alpha * 0.75})`;
+            ctx.strokeStyle = `rgba(255,${fade},0,${alpha * 0.7})`;
             ctx.beginPath();
-            ctx.moveTo(cx + Math.cos(v) * inR, cy + Math.sin(v) * inR);
-            ctx.lineTo(cx + Math.cos(v) * ytR,  cy + Math.sin(v) * ytR);
+            ctx.moveTo(ex + Math.cos(v) * inR, ey + Math.sin(v) * inR);
+            ctx.lineTo(ex + Math.cos(v) * ytR,  ey + Math.sin(v) * ytR);
             ctx.stroke();
           });
         }
 
         // --- Rökmoln i slutfasen ---
         if (elapsed > s.synligMs * 0.55) {
-          const rökFas    = (elapsed - s.synligMs * 0.55) / (s.synligMs * 0.45);
-          const rökAlpha  = Math.min(rökFas * 0.45, alpha * 0.5);
-          const g3 = ctx.createRadialGradient(cx, cy - curR * 0.15, 0, cx, cy - curR * 0.15, curR * 0.75);
+          const rökFas   = (elapsed - s.synligMs * 0.55) / (s.synligMs * 0.45);
+          const rökAlpha = Math.min(rökFas * 0.45, alpha * 0.5);
+          const g3 = ctx.createRadialGradient(ex, ey - curR * 0.15, 0, ex, ey - curR * 0.15, curR * 0.75);
           g3.addColorStop(0, `rgba(90,80,75,${rökAlpha})`);
           g3.addColorStop(1, `rgba(60,55,50,0)`);
-          ctx.beginPath(); ctx.arc(cx, cy - curR * 0.15, curR * 0.75, 0, Math.PI * 2);
+          ctx.beginPath(); ctx.arc(ex, ey - curR * 0.15, curR * 0.75, 0, Math.PI * 2);
           ctx.fillStyle = g3; ctx.fill();
         }
 
@@ -5256,7 +5273,11 @@ function openOrderMenuAt(x,y,unit){
 
   orderMenu.style.left=x+'px'; orderMenu.style.top=y+'px'; orderMenu.classList.remove('hidden');
 }
-function showHint(t){ const h=$('hint'); const sp=$('hintText'); if(sp) sp.textContent=t; else h.textContent=t; h.classList.remove('hidden'); }
+function showHint(t){
+  const h=$('hint'); const sp=$('hintText'); if(sp) sp.textContent=t; else h.textContent=t; h.classList.remove('hidden');
+  const avbrytBtn=$('hintAvbryt');
+  if(avbrytBtn) avbrytBtn.style.display=(pendingResurs||(typeof pendingTarget!=='undefined'&&pendingTarget))?'':'none';
+}
 function hideHint(){ $('hint').classList.add('hidden'); }
 
 function avbrytPendingAction() {
