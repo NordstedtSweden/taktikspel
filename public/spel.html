@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<title>Tactics — Game Module v3.15.0 Demo (GM/Blue/Red)</title>
+<title>Tactics — Game Module v2.15.0 Demo (GM/Blue/Red)</title>
 <style>
 :root{--bg:#0b1020;--panel:#0f1832;--line:#243052;--ink:#e8eefc;--muted:#9fb1d4;--accent:#6cb2ff;--ok:#54d18c;--warn:#f2c94c;--bad:#ff6b6b}
 *{box-sizing:border-box}
@@ -55,9 +55,9 @@ button{cursor:pointer}
 .legend span{display:flex;gap:6px;align-items:center}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2)}
 .floating{position:absolute;left:8px;bottom:8px;background:rgba(12,18,40,0.82);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
-.unitIcon{position:absolute;transform:translate(-50%,-50%);user-select:none}
-.unitIcon img{width:40px;height:auto;image-rendering:pixelated}
-.unitIcon .order{position:absolute;left:-8px;top:-8px;font-size:14px}
+.unitIcon{position:absolute;transform:translate(-50%,-50%);user-select:none;--icon-size:40px}
+.unitIcon img{width:var(--icon-size);height:auto;image-rendering:pixelated}
+.unitIcon .order{position:absolute;left:-8px;top:-8px;font-size:calc(var(--icon-size) * 0.35)}
 .unitIcon { will-change: left, top; }
 /* ☠️ Döds-effekt vid elimination */
 .unitIcon .deathSkull {
@@ -90,7 +90,7 @@ button{cursor:pointer}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 .hint{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#17224a;border:1px solid var(--line);padding:6px 10px;border-radius:10px;font-size:13px;z-index:40}
-.counterFallback{width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;border:1px solid rgba(255,255,255,.25)}
+.counterFallback{width:var(--icon-size,40px);height:var(--icon-size,40px);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;border:1px solid rgba(255,255,255,.25);font-size:calc(var(--icon-size,40px) * 0.35)}
 .opfire-line {
   transition: opacity 0.5s ease-out;
   box-shadow: 0 0 6px red;
@@ -421,16 +421,25 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     </button>
   </div>
 
+  <div class="readyRow" style="gap:12px;flex-wrap:wrap">
+    <label class="readyAutoLabel">
+      <input type="checkbox" id="blueAutoReadyChk">
+      Blue auto-ready
+    </label>
+    <label class="readyAutoLabel">
+      <input type="checkbox" id="redAutoReadyChk">
+      Red auto-ready
+    </label>
+  </div>
+
   <div class="readyRow readyRow-bottom">
-      <button id="nextRoundBtn" class="btn pri">
+    <button id="nextRoundBtn" class="btn pri">
       ▶ Nästa runda
     </button>
     <label class="readyAutoLabel">
-      <input type="checkbox" id="autoNextChk">
+      <input type="checkbox" id="autoNextChk" checked>
       Auto kör nästa runda
     </label>
-
-  
   </div>
 
   <hr>
@@ -1774,6 +1783,9 @@ function setRedReady(val) {
 // Auto-next: kör runda när båda är ready + auto-checken ikryssad
 function maybeAutoAdvanceRound() {
   if (!autoNextEnabled) return;
+  // Sätt auto-ready sidor om de är ibockade (så de inte blockerar auto-next)
+  if (blueAutoReadyChk && blueAutoReadyChk.checked) blueReady = true;
+  if (redAutoReadyChk  && redAutoReadyChk.checked)  redReady  = true;
   if (!blueReady || !redReady) return;
 
   // Auto-läge: kör nästa runda direkt, oavsett vilken roll som nyss klickade
@@ -1891,6 +1903,35 @@ if (autoNextChk) {
       broadcastStateFromGM();
     }
   });
+}
+
+// Auto-ready: bocka i så sätts den sidan automatiskt till ready vid rundbyte
+const blueAutoReadyChk = document.getElementById('blueAutoReadyChk');
+const redAutoReadyChk  = document.getElementById('redAutoReadyChk');
+
+function tillämpaAutoReady() {
+  const role = getCurrentRole();
+  if (role !== 'gm') return;
+  let ändrat = false;
+  if (blueAutoReadyChk && blueAutoReadyChk.checked && !blueReady) {
+    blueReady = true;
+    ändrat = true;
+  }
+  if (redAutoReadyChk && redAutoReadyChk.checked && !redReady) {
+    redReady = true;
+    ändrat = true;
+  }
+  if (ändrat) {
+    updateReadyUI();
+    if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+  }
+}
+
+if (blueAutoReadyChk) {
+  blueAutoReadyChk.addEventListener('change', tillämpaAutoReady);
+}
+if (redAutoReadyChk) {
+  redAutoReadyChk.addEventListener('change', tillämpaAutoReady);
 }
 
 
@@ -3539,7 +3580,7 @@ let currentRound = 1;
 const D10 = () => Math.floor(Math.random() * 10) + 1;
 
 // auto-next flagga (binds till checkbox)
-let autoNextEnabled = false;
+let autoNextEnabled = true;
 
 // enkel logg (knyts till panelen i steg D om den inte finns)
 function logEvent(t){
@@ -4406,6 +4447,9 @@ if (Array.isArray(PLACED)) {
   } else if (typeof drawUnitsAndOrders === 'function') {
     drawUnitsAndOrders();
   }
+
+  // Sätt auto-ready sidor direkt efter rundbyte
+  if (typeof tillämpaAutoReady === 'function') tillämpaAutoReady();
 }
 
 
@@ -4488,6 +4532,10 @@ function gmTriggerNextRound() {
   // Bara GM får starta runda
   const role = getCurrentRole();
   if (role !== 'gm') return;
+
+  // Sätt auto-ready sidor om de är ibockade
+  if (blueAutoReadyChk && blueAutoReadyChk.checked) blueReady = true;
+  if (redAutoReadyChk  && redAutoReadyChk.checked)  redReady  = true;
 
   // kräver att båda är READY (om du vill tillåta override, lägg in prompt här)
   if (!blueReady || !redReady) {
@@ -5271,11 +5319,6 @@ toDraw = toDraw.filter(p => !p.eliminated && String(p.state||'').toLowerCase() !
       const rp = rot(cx,cy, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
       const pos = worldToScreen(rp.x, rp.y);
 
-      // (Behåll gärna din gamla getAnimatedCenter om du vill,
-      //  men vår no-hop override nedan kommer ändå vinna.)
-      // const __anim = (typeof getAnimatedCenter==='function') ? getAnimatedCenter(p) : null;
-      // if (__anim){ pos.x = __anim.x; pos.y = __anim.y; }
-
       const node = document.createElement('div');
       node.className = 'unitIcon';
 
@@ -5289,9 +5332,12 @@ toDraw = toDraw.filter(p => !p.eliminated && String(p.state||'').toLowerCase() !
       node.dataset.unitId   = p.id || p.name || '';
       node.setAttribute('data-hex-label', p.hex || '');
 
-      // Grundposition från hex
+      // Grundposition från hex + skala ikonen mot faktisk skärmstorlek på hexen
       node.style.left = pos.x + 'px';
       node.style.top  = pos.y + 'px';
+      const skärmRadie = r * cam.z; // hex-radien i skärmpixlar
+      const ikonStorlek = Math.round(skärmRadie * 1.1); // ca 55% av hex-diametern
+      node.style.setProperty('--icon-size', ikonStorlek + 'px');
 
       // 📌 2) NO-HOP OVERRIDE (om pågående anim finns → använd pixelpos från anim)
       try {
@@ -5313,28 +5359,42 @@ toDraw = toDraw.filter(p => !p.eliminated && String(p.state||'').toLowerCase() !
 if (icon){
   const img = document.createElement('img');
   img.draggable = false; img.alt = p.id;
-  
+  img.style.width = ikonStorlek + 'px';
+  img.style.height = 'auto';
+
   const serverUrl = 'https://taktikspel.onrender.com/' + icon;
   img.src = icon;
-  
+
   img.onerror = ()=>{
     if (img.src !== serverUrl) {
       img.src = serverUrl;
     } else {
       node.innerHTML = '';
-      node.appendChild(makeFallbackCounter(p));
-      addOrderBubble(node, p);
+      const fb = makeFallbackCounter(p, ikonStorlek);
+      node.appendChild(fb);
+      addOrderBubble(node, p, ikonStorlek);
     }
   };
   node.appendChild(img);
 }
-      addOrderBubble(node, p);
+      addOrderBubble(node, p, ikonStorlek);
 
       // suppression + bang-badge (om de funktionerna finns)
       if (typeof renderSuppressionBadge === 'function') renderSuppressionBadge(node, p);
       if (typeof renderBangBadge === 'function')        renderBangBadge(node, p);
 
            node.addEventListener('click',(e)=>{
+        // Om vi väntar på resursplacering eller hexmål — skicka klicket till canvasen
+        if (pendingResurs) {
+          cv.dispatchEvent(new MouseEvent('click', { bubbles: false, clientX: e.clientX, clientY: e.clientY }));
+          return;
+        }
+        if (pendingTarget && pendingTarget.type !== 'support') {
+          // Simulera ett klick på canvasen med samma koordinater → hexen registreras som mål
+          cv.dispatchEvent(new MouseEvent('click', { bubbles: false, clientX: e.clientX, clientY: e.clientY }));
+          return;
+        }
+
         e.stopPropagation();
 
         // Om vi väntar på att välja understödd enhet — hantera det här
@@ -5441,17 +5501,29 @@ function drawLOSOverlay(){
 
 
 
-function makeFallbackCounter(p){
+function makeFallbackCounter(p, storlek){
   const def=UNITS.units.find(u=>u.id===p.id);
   const initials = (def?.name||p.id||'?').split(/[\s_]+/).map(x=>x[0]).filter(Boolean).slice(0,3).join('').toUpperCase();
   const box=document.createElement('div'); box.className='counterFallback';
   box.style.background = p.side==='blue' ? '#183b6b' : '#6b1b1b';
+  if (storlek) {
+    box.style.width = storlek + 'px';
+    box.style.height = storlek + 'px';
+    box.style.fontSize = Math.round(storlek * 0.35) + 'px';
+  }
   box.textContent=initials;
   return box;
 }
-function addOrderBubble(node, p){
+function addOrderBubble(node, p, storlek){
   const ord = document.createElement('div');
   ord.className = 'order';
+  if (storlek) {
+    const fs = Math.round(storlek * 0.35);
+    const offset = Math.round(storlek * 0.2);
+    ord.style.fontSize = fs + 'px';
+    ord.style.left = -offset + 'px';
+    ord.style.top  = -offset + 'px';
+  }
 
   // Kolla aktuell roll (gm / blue / red)
   const role = getCurrentRole();
