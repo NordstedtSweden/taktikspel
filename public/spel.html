@@ -2133,8 +2133,10 @@ function hexarInomRadie(centrumHex, radie) {
 function lösUtIndirektEld(målHex, ext, side, def) {
   const spridning   = ext.spridning    ?? 1;
   const effektRadie = ext.effektRadie  ?? 1;
-  const effCentrum  = ext.effektCentrum  || 'eliminated';
-  const effPeri     = ext.effektPeriferi || 'suppressed';
+  // Indirekt eld uppgraderar alltid gul suppression till röd — reduced behåller sin skadeeffekt men får också röd suppression
+  const _mappaEffekt = e => e === 'suppressed' ? 'suppressed_red' : e;
+  const effCentrum  = _mappaEffekt(ext.effektCentrum  || 'eliminated');
+  const effPeri     = _mappaEffekt(ext.effektPeriferi || 'suppressed');
   const namn        = def?.name || 'Indirekt eld';
 
   // Beräkna faktisk träffhex via slumpmässig spridning
@@ -2184,12 +2186,14 @@ function lösUtIndirektEld(målHex, ext, side, def) {
 
       if (uHex === träffHex) {
         appliceraMinEffekt(u, effCentrum);
+        if (effCentrum === 'reduced') appliceraMinEffekt(u, 'suppressed_red'); // reduced ger alltid även röd suppression
         if (typeof logEvent === 'function')
-          logEvent(`  ↳ ${u.side?.toUpperCase()} ${u.name||u.id} träffas i centrum: ${effCentrum.toUpperCase()}`);
+          logEvent(`  ↳ ${u.side?.toUpperCase()} ${u.name||u.id} träffas i centrum: ${effCentrum.toUpperCase()}${effCentrum === 'reduced' ? ' + RÖD SUPPRESSED' : ''}`);
       } else if (periHexar.includes(uHex)) {
         appliceraMinEffekt(u, effPeri);
+        if (effPeri === 'reduced') appliceraMinEffekt(u, 'suppressed_red');
         if (typeof logEvent === 'function')
-          logEvent(`  ↳ ${u.side?.toUpperCase()} ${u.name||u.id} träffas i periferi: ${effPeri.toUpperCase()}`);
+          logEvent(`  ↳ ${u.side?.toUpperCase()} ${u.name||u.id} träffas i periferi: ${effPeri.toUpperCase()}${effPeri === 'reduced' ? ' + RÖD SUPPRESSED' : ''}`);
       }
     });
   }
@@ -2270,6 +2274,10 @@ function appliceraMinEffekt(enhet, effekt) {
     enhet.suppression = 'yellow';
     enhet.suppressed = 'yellow';
     enhet.suppressionLevel = Math.max(enhet.suppressionLevel||0, 1);
+  } else if (effekt === 'suppressed_red') {
+    enhet.suppression = 'red';
+    enhet.suppressed = 'red';
+    enhet.suppressionLevel = Math.max(enhet.suppressionLevel||0, 2);
   } else if (effekt === 'reduced') {
     if (enhet.state === 'full') {
       enhet.state = 'reduced';
