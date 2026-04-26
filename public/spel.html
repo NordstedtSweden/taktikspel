@@ -4982,7 +4982,7 @@ function uppdateraReplayUI() {
   $b('replaySistaBtn').disabled    = REPLAY_INDEX >= totRundor;
   $b('replayNextRundBtn').disabled = REPLAY_INDEX >= totRundor;
   $b('replayPrevBtn').disabled     = evIdx <= -1;
-  $b('replayNextBtn').disabled     = evIdx >= händelser.length - 1;
+  $b('replayNextBtn').disabled     = evIdx >= händelser.length - 1 && REPLAY_INDEX >= totRundor;
 }
 
 document.getElementById('replayÖppnaBtn')?.addEventListener('click', öppnaReplay);
@@ -4991,7 +4991,15 @@ document.getElementById('replayPrevRundBtn')?.addEventListener('click', () => st
 document.getElementById('replaySistaBtn')?.addEventListener('click',    () => ställInRunda(SPELHISTORIK.length - 1));
 document.getElementById('replayNextRundBtn')?.addEventListener('click', () => ställInRunda(REPLAY_INDEX + 1));
 document.getElementById('replayPrevBtn')?.addEventListener('click',     () => tillämpaHändelserTill(REPLAY_HÄNDELSE_INDEX - 1));
-document.getElementById('replayNextBtn')?.addEventListener('click',     () => tillämpaHändelserTill(REPLAY_HÄNDELSE_INDEX + 1));
+document.getElementById('replayNextBtn')?.addEventListener('click', () => {
+  const snap = SPELHISTORIK[REPLAY_INDEX];
+  const händelser = snap?.händelser || [];
+  if (REPLAY_HÄNDELSE_INDEX >= händelser.length - 1) {
+    ställInRunda(REPLAY_INDEX + 1); // sista händelsen passerad — hoppa till nästa runda
+  } else {
+    tillämpaHändelserTill(REPLAY_HÄNDELSE_INDEX + 1);
+  }
+});
 document.getElementById('replayStängBtn')?.addEventListener('click',    stängReplay);
 $('loadPaketBtn').onclick = async () => {
   const modal = document.getElementById('scenarioModal');
