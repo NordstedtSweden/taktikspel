@@ -244,31 +244,20 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 <div id="replayOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:80;cursor:default;"></div>
 
 <!-- Replay: kontrollpanel längst ner -->
-<div id="replayKontroll" class="hidden" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0e1730;border:1px solid #3a4a7a;border-radius:14px;padding:12px 20px;z-index:95;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:380px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
+<div id="replayKontroll" class="hidden" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0e1730;border:1px solid #3a4a7a;border-radius:14px;padding:12px 20px;z-index:95;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:420px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
   <div id="replayRubrik" style="font-weight:700;color:#9fb1d4;font-size:14px">📽 Replay</div>
-  <!-- Rundnavigering -->
-  <div id="replayRundaRad" style="display:flex;gap:8px;align-items:center">
+  <div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap">
     <button class="btn" id="replayFörstaBtn" title="Första rundan">⏮</button>
-    <button class="btn" id="replayPrevBtn" title="Föregående runda">◀</button>
-    <span id="replayRundaText" style="min-width:70px;text-align:center;font-size:13px">— / —</span>
-    <button class="btn" id="replayNextBtn" title="Nästa runda">▶</button>
+    <button class="btn" id="replayPrevRundBtn" title="Föregående runda">⏪</button>
+    <button class="btn" id="replayPrevBtn" title="Föregående händelse" style="background:#172040">◀</button>
+    <span id="replayStatusText" style="min-width:130px;text-align:center;font-size:12px;color:#9fb1d4;white-space:nowrap">— / —</span>
+    <button class="btn" id="replayNextBtn" title="Nästa händelse" style="background:#172040">▶</button>
+    <button class="btn" id="replayNextRundBtn" title="Nästa runda">⏩</button>
     <button class="btn" id="replaySistaBtn" title="Sista rundan">⏭</button>
-    <button class="btn" id="replayHändelseBtn" style="margin-left:4px;font-size:12px" title="Stega igenom händelser">⚡ Händelser</button>
     <button class="btn" id="replayStängBtn" style="background:#7a1a1a;margin-left:4px">✕</button>
   </div>
-  <!-- Händelsenavigering (dold tills aktiverad) -->
-  <div id="replayHändelseRad" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%">
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn" id="replayHFörstaBtn">⏮</button>
-      <button class="btn" id="replayHPrevBtn">◀</button>
-      <span id="replayHText" style="min-width:80px;text-align:center;font-size:12px;color:#9fb1d4">— / —</span>
-      <button class="btn" id="replayHNextBtn">▶</button>
-      <button class="btn" id="replayHSistaBtn">⏭</button>
-      <button class="btn" id="replayHStängBtn" style="font-size:12px;margin-left:4px">↩ Rundor</button>
-    </div>
-    <div id="replayHBeskrivning" style="font-size:12px;color:#c8d8ff;text-align:center;max-width:340px;min-height:18px;padding:2px 0"></div>
-  </div>
-  <div id="replayLogg" style="max-height:90px;overflow:auto;width:100%;font-size:11px;color:#9fb1d4;border-top:1px solid #2a3a5a;padding-top:6px;line-height:1.5"></div>
+  <div id="replayHBeskrivning" style="font-size:12px;color:#c8d8ff;text-align:center;max-width:380px;min-height:16px;font-style:italic"></div>
+  <div id="replayLogg" style="max-height:80px;overflow:auto;width:100%;font-size:11px;color:#9fb1d4;border-top:1px solid #2a3a5a;padding-top:6px;line-height:1.5"></div>
 </div>
 
 <div id="anslutPanel" style="
@@ -2173,7 +2162,18 @@ function lösUtIndirektEld(målHex, ext, side, def) {
   const animSkala = effektRadie === 0 ? 0.55 : 1.0;
   visaArtilleriAnfall(träffHex, periHexar, animSkala);
   PENDING_ARTILLERI_ANIM.push({ träffHex, periHexar, skala: animSkala });
-  registreraHändelse({ typ: 'artilleri', sida: side, namn, målHex, träffHex, periHexar: periHexar.slice(), animSkala });
+
+  // Snapshot enheter i effektområdet INNAN påverkan (för replay)
+  const _artFörStater = {};
+  if (Array.isArray(PLACED)) {
+    PLACED.forEach(u => {
+      if (u.eliminated) return;
+      const uHex = (typeof liveHex === 'function' ? liveHex(u) : null) || u.hex;
+      if (uHex && (uHex === träffHex || periHexar.includes(uHex))) {
+        _artFörStater[u.id] = { eliminated: u.eliminated, state: u.state, suppression: u.suppression, suppressed: u.suppressed };
+      }
+    });
+  }
 
   // Applicera effekt på alla enheter i området
   if (Array.isArray(PLACED)) {
@@ -2193,6 +2193,13 @@ function lösUtIndirektEld(målHex, ext, side, def) {
       }
     });
   }
+
+  // Registrera artillerihändelse med before/after states för replay
+  const _artTräffade = Object.keys(_artFörStater).map(id => {
+    const u = Array.isArray(PLACED) ? PLACED.find(e => e.id === id) : null;
+    return { enhetId: id, förState: _artFörStater[id], efterState: u ? { eliminated: u.eliminated, state: u.state, suppression: u.suppression, suppressed: u.suppressed } : _artFörStater[id] };
+  });
+  registreraHändelse({ typ: 'artilleri', sida: side, namn, målHex, träffHex, periHexar: periHexar.slice(), animSkala, träffade: _artTräffade });
 
   if (typeof updateLOS === 'function') updateLOS();
 }
@@ -3805,7 +3812,8 @@ let AKTIVA_REPLAY_FX = [];       // tillfälliga canvas-overlays (pilar, linjer)
 let REPLAY_AKTIV = false;
 let REPLAY_INDEX = 0;
 let REPLAY_HÄNDELSE_INDEX = -1;  // -1 = rundläge, 0+ = händelseläge
-let _REPLAY_SNAP = null;         // snapshot som visas just nu (sätts vid visaReplayRunda/visaReplayHändelse)
+let _REPLAY_SNAP = null;         // pekar på REPLAY_WORKING_STATE under replay — drawAll använder detta
+let REPLAY_WORKING_STATE = null; // {enheter, resurser} — deep copy som ändras händelse för händelse
 
 function sparaRundSnapshot() {
   try {
@@ -4621,27 +4629,29 @@ if (Array.isArray(PLACED)) {
         logEvent(`${fmtSide(u)} ${fmtName(u)} skjuter mot ${fmtSide(target)} ${fmtName(target)}${terrainStr} — slag: ${roll} ${mod>=0?'+':''}${mod} = ${finalRoll} vs ${toHit} ⇒ ${hit ? 'TRÄFF' : 'MISS'}`);
       }
 
+      // Snapshot målets tillstånd INNAN träff (för replay)
+const _målFörState = { eliminated: target.eliminated, state: target.state, suppression: target.suppression, suppressed: target.suppressed };
+let _hitEffekt = null;
+
       // Påverkan vid träff: suppression + reduced/eliminated-kedja
 if (hit) {
-  // Låt moralfunktionen avgöra suppression / reduce / eliminate
   const res = resolveHitWithMorale(u, target, { context: 'normal_fire' });
-
-  // Markera att den varit under eld denna runda (viktigt för recovery-fasen)
+  _hitEffekt = res?.effect || null;
   target.underFireThisRound = true;
-
-  // Om du vill kan du speciallogga effekten:
   if (typeof logEvent === 'function') {
     logEvent(`[Fire] Effekt mot ${fmtSide(target)} ${fmtName(target)}: ${res.effect}`);
   }
 }
 
-// Registrera stridshändelse för replay
+// Registrera stridshändelse med before/after states för replay
 registreraHändelse({
   typ: 'strid',
-  träff: hit,
-  skyttSida: u.side, skyttNamn: u.name || u.id, skyttHex: u.hex,
-  målSida: target.side, målNamn: target.name || target.id, målHex: target.hex,
-  slag: roll, mod, finalRoll, toHit
+  träff: hit, effekt: _hitEffekt,
+  skyttId: u.id, skyttSida: u.side, skyttNamn: u.name || u.id, skyttHex: u.hex,
+  målId: target.id, målSida: target.side, målNamn: target.name || target.id, målHex: target.hex,
+  slag: roll, mod, finalRoll, toHit,
+  målFörState: _målFörState,
+  målEfterState: { eliminated: target.eliminated, state: target.state, suppression: target.suppression, suppressed: target.suppressed }
 });
 
 
@@ -4824,16 +4834,17 @@ if (nextRoundBtn) {
 }
 
 // ===== REPLAY-FUNKTIONER =====
+let _replayAnimLoop = null;
+
 function öppnaReplay() {
-  if (!SPELHISTORIK.length) {
+  if (SPELHISTORIK.length < 2) {
     alert('Ingen historik än — spela minst en runda och kör sedan Nästa runda.');
     return;
   }
   REPLAY_AKTIV = true;
-  REPLAY_HÄNDELSE_INDEX = -1;
   document.getElementById('replayOverlay').style.display = 'block';
   document.getElementById('replayKontroll').classList.remove('hidden');
-  visaReplayRunda(SPELHISTORIK.length - 1);
+  ställInRunda(SPELHISTORIK.length - 1);
 }
 
 function stängReplay() {
@@ -4842,131 +4853,146 @@ function stängReplay() {
   REPLAY_HÄNDELSE_INDEX = -1;
   AKTIVA_REPLAY_FX = [];
   _REPLAY_SNAP = null;
+  REPLAY_WORKING_STATE = null;
   document.getElementById('replayOverlay').style.display = 'none';
   document.getElementById('replayKontroll').classList.add('hidden');
   if (typeof drawAll === 'function') drawAll();
 }
 
-function _visaReplayCanvas(snap) {
-  _REPLAY_SNAP = snap;
+function ställInRunda(rundIdx) {
+  rundIdx = Math.max(1, Math.min(rundIdx, SPELHISTORIK.length - 1));
+  REPLAY_INDEX = rundIdx;
+  REPLAY_HÄNDELSE_INDEX = -1;
+  AKTIVA_REPLAY_FX = [];
+  if (_replayAnimLoop !== null) { clearInterval(_replayAnimLoop); _replayAnimLoop = null; }
+
+  // Startläge = föregående rundas slutläge
+  const startSnap = SPELHISTORIK[rundIdx - 1];
+  REPLAY_WORKING_STATE = {
+    enheter:  JSON.parse(JSON.stringify(startSnap.enheter)),
+    resurser: JSON.parse(JSON.stringify(startSnap.resurser))
+  };
+  _REPLAY_SNAP = REPLAY_WORKING_STATE;
+
+  uppdateraReplayUI();
   if (typeof drawAll === 'function') drawAll();
 }
 
-function visaReplayRunda(index) {
-  if (!SPELHISTORIK.length) return;
-  index = Math.max(0, Math.min(index, SPELHISTORIK.length - 1));
-  REPLAY_INDEX = index;
-  REPLAY_HÄNDELSE_INDEX = -1;
-  AKTIVA_REPLAY_FX = [];
-  const snap = SPELHISTORIK[index];
-
-  _visaReplayCanvas(snap);
-
-  // Uppdatera kontrollpanel
-  document.getElementById('replayRubrik').textContent = `📽 Replay — efter runda ${snap.runda}`;
-  document.getElementById('replayRundaText').textContent = `${index + 1} / ${SPELHISTORIK.length}`;
-  document.getElementById('replayFörstaBtn').disabled = index === 0;
-  document.getElementById('replayPrevBtn').disabled   = index === 0;
-  document.getElementById('replayNextBtn').disabled   = index === SPELHISTORIK.length - 1;
-  document.getElementById('replaySistaBtn').disabled  = index === SPELHISTORIK.length - 1;
-  const harHändelser = (snap.händelser || []).length > 0;
-  document.getElementById('replayHändelseBtn').disabled = !harHändelser;
-
-  // Runda-rad synlig, händelse-rad dold
-  document.getElementById('replayHändelseRad').classList.add('hidden');
-
-  // Visa rundens logg
-  const loggDiv = document.getElementById('replayLogg');
-  loggDiv.innerHTML = snap.logg.length
-    ? snap.logg.map(t => `<div style="padding:1px 0">${t}</div>`).join('')
-    : '<div style="color:#4a5a7a;font-style:italic">— Inga händelser —</div>';
-  loggDiv.scrollTop = 0;
-}
-
-function öppnaHändelseläge() {
+function tillämpaHändelserTill(evIdx) {
   const snap = SPELHISTORIK[REPLAY_INDEX];
-  if (!snap || !(snap.händelser || []).length) return;
-  REPLAY_HÄNDELSE_INDEX = 0;
-  document.getElementById('replayHändelseRad').classList.remove('hidden');
-  visaReplayHändelse(0);
-}
+  const händelser = snap?.händelser || [];
+  evIdx = Math.max(-1, Math.min(evIdx, händelser.length - 1));
 
-function stängHändelseläge() {
   if (_replayAnimLoop !== null) { clearInterval(_replayAnimLoop); _replayAnimLoop = null; }
-  REPLAY_HÄNDELSE_INDEX = -1;
   AKTIVA_REPLAY_FX = [];
-  document.getElementById('replayHändelseRad').classList.add('hidden');
-  visaReplayRunda(REPLAY_INDEX);
+
+  // Återställ working state till rundens startläge
+  const startSnap = SPELHISTORIK[REPLAY_INDEX - 1];
+  REPLAY_WORKING_STATE = {
+    enheter:  JSON.parse(JSON.stringify(startSnap.enheter)),
+    resurser: JSON.parse(JSON.stringify(startSnap.resurser))
+  };
+  _REPLAY_SNAP = REPLAY_WORKING_STATE;
+
+  // Tillämpa händelserna 0..evIdx på working state
+  REPLAY_HÄNDELSE_INDEX = evIdx;
+  for (let i = 0; i <= evIdx; i++) {
+    tillämpaHändelseStill(händelser[i]);
+  }
+
+  // Spela animation för den senaste händelsen
+  if (evIdx >= 0) spelaHändelseAnimation(händelser[evIdx]);
+
+  uppdateraReplayUI();
+  if (typeof drawAll === 'function') drawAll();
 }
 
-function visaReplayHändelse(idx) {
-  const snap = SPELHISTORIK[REPLAY_INDEX];
-  if (!snap) return;
-  const händelser = snap.händelser || [];
-  if (!händelser.length) return;
-  idx = Math.max(0, Math.min(idx, händelser.length - 1));
-  REPLAY_HÄNDELSE_INDEX = idx;
-  const h = händelser[idx];
+function tillämpaHändelseStill(h) {
+  if (!h || !REPLAY_WORKING_STATE) return;
+  const enheter = REPLAY_WORKING_STATE.enheter;
+  if (h.typ === 'rörelse') {
+    const u = enheter.find(e => e.id === h.enhetId);
+    if (u) u.hex = h.tillHex;
+  } else if (h.typ === 'strid' && h.träff && h.målEfterState) {
+    const u = enheter.find(e => e.id === h.målId);
+    if (u) { u.eliminated = h.målEfterState.eliminated; u.state = h.målEfterState.state; u.suppression = h.målEfterState.suppression; u.suppressed = h.målEfterState.suppressed; }
+  } else if (h.typ === 'artilleri' && h.träffade) {
+    h.träffade.forEach(({ enhetId, efterState }) => {
+      const u = enheter.find(e => e.id === enhetId);
+      if (u && efterState) { u.eliminated = efterState.eliminated; u.state = efterState.state; u.suppression = efterState.suppression; u.suppressed = efterState.suppressed; }
+    });
+  }
+}
 
-  // Uppdatera händelse-rad
-  document.getElementById('replayHText').textContent = `${idx + 1} / ${händelser.length}`;
-  document.getElementById('replayHFörstaBtn').disabled = idx === 0;
-  document.getElementById('replayHPrevBtn').disabled   = idx === 0;
-  document.getElementById('replayHNextBtn').disabled   = idx === händelser.length - 1;
-  document.getElementById('replayHSistaBtn').disabled  = idx === händelser.length - 1;
-
-  // Visa snapshot-state som bakgrund
-  _visaReplayCanvas(snap);
-  AKTIVA_REPLAY_FX = [];
-
-  // Starta animation för händelsen
-  spelaHändelse(h);
-
-  // Visa beskrivning
-  document.getElementById('replayHBeskrivning').textContent = beskriv_händelse(h);
+function spelaHändelseAnimation(h) {
+  if (_replayAnimLoop !== null) { clearInterval(_replayAnimLoop); _replayAnimLoop = null; }
+  if (!h) return;
+  const durMs = 2500;
+  if (h.typ === 'rörelse') {
+    // Enheten är redan snäppt till tillHex i working state — pilen visar varifrån
+    AKTIVA_REPLAY_FX.push({ typ: 'pil', sida: h.sida, frånHex: h.frånHex, tillHex: h.tillHex, startMs: Date.now(), totalMs: durMs });
+    _replayAnimLoop = setInterval(() => { if (typeof drawAll === 'function') drawAll(); }, 40);
+    setTimeout(() => { clearInterval(_replayAnimLoop); _replayAnimLoop = null; if (typeof drawAll === 'function') drawAll(); }, durMs + 80);
+  } else if (h.typ === 'strid') {
+    AKTIVA_REPLAY_FX.push({ typ: 'stridslinje', frånHex: h.skyttHex, tillHex: h.målHex, träff: h.träff, startMs: Date.now(), totalMs: durMs });
+    _replayAnimLoop = setInterval(() => { if (typeof drawAll === 'function') drawAll(); }, 40);
+    setTimeout(() => { clearInterval(_replayAnimLoop); _replayAnimLoop = null; if (typeof drawAll === 'function') drawAll(); }, durMs + 80);
+  } else if (h.typ === 'artilleri') {
+    if (typeof visaArtilleriAnfall === 'function') visaArtilleriAnfall(h.träffHex, h.periHexar || [], h.animSkala ?? 1.0);
+  }
 }
 
 function beskriv_händelse(h) {
   if (!h) return '';
-  if (h.typ === 'rörelse')   return `🚶 ${h.sida?.toUpperCase()} ${h.namn} rör sig ${h.frånHex} → ${h.tillHex}`;
-  if (h.typ === 'strid')     return `${h.träff ? '💥 TRÄFF' : '🔸 Miss'} — ${h.skyttSida?.toUpperCase()} ${h.skyttNamn} skjuter mot ${h.målSida?.toUpperCase()} ${h.målNamn} (${h.finalRoll} vs ${h.toHit})`;
+  if (h.typ === 'rörelse')   return `🚶 ${h.sida?.toUpperCase()} ${h.namn} förflyttar sig ${h.frånHex} → ${h.tillHex}`;
+  if (h.typ === 'strid')     return `${h.träff ? '💥 TRÄFF' : '🔸 Miss'} — ${h.skyttSida?.toUpperCase()} ${h.skyttNamn} skjuter mot ${h.målSida?.toUpperCase()} ${h.målNamn} (${h.finalRoll} vs ${h.toHit})${h.effekt ? ' · ' + h.effekt : ''}`;
   if (h.typ === 'artilleri') return `💣 ${h.namn?.toUpperCase()} (${h.sida?.toUpperCase()}) mot ${h.målHex}${h.träffHex !== h.målHex ? ' → ' + h.träffHex : ''}`;
   return h.typ || '?';
 }
 
-let _replayAnimLoop = null;
+function uppdateraReplayUI() {
+  const snap = SPELHISTORIK[REPLAY_INDEX];
+  if (!snap) return;
+  const händelser = snap.händelser || [];
+  const totRundor  = SPELHISTORIK.length - 1;
+  const evIdx      = REPLAY_HÄNDELSE_INDEX;
 
-function spelaHändelse(h) {
-  if (_replayAnimLoop !== null) { clearInterval(_replayAnimLoop); _replayAnimLoop = null; }
-  if (!h) return;
-  const durMs = 2800;
-  if (h.typ === 'rörelse') {
-    AKTIVA_REPLAY_FX.push({ typ: 'pil', sida: h.sida, frånHex: h.frånHex, tillHex: h.tillHex, startMs: Date.now(), totalMs: durMs });
-    _replayAnimLoop = setInterval(() => { if (typeof drawAll === 'function') drawAll(); }, 40);
-    setTimeout(() => { clearInterval(_replayAnimLoop); _replayAnimLoop = null; if (typeof drawAll === 'function') drawAll(); }, durMs + 100);
-  } else if (h.typ === 'strid') {
-    AKTIVA_REPLAY_FX.push({ typ: 'stridslinje', sida: h.skyttSida, frånHex: h.skyttHex, tillHex: h.målHex, träff: h.träff, startMs: Date.now(), totalMs: durMs });
-    _replayAnimLoop = setInterval(() => { if (typeof drawAll === 'function') drawAll(); }, 40);
-    setTimeout(() => { clearInterval(_replayAnimLoop); _replayAnimLoop = null; if (typeof drawAll === 'function') drawAll(); }, durMs + 100);
-  } else if (h.typ === 'artilleri') {
-    if (typeof visaArtilleriAnfall === 'function') {
-      visaArtilleriAnfall(h.träffHex, h.periHexar || [], h.animSkala ?? 1.0);
-    }
+  document.getElementById('replayRubrik').textContent = `📽 Replay — Runda ${snap.runda}`;
+
+  const statusEl = $('replayStatusText');
+  if (statusEl) statusEl.textContent = evIdx < 0
+    ? `Runda ${REPLAY_INDEX}/${totRundor} · start`
+    : `Runda ${REPLAY_INDEX}/${totRundor} · händelse ${evIdx+1}/${händelser.length}`;
+
+  const beskEl = $('replayHBeskrivning');
+  if (beskEl) beskEl.textContent = evIdx >= 0
+    ? beskriv_händelse(händelser[evIdx])
+    : händelser.length ? 'Klicka ▶ för att stega igenom händelserna' : '— inga inspelade händelser —';
+
+  const loggDiv = $('replayLogg');
+  if (loggDiv) {
+    loggDiv.innerHTML = snap.logg.length
+      ? snap.logg.map(t => `<div style="padding:1px 0">${t}</div>`).join('')
+      : '<div style="color:#4a5a7a;font-style:italic">— Inga logg-rader —</div>';
   }
+
+  const $b = id => document.getElementById(id);
+  $b('replayFörstaBtn').disabled   = REPLAY_INDEX <= 1;
+  $b('replayPrevRundBtn').disabled = REPLAY_INDEX <= 1;
+  $b('replaySistaBtn').disabled    = REPLAY_INDEX >= totRundor;
+  $b('replayNextRundBtn').disabled = REPLAY_INDEX >= totRundor;
+  $b('replayPrevBtn').disabled     = evIdx <= -1;
+  $b('replayNextBtn').disabled     = evIdx >= händelser.length - 1;
 }
 
 document.getElementById('replayÖppnaBtn')?.addEventListener('click', öppnaReplay);
-document.getElementById('replayFörstaBtn')?.addEventListener('click', () => visaReplayRunda(0));
-document.getElementById('replayPrevBtn')?.addEventListener('click',   () => visaReplayRunda(REPLAY_INDEX - 1));
-document.getElementById('replayNextBtn')?.addEventListener('click',   () => visaReplayRunda(REPLAY_INDEX + 1));
-document.getElementById('replaySistaBtn')?.addEventListener('click',  () => visaReplayRunda(SPELHISTORIK.length - 1));
-document.getElementById('replayHändelseBtn')?.addEventListener('click', öppnaHändelseläge);
-document.getElementById('replayStängBtn')?.addEventListener('click',  stängReplay);
-document.getElementById('replayHStängBtn')?.addEventListener('click', stängHändelseläge);
-document.getElementById('replayHFörstaBtn')?.addEventListener('click', () => visaReplayHändelse(0));
-document.getElementById('replayHPrevBtn')?.addEventListener('click',   () => visaReplayHändelse(REPLAY_HÄNDELSE_INDEX - 1));
-document.getElementById('replayHNextBtn')?.addEventListener('click',   () => visaReplayHändelse(REPLAY_HÄNDELSE_INDEX + 1));
-document.getElementById('replayHSistaBtn')?.addEventListener('click',  () => { const snap = SPELHISTORIK[REPLAY_INDEX]; visaReplayHändelse((snap?.händelser||[]).length - 1); });
+document.getElementById('replayFörstaBtn')?.addEventListener('click',   () => ställInRunda(1));
+document.getElementById('replayPrevRundBtn')?.addEventListener('click', () => ställInRunda(REPLAY_INDEX - 1));
+document.getElementById('replaySistaBtn')?.addEventListener('click',    () => ställInRunda(SPELHISTORIK.length - 1));
+document.getElementById('replayNextRundBtn')?.addEventListener('click', () => ställInRunda(REPLAY_INDEX + 1));
+document.getElementById('replayPrevBtn')?.addEventListener('click',     () => tillämpaHändelserTill(REPLAY_HÄNDELSE_INDEX - 1));
+document.getElementById('replayNextBtn')?.addEventListener('click',     () => tillämpaHändelserTill(REPLAY_HÄNDELSE_INDEX + 1));
+document.getElementById('replayStängBtn')?.addEventListener('click',    stängReplay);
 $('loadPaketBtn').onclick = async () => {
   const modal = document.getElementById('scenarioModal');
   const lista = document.getElementById('scenarioLista');
