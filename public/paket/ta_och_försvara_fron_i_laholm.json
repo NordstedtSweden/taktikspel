@@ -1,0 +1,1601 @@
+{
+  "version": "1.0",
+  "map": {
+    "hexSize": 50,
+    "orient": "flat",
+    "coordStyle": "rowLetters",
+    "gridAngle": 0,
+    "gridOffX": 80,
+    "gridOffY": 80,
+    "rows": 12,
+    "cols": 20,
+    "terrain": {
+      "K20": "road",
+      "K19": "road",
+      "K18": "road",
+      "K17": "road",
+      "J16": "road",
+      "K15": "road",
+      "J14": "road",
+      "J13": "road",
+      "I12": "road",
+      "I11": "road",
+      "I10": "road",
+      "I9": "road",
+      "I8": "road",
+      "I7": "road",
+      "H6": "road",
+      "H5": "road",
+      "H4": "road",
+      "I4": "road",
+      "J5": "road",
+      "J6": "road",
+      "K7": "road",
+      "L7": "road",
+      "I3": "road",
+      "I2": "road",
+      "J1": "road",
+      "K1": "road",
+      "H3": "road",
+      "G3": "road",
+      "F3": "road",
+      "E2": "road",
+      "F2": "road",
+      "F1": "road",
+      "D2": "road",
+      "C1": "road",
+      "D1": "road",
+      "B1": "road",
+      "F10": "road",
+      "G11": "road",
+      "J17": "road",
+      "I17": "road",
+      "H17": "road",
+      "G17": "road",
+      "F17": "road",
+      "E17": "woods",
+      "E16": "road",
+      "D16": "road",
+      "D15": "road",
+      "C14": "road",
+      "D13": "road",
+      "B9": "road",
+      "B10": "road",
+      "C11": "road",
+      "B12": "road",
+      "B13": "road",
+      "A14": "road",
+      "B15": "road",
+      "B16": "road",
+      "C17": "road",
+      "C18": "road",
+      "C19": "road",
+      "B20": "road",
+      "B18": "road",
+      "B19": "road",
+      "A20": "road",
+      "I19": "road",
+      "L20": "road",
+      "F18": "woods",
+      "E18": "woods",
+      "D18": "woods",
+      "D19": "woods",
+      "D17": "woods",
+      "C16": "woods",
+      "C15": "woods",
+      "B14": "woods",
+      "C13": "woods",
+      "C12": "woods",
+      "D11": "woods",
+      "D12": "woods",
+      "E12": "woods",
+      "F13": "woods",
+      "E13": "woods",
+      "F12": "woods",
+      "G13": "woods",
+      "G12": "woods",
+      "H11": "woods",
+      "H10": "woods",
+      "C10": "woods",
+      "C9": "woods",
+      "C5": "orchard",
+      "A4": "orchard",
+      "A9": "woods",
+      "A7": "woods",
+      "A8": "woods",
+      "G4": "woods",
+      "F4": "woods",
+      "E4": "woods",
+      "B2": "woods",
+      "A2": "woods",
+      "A1": "woods",
+      "G1": "woods",
+      "G2": "woods",
+      "J2": "woods",
+      "J3": "woods",
+      "K2": "woods",
+      "L1": "woods",
+      "L4": "woods",
+      "L5": "woods",
+      "L6": "woods",
+      "K6": "woods",
+      "K5": "woods",
+      "L2": "river",
+      "L3": "river",
+      "K4": "river",
+      "J4": "river",
+      "K3": "marsh",
+      "L8": "river",
+      "K8": "river",
+      "J8": "river",
+      "J7": "river",
+      "I6": "river",
+      "G5": "river",
+      "F5": "river",
+      "E5": "river",
+      "H8": "river",
+      "H9": "river",
+      "G10": "river",
+      "G9": "river",
+      "F11": "river",
+      "E11": "river",
+      "D10": "river",
+      "D9": "river",
+      "C8": "river",
+      "D7": "river",
+      "D6": "river",
+      "D5": "river",
+      "C4": "river",
+      "A3": "river",
+      "B3": "river",
+      "C3": "river",
+      "E6": "wood_building",
+      "E7": "wood_building",
+      "H7": "wood_building",
+      "G8": "wood_building",
+      "C2": "wood_building",
+      "E1": "wood_building",
+      "H1": "wood_building",
+      "I1": "wood_building",
+      "H2": "wood_building",
+      "J9": "wood_building",
+      "J10": "wood_building",
+      "J15": "wood_building",
+      "H18": "wood_building",
+      "J19": "wood_building",
+      "I20": "wood_building",
+      "J20": "wood_building",
+      "H20": "wood_building",
+      "G6": "wood_building",
+      "F9": "stone_building",
+      "E9": "stone_building",
+      "E8": "stone_building",
+      "D8": "stone_building",
+      "G7": "stone_building",
+      "F6": "stone_building",
+      "E10": "orchard",
+      "F8": "orchard",
+      "F7": "orchard",
+      "C6": "orchard",
+      "B4": "orchard",
+      "A13": "orchard",
+      "J11": "woods",
+      "K11": "woods",
+      "K10": "woods",
+      "I14": "woods",
+      "J18": "woods",
+      "E3": "open",
+      "D3": "open",
+      "D4": "open",
+      "I5": "open",
+      "L10": "open",
+      "L11": "open",
+      "L12": "open",
+      "K12": "open",
+      "J12": "open",
+      "K13": "open",
+      "L13": "open",
+      "K14": "open",
+      "L14": "open",
+      "L15": "open",
+      "K16": "open",
+      "L16": "open",
+      "L17": "open",
+      "L18": "open",
+      "L19": "open",
+      "I18": "open",
+      "G18": "open",
+      "H19": "open",
+      "G19": "open",
+      "G20": "open",
+      "F20": "open",
+      "I16": "open",
+      "I15": "open",
+      "H14": "open",
+      "I13": "open",
+      "H12": "open",
+      "H13": "open",
+      "G14": "open",
+      "H15": "open",
+      "H16": "open",
+      "G16": "open",
+      "F16": "open",
+      "F15": "open",
+      "G15": "open",
+      "F14": "open",
+      "E14": "open",
+      "E15": "open",
+      "D14": "open",
+      "F19": "open",
+      "E19": "open",
+      "E20": "open",
+      "D20": "open",
+      "C20": "open",
+      "A19": "open",
+      "A18": "open",
+      "B17": "open",
+      "A17": "open",
+      "A16": "open",
+      "A15": "open",
+      "A12": "open",
+      "B8": "open",
+      "B7": "open",
+      "A6": "open",
+      "A5": "open",
+      "B5": "open",
+      "B6": "open",
+      "C7": "open",
+      "L9": "river",
+      "K9": "river",
+      "B11": "open",
+      "A11": "open",
+      "A10": "open"
+    },
+    "boards": [
+      {
+        "name": "Designer (1).jpg",
+        "x": 15,
+        "y": 65,
+        "rot": 0
+      }
+    ]
+  },
+  "units": {
+    "schema": "taktik.units.v3",
+    "units": [
+      {
+        "id": "BLUE_Inf_EA",
+        "name": "BLUE_Inf_EA",
+        "faction": "",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Inf_FA",
+        "name": "BLUE_Inf_FA",
+        "faction": "",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Inf_GA",
+        "name": "BLUE_Inf_GA",
+        "faction": "",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_EA",
+        "name": "RED_Inf_EA",
+        "faction": "",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_FA",
+        "name": "RED_Inf_FA",
+        "faction": "",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_GA",
+        "name": "RED_Inf_GA",
+        "faction": "",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Larmmina",
+        "name": "BLUE_Larmmina",
+        "faction": "",
+        "type": "larmminor",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "larmminor": {
+            "triggerRadie": 0
+          }
+        }
+      },
+      {
+        "id": "BLUE_Försvarsladdning",
+        "name": "BLUE_Försvarsladdning",
+        "faction": "",
+        "type": "minor",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "minor": {
+            "triggerRadie": 0,
+            "effekt": "reduced"
+          }
+        }
+      },
+      {
+        "id": "ARTILLERI ",
+        "name": "ARTILLERI",
+        "faction": "",
+        "type": "indirektEld",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "indirektEld": {
+            "spridning": 3,
+            "effektRadie": 1,
+            "effektCentrum": "eliminated",
+            "effektPeriferi": "suppressed"
+          }
+        }
+      },
+      {
+        "id": "GRK",
+        "name": "GRK",
+        "faction": "",
+        "type": "indirektEld",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "indirektEld": {
+            "spridning": 1,
+            "effektRadie": 0,
+            "effektCentrum": "reduced",
+            "effektPeriferi": "suppressed"
+          }
+        }
+      },
+      {
+        "id": "BLUE_Drönare",
+        "name": "BLUE_Drönare",
+        "faction": "",
+        "type": "dronare",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/drone-blue.png",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "dronare": {
+            "rörelsePRunda": 5,
+            "losRadie": 3,
+            "kanBekämpas": true
+          }
+        }
+      },
+      {
+        "id": "RED_Drönare",
+        "name": "RED_Drönare",
+        "faction": "",
+        "type": "dronare",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/drone-red.png",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "dronare": {
+            "rörelsePRunda": 5,
+            "losRadie": 3,
+            "kanBekämpas": true
+          }
+        }
+      },
+      {
+        "id": "ART",
+        "name": "ART",
+        "faction": "",
+        "type": "indirektEld",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "indirektEld": {
+            "spridning": 3,
+            "effektRadie": 1,
+            "effektCentrum": "eliminated",
+            "effektPeriferi": "suppressed"
+          }
+        }
+      }
+    ]
+  },
+  "scenario": {
+    "title": "Ta och försvara fron i Laholm",
+    "desc": "",
+    "rounds": 6,
+    "initiative": "Blue",
+    "setupMin": 0,
+    "vc": "Blå vinner om de lyckas hålla bron genom direktriktad eld mot bron\n\nRöd vinner om de lyckas ta och hålla bron samt förhindra att blå kan påverka bron",
+    "order": {
+      "blue": "Försvara bron över Lagan ",
+      "red": "Ta Bron över Lagan"
+    },
+    "boards": [
+      {
+        "name": "Designer (1).jpg",
+        "x": 15,
+        "y": 65,
+        "rot": 0,
+        "index": 0
+      }
+    ],
+    "map": {
+      "hexSize": 50,
+      "orient": "flat",
+      "coordStyle": "rowLetters",
+      "gridAngle": 0,
+      "gridOffX": 80,
+      "gridOffY": 80,
+      "terrain": {
+        "K20": "road",
+        "K19": "road",
+        "K18": "road",
+        "K17": "road",
+        "J16": "road",
+        "K15": "road",
+        "J14": "road",
+        "J13": "road",
+        "I12": "road",
+        "I11": "road",
+        "I10": "road",
+        "I9": "road",
+        "I8": "road",
+        "I7": "road",
+        "H6": "road",
+        "H5": "road",
+        "H4": "road",
+        "I4": "road",
+        "J5": "road",
+        "J6": "road",
+        "K7": "road",
+        "L7": "road",
+        "I3": "road",
+        "I2": "road",
+        "J1": "road",
+        "K1": "road",
+        "H3": "road",
+        "G3": "road",
+        "F3": "road",
+        "E2": "road",
+        "F2": "road",
+        "F1": "road",
+        "D2": "road",
+        "C1": "road",
+        "D1": "road",
+        "B1": "road",
+        "F10": "road",
+        "G11": "road",
+        "J17": "road",
+        "I17": "road",
+        "H17": "road",
+        "G17": "road",
+        "F17": "road",
+        "E17": "woods",
+        "E16": "road",
+        "D16": "road",
+        "D15": "road",
+        "C14": "road",
+        "D13": "road",
+        "B9": "road",
+        "B10": "road",
+        "C11": "road",
+        "B12": "road",
+        "B13": "road",
+        "A14": "road",
+        "B15": "road",
+        "B16": "road",
+        "C17": "road",
+        "C18": "road",
+        "C19": "road",
+        "B20": "road",
+        "B18": "road",
+        "B19": "road",
+        "A20": "road",
+        "I19": "road",
+        "L20": "road",
+        "F18": "woods",
+        "E18": "woods",
+        "D18": "woods",
+        "D19": "woods",
+        "D17": "woods",
+        "C16": "woods",
+        "C15": "woods",
+        "B14": "woods",
+        "C13": "woods",
+        "C12": "woods",
+        "D11": "woods",
+        "D12": "woods",
+        "E12": "woods",
+        "F13": "woods",
+        "E13": "woods",
+        "F12": "woods",
+        "G13": "woods",
+        "G12": "woods",
+        "H11": "woods",
+        "H10": "woods",
+        "C10": "woods",
+        "C9": "woods",
+        "C5": "orchard",
+        "A4": "orchard",
+        "A9": "woods",
+        "A7": "woods",
+        "A8": "woods",
+        "G4": "woods",
+        "F4": "woods",
+        "E4": "woods",
+        "B2": "woods",
+        "A2": "woods",
+        "A1": "woods",
+        "G1": "woods",
+        "G2": "woods",
+        "J2": "woods",
+        "J3": "woods",
+        "K2": "woods",
+        "L1": "woods",
+        "L4": "woods",
+        "L5": "woods",
+        "L6": "woods",
+        "K6": "woods",
+        "K5": "woods",
+        "L2": "river",
+        "L3": "river",
+        "K4": "river",
+        "J4": "river",
+        "K3": "marsh",
+        "L8": "river",
+        "K8": "river",
+        "J8": "river",
+        "J7": "river",
+        "I6": "river",
+        "G5": "river",
+        "F5": "river",
+        "E5": "river",
+        "H8": "river",
+        "H9": "river",
+        "G10": "river",
+        "G9": "river",
+        "F11": "river",
+        "E11": "river",
+        "D10": "river",
+        "D9": "river",
+        "C8": "river",
+        "D7": "river",
+        "D6": "river",
+        "D5": "river",
+        "C4": "river",
+        "A3": "river",
+        "B3": "river",
+        "C3": "river",
+        "E6": "wood_building",
+        "E7": "wood_building",
+        "H7": "wood_building",
+        "G8": "wood_building",
+        "C2": "wood_building",
+        "E1": "wood_building",
+        "H1": "wood_building",
+        "I1": "wood_building",
+        "H2": "wood_building",
+        "J9": "wood_building",
+        "J10": "wood_building",
+        "J15": "wood_building",
+        "H18": "wood_building",
+        "J19": "wood_building",
+        "I20": "wood_building",
+        "J20": "wood_building",
+        "H20": "wood_building",
+        "G6": "wood_building",
+        "F9": "stone_building",
+        "E9": "stone_building",
+        "E8": "stone_building",
+        "D8": "stone_building",
+        "G7": "stone_building",
+        "F6": "stone_building",
+        "E10": "orchard",
+        "F8": "orchard",
+        "F7": "orchard",
+        "C6": "orchard",
+        "B4": "orchard",
+        "A13": "orchard",
+        "J11": "woods",
+        "K11": "woods",
+        "K10": "woods",
+        "I14": "woods",
+        "J18": "woods",
+        "E3": "open",
+        "D3": "open",
+        "D4": "open",
+        "I5": "open",
+        "L10": "open",
+        "L11": "open",
+        "L12": "open",
+        "K12": "open",
+        "J12": "open",
+        "K13": "open",
+        "L13": "open",
+        "K14": "open",
+        "L14": "open",
+        "L15": "open",
+        "K16": "open",
+        "L16": "open",
+        "L17": "open",
+        "L18": "open",
+        "L19": "open",
+        "I18": "open",
+        "G18": "open",
+        "H19": "open",
+        "G19": "open",
+        "G20": "open",
+        "F20": "open",
+        "I16": "open",
+        "I15": "open",
+        "H14": "open",
+        "I13": "open",
+        "H12": "open",
+        "H13": "open",
+        "G14": "open",
+        "H15": "open",
+        "H16": "open",
+        "G16": "open",
+        "F16": "open",
+        "F15": "open",
+        "G15": "open",
+        "F14": "open",
+        "E14": "open",
+        "E15": "open",
+        "D14": "open",
+        "F19": "open",
+        "E19": "open",
+        "E20": "open",
+        "D20": "open",
+        "C20": "open",
+        "A19": "open",
+        "A18": "open",
+        "B17": "open",
+        "A17": "open",
+        "A16": "open",
+        "A15": "open",
+        "A12": "open",
+        "B8": "open",
+        "B7": "open",
+        "A6": "open",
+        "A5": "open",
+        "B5": "open",
+        "B6": "open",
+        "C7": "open",
+        "L9": "river",
+        "K9": "river",
+        "B11": "open",
+        "A11": "open",
+        "A10": "open"
+      }
+    },
+    "setup": {
+      "blue": "",
+      "red": ""
+    },
+    "orbat": {
+      "blue": [
+        {
+          "id": "BLUE_Inf_EA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0
+        },
+        {
+          "id": "BLUE_Inf_FA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0
+        },
+        {
+          "id": "BLUE_Inf_GA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0
+        }
+      ],
+      "red": [
+        {
+          "id": "RED_Inf_EA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0
+        },
+        {
+          "id": "RED_Inf_FA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0
+        },
+        {
+          "id": "RED_Inf_GA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0
+        }
+      ]
+    },
+    "resurser": {
+      "blue": [
+        {
+          "id": "BLUE_Larmmina",
+          "count": 2
+        },
+        {
+          "id": "BLUE_Försvarsladdning",
+          "count": 2
+        },
+        {
+          "id": "GRK",
+          "count": 3
+        }
+      ],
+      "red": [
+        {
+          "id": "GRK",
+          "count": 3
+        },
+        {
+          "id": "ART",
+          "count": 1
+        },
+        {
+          "id": "RED_Drönare",
+          "count": 2
+        }
+      ]
+    }
+  }
+}
