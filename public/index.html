@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Tactics Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #050d1a;
+    --blue-dark: #0a1628;
+    --blue-mid: #1a3a6e;
+    --blue-bright: #4a8fd4;
+    --blue-light: #7ab8f5;
+    --text: #e0ecf8;
+    --muted: #7a9fc0;
+    --accent: #f0c040;
+    --red: #cc4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Hex canvas bakgrund */
+  canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Gradient overlay */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(5,13,26,0.4) 0%, rgba(5,13,26,0.85) 70%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Huvudinnehåll */
+  .content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    animation: fadeIn 1.2s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Eyebrow */
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--blue-bright);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.3s forwards;
+  }
+
+  /* Titel */
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 10vw, 140px);
+    line-height: 0.88;
+    letter-spacing: 2px;
+    color: var(--text);
+    text-shadow: 0 0 80px rgba(74,143,212,0.25);
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.5s forwards;
+  }
+
+  h1 span { color: var(--blue-light); }
+
+  /* Divider */
+  .divider {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue-bright), transparent);
+    margin: 0 auto 28px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.7s forwards;
+  }
+
+  /* Tagline */
+  .tagline {
+    font-size: clamp(14px, 1.8vw, 18px);
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+    margin-bottom: 56px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 0.9s forwards;
+  }
+
+  /* Knappar */
+  .buttons {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 1.1s forwards;
+  }
+
+  .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    padding: 32px 52px;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-width: 220px;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn:hover::before { opacity: 1; }
+
+  .btn-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .btn-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .btn-desc {
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+    margin-top: 4px;
+  }
+
+  /* Spela-knapp */
+  .btn-play {
+    border-color: rgba(74,143,212,0.5);
+    background: rgba(26,58,110,0.2);
+  }
+
+  .btn-play::before {
+    background: rgba(74,143,212,0.1);
+  }
+
+  .btn-play:hover {
+    border-color: var(--blue-bright);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(74,143,212,0.2);
+  }
+
+  .btn-play .btn-label { color: var(--blue-bright); }
+  .btn-play .btn-title { color: var(--text); }
+
+  .btn-play::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--blue-bright);
+  }
+
+  /* Editor-knapp */
+  .btn-editor {
+    border-color: rgba(240,192,64,0.3);
+    background: rgba(240,192,64,0.04);
+  }
+
+  .btn-editor::before {
+    background: rgba(240,192,64,0.06);
+  }
+
+  .btn-editor:hover {
+    border-color: rgba(240,192,64,0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(240,192,64,0.1);
+  }
+
+  .btn-editor .btn-label { color: var(--accent); }
+  .btn-editor .btn-title { color: var(--accent); }
+
+  .btn-editor::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  /* Lösenordsruta för editor */
+  .pw-wrap {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .pw-wrap.show { display: flex; }
+
+  .pw-input {
+    background: rgba(10,22,40,0.8);
+    border: 1px solid rgba(240,192,64,0.3);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    padding: 10px 20px;
+    text-align: center;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .pw-input:focus { border-color: var(--accent); }
+
+  .pw-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 10px 24px;
+    cursor: pointer;
+    width: 220px;
+    transition: opacity 0.2s;
+  }
+
+  .pw-btn:hover { opacity: 0.85; }
+  .pw-error { font-size: 12px; color: var(--red); font-family: 'DM Mono', monospace; letter-spacing: 1px; }
+
+  /* URL badge */
+  .url-badge {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: rgba(74,143,212,0.4);
+    z-index: 2;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 1.5s forwards;
+  }
+
+  /* Hörndekoration */
+  .corner {
+    position: fixed;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(74,143,212,0.2);
+    z-index: 2;
+  }
+
+  .corner.tl { top: 24px; left: 32px; }
+  .corner.tr { top: 24px; right: 32px; text-align: right; }
+  .corner.bl { bottom: 24px; left: 32px; }
+  .corner.br { bottom: 24px; right: 32px; text-align: right; }
+</style>
+</head>
+<body>
+
+<canvas id="hexCanvas"></canvas>
+<div class="overlay"></div>
+
+<div class="corner tl">DIGITAL TACTICS TRAINER<br>v2026.1</div>
+<div class="corner tr">PEDAGOGISKT VERKTYG<br>TAKTIKÖVNING</div>
+<div class="corner bl">ÖVNING · EJ SEKRETESS</div>
+<div class="corner br">taktikspel.onrender.com</div>
+
+<div class="content">
+  <div class="eyebrow">Pedagogiskt verktyg · Taktikövning · 2026</div>
+
+  <h1>DIGITAL<br><span>TACTICS</span><br>TRAINER</h1>
+
+  <div class="divider"></div>
+
+  <p class="tagline">
+    Taktik lärs bäst genom att övas.<br>
+    Välj din roll och börja.
+  </p>
+
+  <div class="buttons">
+    <!-- SPELA -->
+    <a href="spel.html" class="btn btn-play">
+      <span class="btn-label">Elev / Instruktör</span>
+      <span class="btn-title">SPELA</span>
+      <span class="btn-desc">Anslut till ett pågående spel</span>
+    </a>
+
+    <!-- SKAPA -->
+    <div class="btn btn-editor" id="editorBtn" onclick="togglePw()">
+      <span class="btn-label">Endast instruktör</span>
+      <span class="btn-title">SKAPA</span>
+      <span class="btn-desc">Öppna scenarioeditorn</span>
+      <div class="pw-wrap" id="pwWrap" onclick="event.stopPropagation()">
+        <input class="pw-input" type="password" id="pwInput" placeholder="LÖSENORD" onkeydown="if(event.key==='Enter')checkPw()">
+        <button class="pw-btn" onclick="checkPw()">ÖPPNA EDITOR</button>
+        <span class="pw-error" id="pwError"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="url-badge">taktikspel.onrender.com</div>
+
+<script>
+// Hex canvas
+const canvas = document.getElementById('hexCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawHex() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const r = 36;
+  const H = Math.sqrt(3) * r;
+  const cS = 2 * r * 0.75;
+  ctx.strokeStyle = '#1a3a6e';
+  ctx.lineWidth = 1;
+
+  for (let col = -1; col < canvas.width / cS + 2; col++) {
+    for (let row = -1; row < canvas.height / H + 2; row++) {
+      const x = col * cS + r;
+      const y = row * H + (col % 2 === 0 ? 0 : H / 2) + H / 2;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI / 180 * (60 * i);
+        const px = x + r * Math.cos(a);
+        const py = y + r * Math.sin(a);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+}
+
+drawHex();
+window.addEventListener('resize', drawHex);
+
+// Editor lösenord
+const EDITOR_PW = 'Gamer1337';
+
+function togglePw() {
+  const wrap = document.getElementById('pwWrap');
+  const isOpen = wrap.classList.contains('show');
+  if (!isOpen) {
+    wrap.classList.add('show');
+    setTimeout(() => document.getElementById('pwInput').focus(), 50);
+  }
+}
+
+function checkPw() {
+  const val = document.getElementById('pwInput').value;
+  const err = document.getElementById('pwError');
+  if (val === EDITOR_PW) {
+    window.location.href = 'editor.html';
+  } else {
+    err.textContent = 'Fel lösenord';
+    document.getElementById('pwInput').value = '';
+    setTimeout(() => err.textContent = '', 2000);
+  }
+}
+</script>
+
+</body>
+</html>
