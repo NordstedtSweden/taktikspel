@@ -111,6 +111,27 @@ app.get('/api/paket', async (req, res) => {
   }
 });
 
+// Lista tillgängliga enhetsikoner
+app.get('/api/ikoner', async (req, res) => {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/public/assets/units`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!response.ok) return res.json({ ikoner: [] });
+    const filer = await response.json();
+    const ikoner = filer
+      .filter(f => /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name))
+      .map(f => f.name);
+    res.json({ ikoner });
+  } catch(e) {
+    res.json({ ikoner: [] });
+  }
+});
+
 // Spara kartbild
 app.post('/api/spara-karta', async (req, res) => {
   const { password, filnamn, data } = req.body;
@@ -155,6 +176,10 @@ io.on('connection', socket => {
 
   socket.on('state', data => {
     socket.to(data.kod).emit('state', data);
+  });
+
+  socket.on('ping-keepalive', () => {
+    // Inget svar nödvändigt — räcker att servern tar emot anropet
   });
 
   socket.on('disconnect', () => {
