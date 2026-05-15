@@ -76,6 +76,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
   <div class="tab active" data-view="map">Karta</div>
   <div class="tab" data-view="units">Units</div>
   <div class="tab" data-view="scenario">Scenario</div>
+  <div class="tab" data-view="ai">AI-regler</div>
 </div>
 
 <!-- =============== MAP EDITOR =============== -->
@@ -502,6 +503,101 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
   </div>
 </div>
 
+<!-- =============== AI-REGLER =============== -->
+<div class="view" id="view-ai">
+  <div class="p" style="display:grid;grid-template-columns:300px 1fr;gap:12px">
+
+    <!-- Vänster: segervillkor + svårighet -->
+    <div>
+      <h3>Solo-inställningar</h3>
+
+      <h4>Segervillkor (Blue vinner om…)</h4>
+      <label>Typ
+        <select id="wcType">
+          <option value="take_hex">Ta en hex</option>
+          <option value="hold_hex">Håll en hex i N rundor</option>
+          <option value="eliminate_unit">Eliminera specifik enhet</option>
+          <option value="eliminate_all">Eliminera alla röda enheter</option>
+          <option value="survive">Överlev N rundor</option>
+        </select>
+      </label>
+      <div id="wcHexFält" style="margin-top:6px">
+        <label>Mål-hex (t.ex. B5)<input id="wcTarget" type="text" placeholder="B5"></label>
+      </div>
+      <div id="wcEnhetFält" style="margin-top:6px;display:none">
+        <label>Enhet-ID<input id="wcUnit" type="text" placeholder="RED_Inf_EA"></label>
+      </div>
+      <div id="wcRundorFält" style="margin-top:6px;display:none">
+        <label>Antal rundor<input id="wcRounds" type="number" value="3" min="1"></label>
+      </div>
+
+      <hr>
+      <h4>Svårighetsgrad</h4>
+      <label>
+        <select id="soloSvårighet">
+          <option value="lätt">Lätt — AI missar 35% av reglerna</option>
+          <option value="normal" selected>Normal — AI missar 15%</option>
+          <option value="svår">Svår — AI följer alltid reglerna</option>
+        </select>
+      </label>
+      <div class="s" style="margin-top:6px">Svårighetsgraden styr hur ofta AI:n följer sina egna regler.</div>
+    </div>
+
+    <!-- Höger: per-enhet AI-regler -->
+    <div>
+      <h3>AI-regler per enhet (Red)</h3>
+      <div class="s">Välj en Red-enhet ur scenariots orbat och programmera dess beteende.<br>
+      Systemet kollar reglerna uppifrån — den första som matchar körs.</div>
+
+      <div class="row" style="margin-top:10px;align-items:center">
+        <label style="flex:1">Välj Red-enhet
+          <select id="aiEnhetSel" onchange="refreshAiRegler()"></select>
+        </label>
+      </div>
+
+      <div id="aiRegelLista" class="list" style="margin-top:8px;min-height:80px">
+        <div class="s">— Välj en enhet ovan —</div>
+      </div>
+
+      <!-- Lägg till regel -->
+      <div class="p" style="margin-top:10px">
+        <h4>Lägg till regel</h4>
+        <div class="grid2" style="margin-bottom:6px">
+          <label>Condition
+            <select id="aiCondSel">
+              <option value="always">always — alltid sant</option>
+              <option value="enemy_within">enemy_within — fiende inom N hex</option>
+              <option value="enemy_not_within">enemy_not_within — ingen fiende inom N hex</option>
+              <option value="round_gte">round_gte — runda ≥ N</option>
+              <option value="round_lte">round_lte — runda ≤ N</option>
+              <option value="hex_occupied">hex_occupied — fiende på hex (ange hex i Värde)</option>
+              <option value="unit_eliminated">unit_eliminated — enhet eliminerad (ange ID i Värde)</option>
+            </select>
+          </label>
+          <label>Värde (N, hex eller enhet-ID)
+            <input id="aiCondVal" type="text" placeholder="t.ex.  3  eller  B5  eller  Blue_Inf_1">
+          </label>
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <label>Action
+            <select id="aiActSel">
+              <option value="defend">defend — försvara nuv. hex</option>
+              <option value="take">take — rör sig mot Target</option>
+              <option value="fallback">fallback — dra sig undan</option>
+              <option value="scout">scout — spana mot Target</option>
+              <option value="hold">hold — stå still, ingen order</option>
+            </select>
+          </label>
+          <label>Target (hex eller enhet-ID)
+            <input id="aiActTarget" type="text" placeholder="t.ex.  B5  (krävs för take/scout)">
+          </label>
+        </div>
+        <button class="btn pri" id="aiLäggTillBtn">+ Lägg till regel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="tip" class="tip"></div>
 
 <script>
@@ -546,6 +642,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.getElementById('view-'+t.dataset.view).classList.add('active');
     if(t.dataset.view==='units'){ ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); }
     if(t.dataset.view==='scenario'){ refreshBoardList(); refreshUnitPicker(); refreshPools(); refreshResPicker(); refreshResPools(); }
+    if(t.dataset.view==='ai'){ readScenarioForm(); fillAiForm(); }
   });
 });
 const tip=document.getElementById('tip');
@@ -1158,8 +1255,9 @@ function readScenarioForm(){
   if (!SC.order) SC.order={blue:'',red:''};
   SC.order.blue=$('scBlueOrder').value||''; SC.order.red=$('scRedOrder').value||'';
   if (!SC.resurser) SC.resurser={blue:[],red:[]};
+  if (typeof readAiForm === 'function') readAiForm();
 }
-$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal'}; fillScenarioForm(); alert('Nytt scenario.'); };
 $('scImport').onclick=()=>$('scFile').click();
 $('scFile').onchange=(ev)=>{
   const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
@@ -1499,6 +1597,141 @@ $('scHamtaServer').onclick = async () => {
 document.getElementById('serverScenarioStangBtn').onclick = () => {
   document.getElementById('serverScenarioModal').style.display = 'none';
 };
+
+/* ================= AI-REGLER ================= */
+
+function refreshAiEnhetsPicker() {
+  const sel = $('aiEnhetSel');
+  sel.innerHTML = '<option value="">— välj enhet —</option>';
+  const redOrbat = SC.orbat?.red || [];
+  redOrbat.forEach(rad => {
+    const opt = document.createElement('option');
+    opt.value = rad.id;
+    opt.textContent = rad.id + (rad.count > 1 ? ' ×'+rad.count : '');
+    sel.appendChild(opt);
+  });
+}
+
+function refreshAiRegler() {
+  const enhetId = $('aiEnhetSel').value;
+  const lista   = $('aiRegelLista');
+  if (!enhetId) {
+    lista.innerHTML = '<div class="s">— Välj en Red-enhet ovan —</div>';
+    return;
+  }
+  if (!SC.aiRules) SC.aiRules = {};
+  const regler = SC.aiRules[enhetId] || [];
+  if (!regler.length) {
+    lista.innerHTML = '<div class="s">— Inga regler än. Lägg till nedan. —</div>';
+    return;
+  }
+  lista.innerHTML = '';
+  regler.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'uitem';
+    div.innerHTML =
+      `<div style="display:flex;align-items:center;gap:6px">
+        <span style="flex:1;font-size:13px">
+          <b>${i+1}.</b> ${aiCondText(r)} &rarr; ${aiActText(r)}
+        </span>
+        <button class="btn" onclick="aiFlyttaUpp('${enhetId}',${i})" ${i===0?'disabled':''}>↑</button>
+        <button class="btn" onclick="aiFlyttaNer('${enhetId}',${i})" ${i===regler.length-1?'disabled':''}>↓</button>
+        <button class="btn bad" onclick="aiTaBort('${enhetId}',${i})">✕</button>
+      </div>`;
+    lista.appendChild(div);
+  });
+}
+
+function aiCondText(r) {
+  switch(r.condition) {
+    case 'enemy_within':     return `OM fiende inom ${r.value||'?'} hex`;
+    case 'enemy_not_within': return `OM ingen fiende inom ${r.value||'?'} hex`;
+    case 'round_gte':        return `OM runda ≥ ${r.value||'?'}`;
+    case 'round_lte':        return `OM runda ≤ ${r.value||'?'}`;
+    case 'hex_occupied':     return `OM fiende på hex ${r.value||'?'}`;
+    case 'unit_eliminated':  return `OM ${r.value||'?'} är eliminerad`;
+    case 'always':           return 'ALLTID';
+    default: return r.condition;
+  }
+}
+
+function aiActText(r) {
+  switch(r.action) {
+    case 'defend':   return `FÖRSVARA ${r.target||'nuv. hex'}`;
+    case 'take':     return `ANFALLA ${r.target||'?'}`;
+    case 'fallback': return 'DRA SIG UNDAN';
+    case 'scout':    return `SPANA mot ${r.target||'?'}`;
+    case 'hold':     return 'STÅ STILL';
+    default: return r.action;
+  }
+}
+
+function aiFlyttaUpp(enhetId, i) {
+  const regler = SC.aiRules[enhetId];
+  if (i <= 0) return;
+  [regler[i-1], regler[i]] = [regler[i], regler[i-1]];
+  refreshAiRegler();
+}
+function aiFlyttaNer(enhetId, i) {
+  const regler = SC.aiRules[enhetId];
+  if (i >= regler.length-1) return;
+  [regler[i], regler[i+1]] = [regler[i+1], regler[i]];
+  refreshAiRegler();
+}
+function aiTaBort(enhetId, i) {
+  SC.aiRules[enhetId].splice(i, 1);
+  refreshAiRegler();
+}
+
+$('aiLäggTillBtn').onclick = () => {
+  const enhetId = $('aiEnhetSel').value;
+  if (!enhetId) { alert('Välj en enhet först.'); return; }
+  const condition = $('aiCondSel').value;
+  const value     = $('aiCondVal').value.trim();
+  const action    = $('aiActSel').value;
+  const target    = $('aiActTarget').value.trim();
+  if (!condition || !action) { alert('Välj condition och action.'); return; }
+  if (!SC.aiRules) SC.aiRules = {};
+  if (!SC.aiRules[enhetId]) SC.aiRules[enhetId] = [];
+  const regel = { condition, action };
+  if (value)  regel.value  = isNaN(Number(value))  ? value  : Number(value);
+  if (target) regel.target = target;
+  SC.aiRules[enhetId].push(regel);
+  $('aiCondVal').value = '';
+  $('aiActTarget').value = '';
+  refreshAiRegler();
+};
+
+// Visa/dölj fält beroende på segervillkors-typ
+$('wcType').onchange = () => {
+  const t = $('wcType').value;
+  $('wcHexFält').style.display   = (t==='take_hex'||t==='hold_hex') ? 'block' : 'none';
+  $('wcEnhetFält').style.display = (t==='eliminate_unit') ? 'block' : 'none';
+  $('wcRundorFält').style.display= (t==='hold_hex'||t==='survive') ? 'block' : 'none';
+};
+
+function fillAiForm() {
+  if (!SC.aiRules)          SC.aiRules = {};
+  if (!SC.soloWinCondition) SC.soloWinCondition = { type:'take_hex', target:'', rounds:null };
+  const wc = SC.soloWinCondition;
+  $('wcType').value    = wc.type   || 'take_hex';
+  $('wcTarget').value  = wc.target || '';
+  $('wcUnit').value    = wc.target || '';
+  $('wcRounds').value  = wc.rounds || 3;
+  $('soloSvårighet').value = SC.soloSvårighet || 'normal';
+  $('wcType').onchange();
+  refreshAiEnhetsPicker();
+  refreshAiRegler();
+}
+
+function readAiForm() {
+  const type   = $('wcType').value;
+  const target = (type==='eliminate_unit') ? $('wcUnit').value.trim() : $('wcTarget').value.trim();
+  const rounds = (type==='hold_hex'||type==='survive') ? +($('wcRounds').value||3) : null;
+  SC.soloWinCondition = { type, target, rounds };
+  SC.soloSvårighet    = $('soloSvårighet').value;
+}
+
 </script>
 
 <!-- Modal: välj ikon från server -->
