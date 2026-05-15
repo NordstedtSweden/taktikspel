@@ -199,6 +199,8 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
         <div class="grid2">
           <button class="btn" id="pickFull">Välj bild Full…</button>
           <button class="btn" id="pickRed">Välj bild Red…</button>
+          <button class="btn" id="pickFullServer">Från server (Full)</button>
+          <button class="btn" id="pickRedServer">Från server (Red)</button>
           <input id="fileFull" type="file" accept="image/*" class="hide">
           <input id="fileRed" type="file" accept="image/*" class="hide">
         </div>
@@ -981,6 +983,7 @@ $('uType').addEventListener('change',()=>{ showTypePanels(); buildTerrainMatrix(
 
 $('fileFull').addEventListener('change', async ev => {
   const f = ev.target.files?.[0]; if (!f) return;
+  ev.target.value = '';
   if (editorPassword) {
     const reader = new FileReader();
     reader.onload = async function() {
@@ -1010,6 +1013,7 @@ $('fileFull').addEventListener('change', async ev => {
 
 $('fileRed').addEventListener('change', async ev => {
   const f = ev.target.files?.[0]; if (!f) return;
+  ev.target.value = '';
   if (editorPassword) {
     const reader = new FileReader();
     reader.onload = async function() {
@@ -1263,6 +1267,51 @@ function wrap(ctx, text, maxW){
   if(line) out.push(line); return out;
 }
 
+/* ===== Välj ikon från server ===== */
+let serverIkonTarget = 'full';
+
+async function visaServerIkonModal() {
+  const modal = $('serverIkonModal');
+  const grid  = $('serverIkonGrid');
+  modal.style.display = 'flex';
+  grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Hämtar ikoner från servern…</div>';
+  try {
+    const res  = await fetch(SERVER + '/api/ikoner');
+    const data = await res.json();
+    if (!data.ikoner || !data.ikoner.length) {
+      grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Inga ikoner hittades på servern.</div>';
+      return;
+    }
+    grid.innerHTML = '';
+    data.ikoner.forEach(filnamn => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style.cssText = 'padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;height:auto';
+      const img = document.createElement('img');
+      img.src = SERVER + '/assets/units/' + filnamn;
+      img.style.cssText = 'width:64px;height:64px;object-fit:contain;image-rendering:pixelated';
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:10px;word-break:break-all;color:#9fb1d4;max-width:80px;text-align:center';
+      lbl.textContent = filnamn;
+      btn.appendChild(img);
+      btn.appendChild(lbl);
+      btn.onclick = () => {
+        const sökväg = 'assets/units/' + filnamn;
+        if (serverIkonTarget === 'full') {
+          $('uIconFull').value = sökväg;
+        } else {
+          $('uIconReduced').value = sökväg;
+        }
+        updatePreview();
+        modal.style.display = 'none';
+      };
+      grid.appendChild(btn);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="color:#ff6b6b;grid-column:1/-1">Kunde inte nå servern: ' + e.message + '</div>';
+  }
+}
+
 /* ===== Init ===== */
 function safeInit(){
   $('gridRows').value = M.rows || 12;
@@ -1271,6 +1320,9 @@ function safeInit(){
   fillScenarioForm(); refreshUnitPicker(); refreshPools();
   $('pickFull').addEventListener('click', () => $('fileFull').click());
   $('pickRed').addEventListener('click', () => $('fileRed').click());
+  $('pickFullServer').addEventListener('click', () => { serverIkonTarget = 'full'; visaServerIkonModal(); });
+  $('pickRedServer').addEventListener('click', () => { serverIkonTarget = 'reduced'; visaServerIkonModal(); });
+  $('serverIkonStangBtn').onclick = () => { $('serverIkonModal').style.display = 'none'; };
   console.log('v1.17.3 init klar');
 }
 document.addEventListener('DOMContentLoaded', safeInit);
@@ -1448,6 +1500,15 @@ document.getElementById('serverScenarioStangBtn').onclick = () => {
   document.getElementById('serverScenarioModal').style.display = 'none';
 };
 </script>
+
+<!-- Modal: välj ikon från server -->
+<div id="serverIkonModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:640px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;">
+    <h3 style="margin:0 0 16px;color:#e8eefc">Välj ikon från servern</h3>
+    <div id="serverIkonGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;overflow:auto;flex:1;margin-bottom:16px;padding:4px"></div>
+    <button class="btn" id="serverIkonStangBtn" style="align-self:flex-end">Stäng</button>
+  </div>
+</div>
 
 <!-- Modal: hämta scenario från server -->
 <div id="serverScenarioModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
