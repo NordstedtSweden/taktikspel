@@ -296,6 +296,32 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 
   <div id="anslutStatus" style="font-size:13px;color:#9fb1d4"></div>
 </div>
+<!-- ===== SOLO-PANEL ===== -->
+<div id="soloPanel" style="
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:#0b1020;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;
+  font-family:system-ui,sans-serif;color:#e8eefc;">
+  <h2 style="margin:0;font-size:24px">Solo-spel</h2>
+  <p style="color:#9fb1d4;font-size:14px;margin:0;text-align:center;max-width:320px">
+    Du spelar som <b style="color:#4da6ff">Blue</b>.<br>
+    Välj ett scenario och starta.
+  </p>
+  <div id="soloScenarioLista" style="width:320px;max-height:260px;overflow:auto;
+    border:1px solid #243052;border-radius:10px;background:#0e1730;padding:8px">
+    <div style="color:#9fb1d4;font-size:13px">Hämtar scenarios…</div>
+  </div>
+  <div style="display:flex;gap:10px;width:320px">
+    <button id="soloLokalBtn" style="flex:1;padding:10px;border-radius:8px;border:1px solid #243052;
+      background:#0e1730;color:#e8eefc;cursor:pointer;font-size:14px">
+      Lokal fil…
+    </button>
+    <input type="file" id="soloLokalFil" accept="application/json" style="display:none">
+  </div>
+  <div id="soloStatus" style="font-size:13px;color:#9fb1d4">—</div>
+</div>
+
 <div class="top">
   <div class="row">
     <label>Roll:
@@ -459,6 +485,14 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
       <input type="checkbox" id="autoNextChk" checked>
       Auto kör nästa runda
     </label>
+  </div>
+
+  <!-- Solo-läge: ersätter Ready-systemet -->
+  <div id="soloKlarRad" style="display:none;margin-top:8px">
+    <button id="soloKlarBtn" class="btn ok" style="width:100%;padding:12px;font-size:16px;font-weight:700">
+      ✔ Klar — kör AI-rundan
+    </button>
+    <div id="soloRundInfo" class="s" style="text-align:center;margin-top:6px">—</div>
   </div>
 
   <div class="readyRow" style="justify-content:flex-end">
@@ -8148,7 +8182,397 @@ if (stepChanged || liveChanged) {
   });
 })();
 
+/* ================================================================
+   SOLO-MOD
+   Aktiveras via URL: spel.html?mode=solo
+   Blue = eleven, Red = AI styrd av aiRules i spelpaket-JSON
+   ================================================================ */
 
+const soloMode = new URLSearchParams(location.search).get('mode') === 'solo';
+const SOLO_SERVER = 'https://taktikspel.onrender.com';
+let soloValtPaket = null;   // det laddade paketet
+let soloSpelSlut  = false;  // förhindrar att Klar-knappen körs efter spelslut
+let soloHeldRounds = 0;     // räknare för hold_hex-villkoret
+
+// ----------------------------------------------------------------
+// INIT: byt ut anslutPanel mot soloPanel om mode=solo
+// ----------------------------------------------------------------
+if (soloMode) {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Dölj multiplayer-panelen, visa solo-panelen
+    const ap = document.getElementById('anslutPanel');
+    if (ap) { ap.style.display = 'none'; ap.style.pointerEvents = 'none'; }
+    const sp = document.getElementById('soloPanel');
+    if (sp) sp.style.display = 'flex';
+
+    // Sätt roll direkt till blue
+    window.spelRoll = 'blue';
+    const rollSel = document.getElementById('roleSel');
+    if (rollSel) rollSel.value = 'blue';
+
+    // Hämta scenarios från servern
+    soloHämtaScenarios();
+
+    // Lokal fil-knapp
+    document.getElementById('soloLokalBtn').onclick = () =>
+      document.getElementById('soloLokalFil').click();
+
+    document.getElementById('soloLokalFil').onchange = e => {
+      const f = e.target.files?.[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const paket = JSON.parse(r.result);
+          soloStartaPaket(paket);
+        } catch(err) { alert('Fel i paketfil: ' + err.message); }
+      };
+      r.readAsText(f);
+      e.target.value = '';
+    };
+
+    // Klar-knappen
+    document.getElementById('soloKlarBtn').onclick = soloKlarClicked;
+  });
+}
+
+async function soloHämtaScenarios() {
+  const lista = document.getElementById('soloScenarioLista');
+  try {
+    const res  = await fetch(SOLO_SERVER + '/api/paket');
+    const data = await res.json();
+    lista.innerHTML = '';
+    if (!data.paket?.length) {
+      lista.innerHTML = '<div style="color:#9fb1d4;font-size:13px">Inga scenarios på servern.</div>';
+      return;
+    }
+    data.paket.forEach(filnamn => {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px;' +
+        'border-radius:8px;border:1px solid #243052;background:#0a0f24;color:#e8eefc;cursor:pointer;font-size:14px';
+      btn.textContent = filnamn.replace('.json', '');
+      btn.onmouseenter = () => btn.style.background = '#17224a';
+      btn.onmouseleave = () => btn.style.background = '#0a0f24';
+      btn.onclick = async () => {
+        document.getElementById('soloStatus').textContent = 'Hämtar…';
+        const paketRes = await fetch(SOLO_SERVER + '/paket/' + filnamn);
+        const paket    = await paketRes.json();
+        soloStartaPaket(paket);
+      };
+      lista.appendChild(btn);
+    });
+  } catch(e) {
+    lista.innerHTML = '<div style="color:#ff6b6b;font-size:13px">Kunde inte nå servern.</div>';
+  }
+}
+
+function soloStartaPaket(paket) {
+  if (!paket.version || !paket.map || !paket.units || !paket.scenario) {
+    alert('Ogiltig paketfil.'); return;
+  }
+  soloValtPaket = paket;
+  soloSpelSlut  = false;
+  soloHeldRounds = 0;
+
+  // Ladda in paket via befintlig funktion (MAP, UNITS, SC sätts)
+  laddaPaket(paket);
+
+  // Stäng solo-panelen
+  document.getElementById('soloPanel').style.display = 'none';
+
+  // Sätt roll till blue och tillämpa UI
+  window.spelRoll = 'blue';
+  window.spelKod  = 'SOLO';
+  const rollSel = document.getElementById('roleSel');
+  if (rollSel) rollSel.value = 'blue';
+  if (typeof applyRoleUI === 'function') applyRoleUI();
+
+  // Dölj GM-knappar, ready-panel; visa solo-rad
+  document.getElementById('readyPanel').style.display = 'none';
+  document.getElementById('soloKlarRad').style.display = 'block';
+  const nextBtn = document.getElementById('nextRoundBtn');
+  if (nextBtn) nextBtn.style.display = 'none';
+
+  // Auto-placera alla enheter med fördefinierad starthex (tyst)
+  soloAutoPlace();
+
+  // Visa uppdraget för eleven
+  const uppdrag = SC?.order?.blue || SC?.order?.Blue || '';
+  if (uppdrag) {
+    const el = document.getElementById('uppdragText');
+    if (el) el.textContent = uppdrag;
+    const modal = document.getElementById('uppdragModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  soloUppdateraRundInfo();
+  if (typeof drawAll === 'function') drawAll();
+  if (typeof updateLOS === 'function') updateLOS();
+}
+
+function soloAutoPlace() {
+  if (!SC?.orbat) return;
+  const placerade = [];
+  ['blue', 'red'].forEach(sida => {
+    (SC.orbat[sida] || []).forEach(rad => {
+      if (!rad.startHex) return;
+      const hex = rad.startHex.toUpperCase();
+      const rc  = (typeof keyToRC === 'function') ? keyToRC(hex) : null;
+      if (!rc) return;
+      const antal = rad.count || 1;
+      for (let i = 0; i < antal; i++) {
+        const upptagen = PLACED.some(u => u.side === sida && u.hex === hex && !u.eliminated);
+        if (upptagen) continue;
+        if ((typeof remainingCountGrouped === 'function') &&
+            remainingCountGrouped(sida, rad.id, rad.state || 'full') <= 0) continue;
+        const obj = {
+          side: sida, id: rad.id, hex,
+          state: rad.state || 'full',
+          order: null, orderTarget: null,
+          suppressed: null, suppressedRounds: 0,
+          eliminated: false, hasFired: false, fireTarget: null,
+          spottedBy: { blue: false, red: false }
+        };
+        if (typeof backfillRuntime === 'function') backfillRuntime(obj);
+        PLACED.push(obj);
+        placerade.push(rad.id);
+      }
+    });
+  });
+  if (typeof renderPools   === 'function') renderPools();
+  if (typeof renderOrders  === 'function') renderOrders();
+  if (typeof drawAll       === 'function') drawAll();
+}
+
+function soloUppdateraRundInfo() {
+  const el = document.getElementById('soloRundInfo');
+  if (!el) return;
+  const maxR = SC?.rounds || '?';
+  el.textContent = `Runda ${typeof currentRound === 'number' ? currentRound : 0} / ${maxR}`;
+}
+
+// ----------------------------------------------------------------
+// KLAR-KNAPPEN: kör AI-rundan, sedan nextRound
+// ----------------------------------------------------------------
+async function soloKlarClicked() {
+  if (soloSpelSlut) return;
+  const btn = document.getElementById('soloKlarBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'AI kör…'; }
+
+  // Ge spelaren en liten fördröjning så UI hinner uppdatera
+  await new Promise(r => setTimeout(r, 80));
+
+  // Spara replay-snapshot manuellt (nextRound gör det bara för GM)
+  if (typeof sparaRundSnapshot === 'function') sparaRundSnapshot();
+
+  // Kör AI
+  const aiRules = soloValtPaket?.scenario?.aiRules || SC?.aiRules || {};
+  executeAiTurn('red', PLACED, typeof currentRound === 'number' ? currentRound : 0, aiRules);
+
+  // Kör runda (strid + rörelse)
+  if (typeof nextRound === 'function') nextRound();
+  if (typeof drawAll   === 'function') drawAll();
+  if (typeof updateLOS === 'function') updateLOS();
+
+  // Kolla segervillkor
+  const wc = soloValtPaket?.scenario?.soloWinCondition || SC?.soloWinCondition;
+  const maxRundor = SC?.rounds || 999;
+  const resultat  = checkSoloWinCondition(wc, PLACED, typeof currentRound === 'number' ? currentRound : 0, maxRundor);
+
+  soloUppdateraRundInfo();
+
+  if (resultat.result !== 'ongoing') {
+    soloSpelSlut = true;
+    soloVisaSlut(resultat);
+  } else {
+    if (btn) { btn.disabled = false; btn.textContent = '✔ Klar — kör AI-rundan'; }
+  }
+}
+
+// ----------------------------------------------------------------
+// AI-MOTOR
+// ----------------------------------------------------------------
+function executeAiTurn(aiSide, placed, round, aiRules) {
+  const aiUnits     = placed.filter(u => u.side === aiSide && !u.eliminated);
+  const playerUnits = placed.filter(u => u.side !== aiSide && !u.eliminated);
+  const svår = soloValtPaket?.scenario?.soloSvårighet || 'normal';
+  const följRegel = () => {
+    if (svår === 'lätt')  return Math.random() < 0.65;
+    if (svår === 'svår')  return true;
+    return Math.random() < 0.85; // normal
+  };
+
+  for (const unit of aiUnits) {
+    const regler = aiRules[unit.id] || aiRules[unit.name] || [];
+    for (const regel of regler) {
+      if (checkAiCondition(regel, unit, playerUnits, round, placed)) {
+        if (följRegel()) {
+          applyAiAction(regel, unit, playerUnits);
+          if (typeof logEvent === 'function')
+            logEvent(`[AI] ${unit.name||unit.id} — ${regel.condition} → ${regel.action}${regel.target?' '+regel.target:''}`);
+        }
+        break;
+      }
+    }
+  }
+}
+
+function checkAiCondition(regel, unit, enemies, round, placed) {
+  const dist = (a, b) => (typeof hexDistance === 'function') ? hexDistance(a, b) : 999;
+  switch (regel.condition) {
+    case 'enemy_within':
+      return enemies.some(e => dist(unit.hex, e.hex) <= (regel.value || 3));
+    case 'enemy_not_within':
+      return !enemies.some(e => dist(unit.hex, e.hex) <= (regel.value || 3));
+    case 'round_gte':
+      return round >= (regel.value || 1);
+    case 'round_lte':
+      return round <= (regel.value || 99);
+    case 'hex_occupied':
+      return enemies.some(e => e.hex === regel.value && !e.eliminated);
+    case 'unit_eliminated': {
+      const u = placed.find(u => u.id === regel.value || u.name === regel.value);
+      return !u || u.eliminated;
+    }
+    case 'always':
+    default:
+      return true;
+  }
+}
+
+function applyAiAction(regel, unit, enemies) {
+  switch (regel.action) {
+    case 'defend':
+      unit.order = 'defend';
+      unit.orderTarget = unit.hex;
+      break;
+    case 'take':
+      unit.order = 'take';
+      unit.orderTarget = regel.target || unit.hex;
+      break;
+    case 'support':
+      unit.order = 'support';
+      unit.orderTarget = regel.target || null;
+      break;
+    case 'scout':
+      unit.order = 'scout';
+      unit.orderTarget = regel.target || unit.hex;
+      break;
+    case 'fallback': {
+      const närmast = enemies.reduce((bäst, e) => {
+        const d = (typeof hexDistance === 'function') ? hexDistance(unit.hex, e.hex) : 999;
+        return (!bäst || d < bäst.d) ? { e, d } : bäst;
+      }, null);
+      unit.order = 'take';
+      unit.orderTarget = närmast ? findFallbackHex(unit, närmast.e) : unit.hex;
+      break;
+    }
+    case 'hold':
+    default:
+      unit.order = null;
+      break;
+  }
+}
+
+function findFallbackHex(unit, fiende) {
+  // Enklaste version: välj hex i riktning bort från fienden
+  if (typeof hexDistance !== 'function') return unit.hex;
+  const grannar = (typeof getNeighbors === 'function') ? getNeighbors(unit.hex) : [];
+  if (!grannar.length) return unit.hex;
+  let bäst = unit.hex, bästD = hexDistance(unit.hex, fiende.hex);
+  for (const h of grannar) {
+    const d = hexDistance(h, fiende.hex);
+    if (d > bästD) { bästD = d; bäst = h; }
+  }
+  return bäst;
+}
+
+// ----------------------------------------------------------------
+// SEGERVILLKOR
+// ----------------------------------------------------------------
+function checkSoloWinCondition(wc, placed, round, maxRundor) {
+  const blueUnits = placed.filter(u => u.side === 'blue' && !u.eliminated);
+  const redUnits  = placed.filter(u => u.side === 'red'  && !u.eliminated);
+
+  if (blueUnits.length === 0)
+    return { result: 'lose', reason: 'Alla Blue-enheter eliminerade.' };
+
+  if (wc) {
+    switch (wc.type) {
+      case 'take_hex':
+        if (blueUnits.some(u => u.hex === wc.target))
+          return { result: 'win', reason: `Blue kontrollerar ${wc.target}.` };
+        break;
+
+      case 'hold_hex':
+        if (blueUnits.some(u => u.hex === wc.target)) {
+          soloHeldRounds++;
+          if (soloHeldRounds >= (wc.rounds || 1))
+            return { result: 'win', reason: `Blue höll ${wc.target} i ${wc.rounds} rundor.` };
+        } else {
+          soloHeldRounds = 0;
+        }
+        break;
+
+      case 'eliminate_unit': {
+        const målet = placed.find(u => (u.id === wc.target || u.name === wc.target));
+        if (!målet || målet.eliminated)
+          return { result: 'win', reason: `${wc.target} eliminerad.` };
+        break;
+      }
+
+      case 'eliminate_all':
+        if (redUnits.length === 0)
+          return { result: 'win', reason: 'Alla röda enheter eliminerade.' };
+        break;
+
+      case 'survive':
+        if (round >= (wc.rounds || maxRundor) && blueUnits.length > 0)
+          return { result: 'win', reason: `Blue överlevde ${wc.rounds || maxRundor} rundor.` };
+        break;
+    }
+  }
+
+  if (round >= maxRundor)
+    return { result: 'lose', reason: 'Tiden tog slut utan att uppdraget löstes.' };
+
+  return { result: 'ongoing' };
+}
+
+// ----------------------------------------------------------------
+// VISA SPELSLUT (solo)
+// ----------------------------------------------------------------
+function soloVisaSlut(resultat) {
+  const overlay = document.getElementById('spelslutOverlay');
+  const emoji   = document.getElementById('spelslutEmoji');
+  const rubrik  = document.getElementById('spelslutRubrik');
+  const vinnare = document.getElementById('spelslutVinnare');
+  const vc      = document.getElementById('spelslutVC');
+  if (!overlay) return;
+
+  const vann = resultat.result === 'win';
+  emoji.textContent   = vann ? '🏆' : '💀';
+  rubrik.textContent  = vann ? 'Uppdraget löst!' : 'Uppdraget misslyckat';
+  rubrik.style.color  = vann ? '#54d18c' : '#ff6b6b';
+  vinnare.textContent = resultat.reason || '';
+  vc.textContent      = SC?.vc ? 'Segervillkor:\n' + SC.vc : '';
+
+  // Lägg till "Visa replay"-knapp i overlayens knappar
+  const befintligStäng = document.getElementById('spelslutStangBtn');
+  if (befintligStäng && !document.getElementById('soloReplayBtn')) {
+    const rb = document.createElement('button');
+    rb.id = 'soloReplayBtn';
+    rb.className = 'btn';
+    rb.style.marginTop = '8px';
+    rb.textContent = '📽 Visa replay';
+    rb.onclick = () => {
+      overlay.style.display = 'none';
+      if (typeof öppnaReplay === 'function') öppnaReplay();
+    };
+    befintligStäng.insertAdjacentElement('afterend', rb);
+  }
+
+  overlay.style.display = 'flex';
+}
 
 </script>
 
