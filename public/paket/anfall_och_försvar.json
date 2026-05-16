@@ -585,7 +585,7 @@
   "scenario": {
     "title": "Anfall och försvar",
     "desc": "Blå ska ta huset i söder.\n\nRöd ska försvara huset",
-    "rounds": 6,
+    "rounds": 20,
     "initiative": "Blue",
     "setupMin": 0,
     "vc": "",
