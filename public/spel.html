@@ -3167,6 +3167,14 @@ function sendOrderCommand(unit, order, targetHex) {
     return;
   }
 
+  // Solo-läge: ingen GM-kanal finns — applicera ordern direkt
+  if (typeof soloMode !== 'undefined' && soloMode) {
+    applyOrderFromCommand(unit, order, targetHex);
+    if (typeof renderOrders === 'function') renderOrders();
+    if (typeof drawAll === 'function')      drawAll();
+    return;
+  }
+
   // Klient (BLUE/RED) → skicka kommando till GM
   if (!gameChannel) return;
 
