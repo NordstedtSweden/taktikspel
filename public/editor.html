@@ -1260,6 +1260,7 @@ function fillScenarioForm(){
   $('scVC').value=SC.vc||''; $('scBlueZones').value=SC.setup?.blue||''; $('scRedZones').value=SC.setup?.red||'';
   $('scBlueOrder').value=SC.order?.blue||''; $('scRedOrder').value=SC.order?.red||'';
   refreshBoardList(); refreshUnitPicker(); refreshPools(); refreshResPicker(); refreshResPools();
+  if (typeof fillAiForm === 'function') fillAiForm();
 }
 function readScenarioForm(){
   SC.title=$('scTitle').value||''; SC.desc=$('scDesc').value||'';
