@@ -1862,6 +1862,12 @@ function maybeAutoAdvanceRound() {
 
 if (blueReadyBtn) {
   blueReadyBtn.addEventListener('click', () => {
+    // Solo-läge: Blue Ready-knappen triggar soloKlarClicked istället
+    if (typeof soloMode !== 'undefined' && soloMode) {
+      if (typeof soloKlarClicked === 'function') soloKlarClicked();
+      return;
+    }
+
     const role = getCurrentRole();
 
     // bara när du spelar som BLUE eller GM får du toggla BLUE
@@ -8381,7 +8387,9 @@ function soloUppdateraRundInfo() {
 // ----------------------------------------------------------------
 async function soloKlarClicked() {
   if (soloSpelSlut) return;
-  const btn = document.getElementById('soloKlarBtn');
+  // Klar-knappen kan vara soloKlarBtn eller blueReadyBtn (toppraden i solo)
+  const btn = document.getElementById('soloKlarBtn') || document.getElementById('blueReadyBtn');
+  const origText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'AI kör…'; }
 
   // Ge spelaren en liten fördröjning så UI hinner uppdatera
@@ -8410,7 +8418,7 @@ async function soloKlarClicked() {
     soloSpelSlut = true;
     soloVisaSlut(resultat);
   } else {
-    if (btn) { btn.disabled = false; btn.textContent = '✔ Klar — kör AI-rundan'; }
+    if (btn) { btn.disabled = false; btn.textContent = origText || 'BLUE READY'; }
   }
 }
 
