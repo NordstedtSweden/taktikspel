@@ -8237,27 +8237,45 @@ if (soloMode) {
 
 async function soloHämtaScenarios() {
   const lista = document.getElementById('soloScenarioLista');
+  lista.innerHTML = '<div style="color:#9fb1d4;font-size:13px">Hämtar scenarios…</div>';
   try {
     const res  = await fetch(SOLO_SERVER + '/api/paket');
     const data = await res.json();
-    lista.innerHTML = '';
     if (!data.paket?.length) {
       lista.innerHTML = '<div style="color:#9fb1d4;font-size:13px">Inga scenarios på servern.</div>';
       return;
     }
-    data.paket.forEach(filnamn => {
+
+    // Hämta alla paket parallellt och filtrera på soloKompatibel
+    const paket = await Promise.all(
+      data.paket.map(async filnamn => {
+        try {
+          const r = await fetch(SOLO_SERVER + '/paket/' + filnamn);
+          const p = await r.json();
+          return { filnamn, paket: p };
+        } catch { return null; }
+      })
+    );
+
+    const soloKlara = paket.filter(p => p && p.paket?.scenario?.soloKompatibel === true);
+
+    lista.innerHTML = '';
+    if (!soloKlara.length) {
+      lista.innerHTML = '<div style="color:#9fb1d4;font-size:13px">Inga solo-kompatibla scenarios på servern ännu.</div>';
+      return;
+    }
+
+    soloKlara.forEach(({ filnamn, paket: p }) => {
       const btn = document.createElement('button');
       btn.style.cssText = 'display:block;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px;' +
         'border-radius:8px;border:1px solid #243052;background:#0a0f24;color:#e8eefc;cursor:pointer;font-size:14px';
-      btn.textContent = filnamn.replace('.json', '');
+      const svår = p.scenario?.soloSvårighet || 'normal';
+      const svårFärg = svår === 'svår' ? '#ff6b6b' : svår === 'lätt' ? '#54d18c' : '#f2c94c';
+      btn.innerHTML = `<span>${filnamn.replace('.json','')}</span>
+        <span style="float:right;font-size:11px;color:${svårFärg}">${svår}</span>`;
       btn.onmouseenter = () => btn.style.background = '#17224a';
       btn.onmouseleave = () => btn.style.background = '#0a0f24';
-      btn.onclick = async () => {
-        document.getElementById('soloStatus').textContent = 'Hämtar…';
-        const paketRes = await fetch(SOLO_SERVER + '/paket/' + filnamn);
-        const paket    = await paketRes.json();
-        soloStartaPaket(paket);
-      };
+      btn.onclick = () => soloStartaPaket(p);
       lista.appendChild(btn);
     });
   } catch(e) {

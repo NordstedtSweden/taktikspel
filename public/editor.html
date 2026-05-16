@@ -511,6 +511,12 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
     <div>
       <h3>Solo-inställningar</h3>
 
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:15px">
+        <input type="checkbox" id="soloKompatibel" style="width:18px;height:18px">
+        <span>Scenariot är solo-kompatibelt</span>
+      </label>
+      <div class="s" style="margin-bottom:14px">Endast markerade scenarios visas i solo-läget.</div>
+
       <h4>Segervillkor (Blue vinner om…)</h4>
       <label>Typ
         <select id="wcType">
@@ -1257,7 +1263,7 @@ function readScenarioForm(){
   if (!SC.resurser) SC.resurser={blue:[],red:[]};
   if (typeof readAiForm === 'function') readAiForm();
 }
-$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal'}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal', soloKompatibel:false}; fillScenarioForm(); alert('Nytt scenario.'); };
 $('scImport').onclick=()=>$('scFile').click();
 $('scFile').onchange=(ev)=>{
   const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
@@ -1714,11 +1720,12 @@ function fillAiForm() {
   if (!SC.aiRules)          SC.aiRules = {};
   if (!SC.soloWinCondition) SC.soloWinCondition = { type:'take_hex', target:'', rounds:null };
   const wc = SC.soloWinCondition;
-  $('wcType').value    = wc.type   || 'take_hex';
-  $('wcTarget').value  = wc.target || '';
-  $('wcUnit').value    = wc.target || '';
-  $('wcRounds').value  = wc.rounds || 3;
-  $('soloSvårighet').value = SC.soloSvårighet || 'normal';
+  $('soloKompatibel').checked  = !!SC.soloKompatibel;
+  $('wcType').value            = wc.type   || 'take_hex';
+  $('wcTarget').value          = wc.target || '';
+  $('wcUnit').value            = wc.target || '';
+  $('wcRounds').value          = wc.rounds || 3;
+  $('soloSvårighet').value     = SC.soloSvårighet || 'normal';
   $('wcType').onchange();
   refreshAiEnhetsPicker();
   refreshAiRegler();
@@ -1728,6 +1735,7 @@ function readAiForm() {
   const type   = $('wcType').value;
   const target = (type==='eliminate_unit') ? $('wcUnit').value.trim() : $('wcTarget').value.trim();
   const rounds = (type==='hold_hex'||type==='survive') ? +($('wcRounds').value||3) : null;
+  SC.soloKompatibel   = $('soloKompatibel').checked;
   SC.soloWinCondition = { type, target, rounds };
   SC.soloSvårighet    = $('soloSvårighet').value;
 }
