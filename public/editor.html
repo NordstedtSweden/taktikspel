@@ -1608,7 +1608,8 @@ $('scHamtaServer').onclick = async () => {
     lista.innerHTML = '<div style="color:#ff6b6b">Kunde inte nå servern: ' + e.message + '</div>';
   }
 };
-document.getElementById('serverScenarioStangBtn').onclick = () => {
+const _stangScenarioBtn = document.getElementById('serverScenarioStangBtn');
+if (_stangScenarioBtn) _stangScenarioBtn.onclick = () => {
   document.getElementById('serverScenarioModal').style.display = 'none';
 };
 
@@ -1768,7 +1769,7 @@ function fillAiForm() {
   $('wcUnit').value            = wc.target || '';
   $('wcRounds').value          = wc.rounds || 3;
   $('soloSvårighet').value     = SC.soloSvårighet || 'normal';
-  $('wcType').onchange();
+  if (typeof $('wcType').onchange === 'function') $('wcType').onchange();
   refreshAiEnhetsPicker();
   refreshAiRegler();
 }
