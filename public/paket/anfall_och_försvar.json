@@ -45,7 +45,6 @@
       "C8": "open",
       "D8": "wood_building",
       "D7": "open",
-      "E7": "woods",
       "D6": "woods",
       "C6": "woods",
       "F6": "woods",
@@ -90,7 +89,8 @@
       "H1": "woods",
       "G1": "woods",
       "F1": "woods",
-      "D1": "woods"
+      "D1": "woods",
+      "E7": "woods"
     },
     "boards": [
       {
@@ -103,6 +103,12 @@
         "name": "Map2.jpg",
         "x": 55,
         "y": 5,
+        "rot": 0
+      },
+      {
+        "name": "Map2.jpg",
+        "x": 50,
+        "y": 0,
         "rot": 0
       },
       {
@@ -604,6 +610,13 @@
         "y": 0,
         "rot": 0,
         "index": 2
+      },
+      {
+        "name": "Map2.jpg",
+        "x": 50,
+        "y": 0,
+        "rot": 0,
+        "index": 3
       }
     ],
     "map": {
@@ -649,7 +662,6 @@
         "C8": "open",
         "D8": "wood_building",
         "D7": "open",
-        "E7": "woods",
         "D6": "woods",
         "C6": "woods",
         "F6": "woods",
@@ -694,7 +706,8 @@
         "H1": "woods",
         "G1": "woods",
         "F1": "woods",
-        "D1": "woods"
+        "D1": "woods",
+        "E7": "woods"
       }
     },
     "setup": {
@@ -770,6 +783,60 @@
       "rounds": null
     },
     "soloSvårighet": "normal",
-    "aiRules": {}
+    "aiRules": {
+      "RED_Inf_EA": [
+        {
+          "condition": "always",
+          "action": "take",
+          "target": "B5"
+        },
+        {
+          "condition": "enemy_within",
+          "action": "defend",
+          "value": 5
+        },
+        {
+          "condition": "hex_occupied",
+          "action": "take",
+          "value": "D8",
+          "target": "D6"
+        }
+      ],
+      "RED_Inf_FA": [
+        {
+          "condition": "always",
+          "action": "take",
+          "target": "D5"
+        },
+        {
+          "condition": "always",
+          "action": "defend"
+        },
+        {
+          "condition": "enemy_within",
+          "action": "fallback",
+          "value": 1,
+          "target": "D8"
+        }
+      ],
+      "RED_Inf_GA": [
+        {
+          "condition": "always",
+          "action": "take",
+          "target": "H6"
+        },
+        {
+          "condition": "enemy_within",
+          "action": "defend",
+          "value": 5
+        },
+        {
+          "condition": "hex_occupied",
+          "action": "take",
+          "value": "g8",
+          "target": "D8"
+        }
+      ]
+    }
   }
 }
