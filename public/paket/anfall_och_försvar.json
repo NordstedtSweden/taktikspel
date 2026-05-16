@@ -7,8 +7,8 @@
     "gridAngle": 0,
     "gridOffX": 53,
     "gridOffY": 75,
-    "rows": 12,
-    "cols": 16,
+    "rows": 9,
+    "cols": 9,
     "terrain": {
       "A5": "road",
       "B5": "woods",
@@ -104,6 +104,12 @@
         "x": 55,
         "y": 5,
         "rot": 0
+      },
+      {
+        "name": "Map2.jpg",
+        "x": 50,
+        "y": 0,
+        "rot": 0
       }
     ]
   },
@@ -118,8 +124,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/Inf-green.png",
-          "icon_reduced": "assets/units/Inf-green-back.png"
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
         },
         "stats": {
           "full": {
@@ -194,8 +200,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/Inf-green.png",
-          "icon_reduced": "assets/units/Inf-green-back.png"
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
         },
         "stats": {
           "full": {
@@ -270,8 +276,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/Inf-green.png",
-          "icon_reduced": "assets/units/Inf-green-back.png"
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
         },
         "stats": {
           "full": {
@@ -346,8 +352,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/Inf-red.png",
-          "icon_reduced": "assets/units/Inf-red-back.png"
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
         },
         "stats": {
           "full": {
@@ -422,8 +428,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/Inf-red.png",
-          "icon_reduced": "assets/units/Inf-red-back.png"
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
         },
         "stats": {
           "full": {
@@ -500,8 +506,8 @@
           "RED_Inf_GA"
         ],
         "display": {
-          "icon_front": "assets/units/Inf-red.png",
-          "icon_reduced": "assets/units/Inf-red-back.png"
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
         },
         "stats": {
           "full": {
@@ -591,6 +597,13 @@
         "y": 5,
         "rot": 0,
         "index": 1
+      },
+      {
+        "name": "Map2.jpg",
+        "x": 50,
+        "y": 0,
+        "rot": 0,
+        "index": 2
       }
     ],
     "map": {
@@ -695,21 +708,24 @@
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "F1"
         },
         {
           "id": "BLUE_Inf_FA",
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "G1"
         },
         {
           "id": "BLUE_Inf_GA",
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "H1"
         }
       ],
       "red": [
@@ -718,23 +734,42 @@
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "B9"
         },
         {
           "id": "RED_Inf_FA",
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "C9"
         },
         {
           "id": "RED_Inf_GA",
           "count": 1,
           "state": "full",
           "startZone": "",
-          "startRound": 0
+          "startRound": 0,
+          "startHex": "D9"
         }
       ]
-    }
+    },
+    "order": {
+      "blue": "Ta södra huset",
+      "red": "Försvara södra huset"
+    },
+    "resurser": {
+      "blue": [],
+      "red": []
+    },
+    "soloKompatibel": true,
+    "soloWinCondition": {
+      "type": "take_hex",
+      "target": "D8",
+      "rounds": null
+    },
+    "soloSvårighet": "normal",
+    "aiRules": {}
   }
 }
