@@ -1616,6 +1616,8 @@ document.getElementById('serverScenarioStangBtn').onclick = () => {
 
 function refreshAiEnhetsPicker() {
   const sel = $('aiEnhetSel');
+  if (!sel) { console.warn('[AI] aiEnhetSel hittades inte i DOM'); return; }
+  console.log('[AI] refreshAiEnhetsPicker — SC.orbat.red:', JSON.stringify(SC.orbat?.red), '| UNITS.units:', UNITS?.units?.length, 'st');
   sel.innerHTML = '<option value="">— välj enhet —</option>';
   const specialTyper = ['larmminor','minor','dronare','indirektEld'];
   const redOrbat = SC.orbat?.red || [];
