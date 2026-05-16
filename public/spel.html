@@ -487,14 +487,6 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     </label>
   </div>
 
-  <!-- Solo-läge: ersätter Ready-systemet -->
-  <div id="soloKlarRad" style="display:none;margin-top:8px">
-    <button id="soloKlarBtn" class="btn ok" style="width:100%;padding:12px;font-size:16px;font-weight:700">
-      ✔ Klar — kör AI-rundan
-    </button>
-    <div id="soloRundInfo" class="s" style="text-align:center;margin-top:6px">—</div>
-  </div>
-
   <div class="readyRow" style="justify-content:flex-end">
     <button id="replayÖppnaBtn" class="btn" style="font-size:12px;padding:4px 10px">📽 Visa replay</button>
   </div>
@@ -502,8 +494,13 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   <hr>
 </div>
 
-
-
+<!-- Solo-läge: visas istället för readyPanel -->
+<div id="soloKlarRad" style="display:none;margin-top:8px">
+  <button id="soloKlarBtn" class="btn ok" style="width:100%;padding:12px;font-size:16px;font-weight:700">
+    ✔ Klar — kör AI-rundan
+  </button>
+  <div id="soloRundInfo" class="s" style="text-align:center;margin-top:6px">—</div>
+</div>
 
     <h3 class="h" id="logHeader">Logg</h3>
 <div id="eventLog" class="list" style="min-height:180px; max-height:38vh; overflow:auto"></div>
@@ -4849,16 +4846,19 @@ document.getElementById('gmLosToggle')?.classList.toggle('hidden', $('roleSel').
 function gmTriggerNextRound() {
   // Bara GM får starta runda
   const role = getCurrentRole();
-  if (role !== 'gm') return;
+  const isSolo = typeof soloMode !== 'undefined' && soloMode;
+  if (role !== 'gm' && !isSolo) return;
 
-  // Sätt auto-ready sidor om de är ibockade
-  if (blueAutoReadyChk && blueAutoReadyChk.checked) blueReady = true;
-  if (redAutoReadyChk  && redAutoReadyChk.checked)  redReady  = true;
+  if (!isSolo) {
+    // Sätt auto-ready sidor om de är ibockade
+    if (blueAutoReadyChk && blueAutoReadyChk.checked) blueReady = true;
+    if (redAutoReadyChk  && redAutoReadyChk.checked)  redReady  = true;
 
-  // kräver att båda är READY (om du vill tillåta override, lägg in prompt här)
-  if (!blueReady || !redReady) {
-    alert('Både BLUE och RED måste markera READY innan nästa runda.');
-    return;
+    // kräver att båda är READY (om du vill tillåta override, lägg in prompt här)
+    if (!blueReady || !redReady) {
+      alert('Både BLUE och RED måste markera READY innan nästa runda.');
+      return;
+    }
   }
 
   // Nollställ ready för nästa runda
