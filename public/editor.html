@@ -555,10 +555,11 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <div class="s">Välj en Red-enhet ur scenariots orbat och programmera dess beteende.<br>
       Systemet kollar reglerna uppifrån — den första som matchar körs.</div>
 
-      <div class="row" style="margin-top:10px;align-items:center">
-        <label style="flex:1">Välj Red-enhet
-          <select id="aiEnhetSel" onchange="refreshAiRegler()"></select>
-        </label>
+      <div style="margin-top:10px">
+        <label class="s">Välj Red-enhet</label>
+        <select id="aiEnhetSel" onchange="refreshAiRegler()"
+          style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;
+                 background:#0e1730;color:#e8eefc;margin-top:4px;font-size:14px"></select>
       </div>
 
       <div id="aiRegelLista" class="list" style="margin-top:8px;min-height:80px">
@@ -569,8 +570,10 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <div class="p" style="margin-top:10px">
         <h4>Lägg till regel</h4>
         <div class="grid2" style="margin-bottom:6px">
-          <label>Condition
-            <select id="aiCondSel">
+          <div>
+            <div class="s">Condition</div>
+            <select id="aiCondSel" style="width:100%;padding:8px;border:1px solid var(--line);
+              border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
               <option value="always">always — alltid sant</option>
               <option value="enemy_within">enemy_within — fiende inom N hex</option>
               <option value="enemy_not_within">enemy_not_within — ingen fiende inom N hex</option>
@@ -579,24 +582,28 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
               <option value="hex_occupied">hex_occupied — fiende på hex (ange hex i Värde)</option>
               <option value="unit_eliminated">unit_eliminated — enhet eliminerad (ange ID i Värde)</option>
             </select>
-          </label>
-          <label>Värde (N, hex eller enhet-ID)
-            <input id="aiCondVal" type="text" placeholder="t.ex.  3  eller  B5  eller  Blue_Inf_1">
-          </label>
+          </div>
+          <div>
+            <div class="s">Värde (N, hex eller enhet-ID)</div>
+            <input id="aiCondVal" type="text" placeholder="t.ex. 3 eller B5" style="margin-top:4px">
+          </div>
         </div>
         <div class="grid2" style="margin-bottom:8px">
-          <label>Action
-            <select id="aiActSel">
+          <div>
+            <div class="s">Action</div>
+            <select id="aiActSel" style="width:100%;padding:8px;border:1px solid var(--line);
+              border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
               <option value="defend">defend — försvara nuv. hex</option>
               <option value="take">take — rör sig mot Target</option>
               <option value="fallback">fallback — dra sig undan</option>
               <option value="scout">scout — spana mot Target</option>
               <option value="hold">hold — stå still, ingen order</option>
             </select>
-          </label>
-          <label>Target (hex eller enhet-ID)
-            <input id="aiActTarget" type="text" placeholder="t.ex.  B5  (krävs för take/scout)">
-          </label>
+          </div>
+          <div>
+            <div class="s">Target (hex eller enhet-ID)</div>
+            <input id="aiActTarget" type="text" placeholder="t.ex. B5 (krävs för take/scout)" style="margin-top:4px">
+          </div>
         </div>
         <button class="btn pri" id="aiLäggTillBtn">+ Lägg till regel</button>
       </div>
@@ -1609,13 +1616,45 @@ document.getElementById('serverScenarioStangBtn').onclick = () => {
 function refreshAiEnhetsPicker() {
   const sel = $('aiEnhetSel');
   sel.innerHTML = '<option value="">— välj enhet —</option>';
+  const specialTyper = ['larmminor','minor','dronare','indirektEld'];
   const redOrbat = SC.orbat?.red || [];
-  redOrbat.forEach(rad => {
+
+  if (redOrbat.length > 0) {
+    // Visa enheter från scenariots Red-orbat
+    const grp = document.createElement('optgroup');
+    grp.label = 'I detta scenario (Red)';
+    redOrbat.forEach(rad => {
+      const opt = document.createElement('option');
+      opt.value = rad.id;
+      opt.textContent = rad.id + (rad.count > 1 ? ' ×'+rad.count : '');
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+
+  // Visa alla övriga enheter från biblioteket (inte special, inte redan i orbat)
+  const orbatIds = new Set(redOrbat.map(r => r.id));
+  const övriga = (UNITS.units || []).filter(u =>
+    !specialTyper.includes(u.type) && !orbatIds.has(u.id)
+  );
+  if (övriga.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = redOrbat.length > 0 ? 'Övriga enheter (bibliotek)' : 'Alla enheter (bibliotek)';
+    övriga.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.id;
+      opt.textContent = (u.name || u.id) + (u.faction ? ' ['+u.faction+']' : '');
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+
+  if (redOrbat.length === 0 && övriga.length === 0) {
     const opt = document.createElement('option');
-    opt.value = rad.id;
-    opt.textContent = rad.id + (rad.count > 1 ? ' ×'+rad.count : '');
+    opt.disabled = true;
+    opt.textContent = '— Inga enheter laddade ännu —';
     sel.appendChild(opt);
-  });
+  }
 }
 
 function refreshAiRegler() {
