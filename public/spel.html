@@ -8174,12 +8174,13 @@ if (stepChanged || liveChanged) {
     const r = orig.apply(this, arguments);
     if (!Array.isArray(window.PLACED)) window.PLACED = [];
 
-    // 🚩 Bara GM ska driva den nya rörelsemotorn – klienter får bara fx_move
+    // 🚩 GM och solo-läget driver rörelsemotorn – vanliga klienter får fx_move
     const roleNow = (typeof getCurrentRole === 'function')
       ? getCurrentRole()
       : (document.getElementById('roleSel')?.value || 'gm');
+    const isSoloNow = typeof soloMode !== 'undefined' && soloMode;
 
-    if (roleNow === 'gm' && typeof startMovementPhase === 'function') {
+    if ((roleNow === 'gm' || isSoloNow) && typeof startMovementPhase === 'function') {
       startMovementPhase();
     }
 
