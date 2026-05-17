@@ -132,6 +132,27 @@ app.get('/api/ikoner', async (req, res) => {
   }
 });
 
+// Lista tillgängliga kartbilder
+app.get('/api/kartor', async (req, res) => {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/public/kartor`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!response.ok) return res.json({ kartor: [] });
+    const filer = await response.json();
+    const kartor = filer
+      .filter(f => /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name))
+      .map(f => f.name);
+    res.json({ kartor });
+  } catch(e) {
+    res.json({ kartor: [] });
+  }
+});
+
 // Spara kartbild
 app.post('/api/spara-karta', async (req, res) => {
   const { password, filnamn, data } = req.body;
