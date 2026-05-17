@@ -797,7 +797,9 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <h3>Karta</h3>
       <div class="s" style="margin-bottom:8px">Klicka i ett <span style="color:#f0c040">mål-fält</span> nedan, klicka sedan på en hex för att fylla i.</div>
       <div id="aiAktivFältInfo" style="font-size:11px;color:#f0c040;margin-bottom:6px;min-height:16px">— välj ett fält först —</div>
-      <canvas id="aiMapCanvas" style="width:100%;display:block;border:1px solid var(--line);border-radius:8px;cursor:crosshair;background:#0a0f24"></canvas>
+      <div id="aiMapWrap" style="overflow:auto;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+        <canvas id="aiMapCanvas" style="display:block;cursor:crosshair"></canvas>
+      </div>
     </div>
   </div>
 </div>
@@ -2208,7 +2210,10 @@ function hexKeyAi(ri, ci) {
 function renderAiKarta() {
   const canvas = document.getElementById('aiMapCanvas');
   if (!canvas) return;
+  requestAnimationFrame(() => _doRenderAiKarta(canvas));
+}
 
+function _doRenderAiKarta(canvas) {
   const map = SC.map || M;
   const orient = map.orient || 'flat';
   const r = map.hexSize || 50;
@@ -2223,8 +2228,9 @@ function renderAiKarta() {
   const totalW = cols * dx + r + offX;
   const totalH = rows * dy + dy + offY;
 
-  const canvasW = canvas.parentElement ? canvas.parentElement.clientWidth || 240 : 240;
-  const scale = Math.min(1, canvasW / totalW);
+  const wrap = document.getElementById('aiMapWrap');
+  const colW = (wrap ? wrap.offsetWidth : 400) || 400;
+  const scale = (colW / totalW) * 2;
 
   canvas.width  = Math.round(totalW * scale);
   canvas.height = Math.round(totalH * scale);
