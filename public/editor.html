@@ -2230,7 +2230,7 @@ function _doRenderAiKarta(canvas) {
 
   const wrap = document.getElementById('aiMapWrap');
   const colW = (wrap ? wrap.offsetWidth : 400) || 400;
-  const scale = Math.min(1.5, (colW / totalW) * 2);
+  const scale = colW / totalW;
 
   canvas.width  = Math.round(totalW * scale);
   canvas.height = Math.round(totalH * scale);
