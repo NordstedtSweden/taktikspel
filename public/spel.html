@@ -8468,6 +8468,8 @@ function checkAiCondition(regel, unit, enemies, round, placed) {
       const u = placed.find(u => u.id === regel.value || u.name === regel.value);
       return !u || u.eliminated;
     }
+    case 'self_reduced':
+      return unit.state === 'reduced' || !!unit.isReduced;
     case 'always':
     default:
       return true;

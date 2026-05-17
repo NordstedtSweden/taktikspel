@@ -552,60 +552,224 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
     <!-- Höger: per-enhet AI-regler -->
     <div>
       <h3>AI-regler per enhet (Red)</h3>
-      <div class="s">Välj en Red-enhet ur scenariots orbat och programmera dess beteende.<br>
-      Systemet kollar reglerna uppifrån — den första som matchar körs.</div>
 
       <div style="margin-top:10px">
         <label class="s">Välj Red-enhet</label>
-        <select id="aiEnhetSel" onchange="refreshAiRegler()"
+        <select id="aiEnhetSel" onchange="aiEnhetBytt()"
           style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;
                  background:#0e1730;color:#e8eefc;margin-top:4px;font-size:14px"></select>
       </div>
 
-      <div id="aiRegelLista" class="list" style="margin-top:8px;min-height:80px">
-        <div class="s">— Välj en enhet ovan —</div>
+      <!-- Vy-växlare -->
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="aiVyEnkelBtn" class="btn pri" style="flex:1" onclick="setAiVy('enkel')">Enkel vy</button>
+        <button id="aiVyAvanceradBtn" class="btn" style="flex:1" onclick="setAiVy('avancerad')">Avancerad vy</button>
       </div>
 
-      <!-- Lägg till regel -->
-      <div class="p" style="margin-top:10px">
-        <h4>Lägg till regel</h4>
-        <div class="grid2" style="margin-bottom:6px">
-          <div>
-            <div class="s">Condition</div>
-            <select id="aiCondSel" style="width:100%;padding:8px;border:1px solid var(--line);
-              border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
-              <option value="always">always — alltid sant</option>
-              <option value="enemy_within">enemy_within — fiende inom N hex</option>
-              <option value="enemy_not_within">enemy_not_within — ingen fiende inom N hex</option>
-              <option value="round_gte">round_gte — runda ≥ N</option>
-              <option value="round_lte">round_lte — runda ≤ N</option>
-              <option value="hex_occupied">hex_occupied — fiende på hex (ange hex i Värde)</option>
-              <option value="unit_eliminated">unit_eliminated — enhet eliminerad (ange ID i Värde)</option>
-            </select>
+      <!-- ===== ENKEL VY ===== -->
+      <div id="aiEnkelDiv" style="margin-top:10px">
+        <div class="s" style="margin-bottom:8px">Omfall kollas alltid först — de kan bryta faslogiken när som helst under scenariot.</div>
+
+        <!-- FASER -->
+        <div class="p" style="padding:10px">
+          <div id="fasInledSektion" style="margin-bottom:14px">
+            <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#6cb2ff;text-transform:uppercase;margin-bottom:6px">Inledningsvis</div>
+            <div style="display:grid;grid-template-columns:1fr 90px;gap:6px">
+              <select id="fasInledAction" style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— ingen order —</option>
+                <option value="take">Anfalla / rycka fram mot →</option>
+                <option value="defend">Försvara position</option>
+                <option value="fallback">Dra tillbaka</option>
+                <option value="scout">Spana mot →</option>
+                <option value="hold">Avvakta</option>
+              </select>
+              <input id="fasInledTarget" type="text" placeholder="Mål-hex"
+                style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">
+              <span class="s">t.o.m. runda</span>
+              <input id="fasInledTill" type="number" min="1" placeholder="(frivillig)"
+                style="width:100px;padding:5px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              <span class="s" style="color:#6cb2ff">— sedan nästa fas</span>
+            </div>
           </div>
-          <div>
-            <div class="s">Värde (N, hex eller enhet-ID)</div>
-            <input id="aiCondVal" type="text" placeholder="t.ex. 3 eller B5" style="margin-top:4px">
+
+          <div id="fasDärSektion" style="margin-bottom:14px">
+            <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#9fb1d4;text-transform:uppercase;margin-bottom:6px">Därefter</div>
+            <div style="display:grid;grid-template-columns:1fr 90px;gap:6px">
+              <select id="fasDärAction" style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— ingen order —</option>
+                <option value="take">Anfalla / rycka fram mot →</option>
+                <option value="defend">Försvara position</option>
+                <option value="fallback">Dra tillbaka</option>
+                <option value="scout">Spana mot →</option>
+                <option value="hold">Avvakta</option>
+              </select>
+              <input id="fasDärTarget" type="text" placeholder="Mål-hex"
+                style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+          </div>
+
+          <div id="fasSlutSektion">
+            <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#7a9fc0;text-transform:uppercase;margin-bottom:6px">Slutligen</div>
+            <div style="display:grid;grid-template-columns:1fr 90px;gap:6px">
+              <select id="fasSlutAction" style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— ingen order —</option>
+                <option value="take">Anfalla / rycka fram mot →</option>
+                <option value="defend">Försvara position</option>
+                <option value="fallback">Dra tillbaka</option>
+                <option value="scout">Spana mot →</option>
+                <option value="hold">Avvakta</option>
+              </select>
+              <input id="fasSlutTarget" type="text" placeholder="Mål-hex"
+                style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
           </div>
         </div>
-        <div class="grid2" style="margin-bottom:8px">
-          <div>
-            <div class="s">Action</div>
-            <select id="aiActSel" style="width:100%;padding:8px;border:1px solid var(--line);
-              border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
-              <option value="defend">defend — försvara nuv. hex</option>
-              <option value="take">take — rör sig mot Target</option>
-              <option value="fallback">fallback — dra sig undan</option>
-              <option value="scout">scout — spana mot Target</option>
-              <option value="hold">hold — stå still, ingen order</option>
-            </select>
+
+        <!-- OMFALL -->
+        <div class="p" style="padding:10px;margin-top:6px">
+          <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#f0c040;text-transform:uppercase;margin-bottom:8px">Omfall (kollas alltid först)</div>
+          <div class="s" style="margin-bottom:10px">Undantag som bryter faslogiken — ex. om fienden gör något oväntat.</div>
+
+          <!-- Omfall 0, 1, 2 -->
+          <div id="omfallRad0" style="margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+            <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 1</div>
+            <div style="display:grid;grid-template-columns:1fr 80px;gap:4px;margin-bottom:5px">
+              <select id="omfall0Cond" onchange="uppdateraOmfallValLabel(0)"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— inaktivt —</option>
+                <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="hex_occupied">Fiende vid hex X</option>
+                <option value="round_gte">Från och med runda X</option>
+                <option value="self_reduced">Enheten reduceras</option>
+                <option value="unit_eliminated">Enhet X eliminerad</option>
+              </select>
+              <input id="omfall0Val" type="text" placeholder="Värde" disabled
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 90px;gap:4px">
+              <select id="omfall0Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">→ ingen order</option>
+                <option value="take">→ Anfalla / rycka fram mot</option>
+                <option value="defend">→ Försvara position</option>
+                <option value="fallback">→ Dra tillbaka</option>
+                <option value="scout">→ Spana mot</option>
+                <option value="hold">→ Avvakta</option>
+              </select>
+              <input id="omfall0Target" type="text" placeholder="Mål"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
           </div>
-          <div>
-            <div class="s">Target (hex eller enhet-ID)</div>
-            <input id="aiActTarget" type="text" placeholder="t.ex. B5 (krävs för take/scout)" style="margin-top:4px">
+
+          <div id="omfallRad1" style="margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+            <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 2</div>
+            <div style="display:grid;grid-template-columns:1fr 80px;gap:4px;margin-bottom:5px">
+              <select id="omfall1Cond" onchange="uppdateraOmfallValLabel(1)"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— inaktivt —</option>
+                <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="hex_occupied">Fiende vid hex X</option>
+                <option value="round_gte">Från och med runda X</option>
+                <option value="self_reduced">Enheten reduceras</option>
+                <option value="unit_eliminated">Enhet X eliminerad</option>
+              </select>
+              <input id="omfall1Val" type="text" placeholder="Värde" disabled
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 90px;gap:4px">
+              <select id="omfall1Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">→ ingen order</option>
+                <option value="take">→ Anfalla / rycka fram mot</option>
+                <option value="defend">→ Försvara position</option>
+                <option value="fallback">→ Dra tillbaka</option>
+                <option value="scout">→ Spana mot</option>
+                <option value="hold">→ Avvakta</option>
+              </select>
+              <input id="omfall1Target" type="text" placeholder="Mål"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+          </div>
+
+          <div id="omfallRad2" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+            <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 3</div>
+            <div style="display:grid;grid-template-columns:1fr 80px;gap:4px;margin-bottom:5px">
+              <select id="omfall2Cond" onchange="uppdateraOmfallValLabel(2)"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— inaktivt —</option>
+                <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="hex_occupied">Fiende vid hex X</option>
+                <option value="round_gte">Från och med runda X</option>
+                <option value="self_reduced">Enheten reduceras</option>
+                <option value="unit_eliminated">Enhet X eliminerad</option>
+              </select>
+              <input id="omfall2Val" type="text" placeholder="Värde" disabled
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 90px;gap:4px">
+              <select id="omfall2Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">→ ingen order</option>
+                <option value="take">→ Anfalla / rycka fram mot</option>
+                <option value="defend">→ Försvara position</option>
+                <option value="fallback">→ Dra tillbaka</option>
+                <option value="scout">→ Spana mot</option>
+                <option value="hold">→ Avvakta</option>
+              </select>
+              <input id="omfall2Target" type="text" placeholder="Mål"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
           </div>
         </div>
-        <button class="btn pri" id="aiLäggTillBtn">+ Lägg till regel</button>
+
+        <button class="btn pri" style="width:100%;margin-top:8px" onclick="sparaFaser()">Spara mall för denna enhet</button>
+        <div id="fasarSparadMsg" class="s" style="text-align:center;color:#54d18c;margin-top:4px;display:none">✓ Sparad</div>
+      </div>
+
+      <!-- ===== AVANCERAD VY ===== -->
+      <div id="aiAvanceradDiv" style="display:none;margin-top:10px">
+        <div class="s" style="margin-bottom:6px">Regler körs uppifrån — den första som matchar körs.</div>
+        <div id="aiRegelLista" class="list" style="margin-top:8px;min-height:80px">
+          <div class="s">— Välj en enhet ovan —</div>
+        </div>
+        <div class="p" style="margin-top:10px">
+          <h4>Lägg till regel</h4>
+          <div class="grid2" style="margin-bottom:6px">
+            <div>
+              <div class="s">Condition</div>
+              <select id="aiCondSel" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
+                <option value="always">always — alltid sant</option>
+                <option value="enemy_within">enemy_within — fiende inom N hex</option>
+                <option value="enemy_not_within">enemy_not_within — ingen fiende inom N hex</option>
+                <option value="round_gte">round_gte — runda ≥ N</option>
+                <option value="round_lte">round_lte — runda ≤ N</option>
+                <option value="hex_occupied">hex_occupied — fiende på hex (ange hex i Värde)</option>
+                <option value="unit_eliminated">unit_eliminated — enhet eliminerad (ange ID i Värde)</option>
+                <option value="self_reduced">self_reduced — denna enhet är reducerad</option>
+              </select>
+            </div>
+            <div>
+              <div class="s">Värde</div>
+              <input id="aiCondVal" type="text" placeholder="t.ex. 3 eller B5" style="margin-top:4px">
+            </div>
+          </div>
+          <div class="grid2" style="margin-bottom:8px">
+            <div>
+              <div class="s">Action</div>
+              <select id="aiActSel" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
+                <option value="defend">defend — försvara nuv. hex</option>
+                <option value="take">take — rör sig mot Target</option>
+                <option value="fallback">fallback — dra sig undan</option>
+                <option value="scout">scout — spana mot Target</option>
+                <option value="hold">hold — stå still, ingen order</option>
+              </select>
+            </div>
+            <div>
+              <div class="s">Target (hex)</div>
+              <input id="aiActTarget" type="text" placeholder="t.ex. B5" style="margin-top:4px">
+            </div>
+          </div>
+          <button class="btn pri" id="aiLäggTillBtn">+ Lägg till regel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1271,7 +1435,7 @@ function readScenarioForm(){
   if (!SC.resurser) SC.resurser={blue:[],red:[]};
   if (typeof readAiForm === 'function') readAiForm();
 }
-$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal', soloKompatibel:false}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, aiMallar:{}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal', soloKompatibel:false}; fillScenarioForm(); alert('Nytt scenario.'); };
 $('scImport').onclick=()=>$('scFile').click();
 $('scFile').onchange=(ev)=>{
   const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
@@ -1761,6 +1925,7 @@ $('wcType').onchange = () => {
 
 function fillAiForm() {
   if (!SC.aiRules)          SC.aiRules = {};
+  if (!SC.aiMallar)         SC.aiMallar = {};
   if (!SC.soloWinCondition) SC.soloWinCondition = { type:'take_hex', target:'', rounds:null };
   const wc = SC.soloWinCondition;
   $('soloKompatibel').checked  = !!SC.soloKompatibel;
@@ -1781,6 +1946,133 @@ function readAiForm() {
   SC.soloKompatibel   = $('soloKompatibel').checked;
   SC.soloWinCondition = { type, target, rounds };
   SC.soloSvårighet    = $('soloSvårighet').value;
+}
+
+/* ===== ENKEL VY — TAKTISKA MALLAR ===== */
+
+function setAiVy(vy) {
+  const enkel     = document.getElementById('aiEnkelDiv');
+  const avancerad = document.getElementById('aiAvanceradDiv');
+  const btnEnkel  = document.getElementById('aiVyEnkelBtn');
+  const btnAv     = document.getElementById('aiVyAvanceradBtn');
+  if (vy === 'enkel') {
+    enkel.style.display     = 'block';
+    avancerad.style.display = 'none';
+    btnEnkel.className = 'btn pri';
+    btnAv.className    = 'btn';
+  } else {
+    enkel.style.display     = 'none';
+    avancerad.style.display = 'block';
+    btnEnkel.className = 'btn';
+    btnAv.className    = 'btn pri';
+    refreshAiRegler();
+  }
+}
+
+function aiEnhetBytt() {
+  const enhetId = $('aiEnhetSel').value;
+  const isEnkel = document.getElementById('aiEnkelDiv').style.display !== 'none';
+  if (isEnkel) fillEnkelvy(enhetId);
+  else         refreshAiRegler();
+}
+
+function clearFasForm() {
+  ['fasInledAction','fasDärAction','fasSlutAction'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  ['fasInledTarget','fasDärTarget','fasSlutTarget'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  const till=$('fasInledTill'); if(till) till.value='';
+  for (let i=0; i<3; i++) {
+    $('omfall'+i+'Cond').value   = '';
+    $('omfall'+i+'Val').value    = '';
+    $('omfall'+i+'Action').value = '';
+    $('omfall'+i+'Target').value = '';
+    uppdateraOmfallValLabel(i);
+  }
+}
+
+function fillEnkelvy(enhetId) {
+  clearFasForm();
+  if (!enhetId) return;
+  if (!SC.aiMallar) SC.aiMallar = {};
+  const mall = SC.aiMallar[enhetId];
+  if (!mall) return;
+  const faser  = mall.faser  || [];
+  const omfall = mall.omfall || [];
+  if (faser[0]) { const a=$('fasInledAction'); if(a) a.value=faser[0].action||''; const t=$('fasInledTarget'); if(t) t.value=faser[0].target||''; const ti=$('fasInledTill'); if(ti) ti.value=faser[0].till||''; }
+  if (faser[1]) { const a=$('fasDärAction');   if(a) a.value=faser[1].action||''; const t=$('fasDärTarget');   if(t) t.value=faser[1].target||''; }
+  if (faser[2]) { const a=$('fasSlutAction');  if(a) a.value=faser[2].action||''; const t=$('fasSlutTarget');  if(t) t.value=faser[2].target||''; }
+  for (let i=0; i<3; i++) {
+    const o = omfall[i] || {};
+    $('omfall'+i+'Cond').value   = o.cond   || '';
+    $('omfall'+i+'Val').value    = o.val    || '';
+    $('omfall'+i+'Action').value = o.action || '';
+    $('omfall'+i+'Target').value = o.target || '';
+    uppdateraOmfallValLabel(i);
+  }
+}
+
+function uppdateraOmfallValLabel(i) {
+  const cond  = $('omfall'+i+'Cond').value;
+  const valEl = $('omfall'+i+'Val');
+  if (!valEl) return;
+  const needsVal = ['enemy_within','hex_occupied','round_gte','unit_eliminated'];
+  valEl.disabled   = !needsVal.includes(cond);
+  valEl.placeholder = { 'enemy_within':'Antal hex','hex_occupied':'Hex-id','round_gte':'Runda nr','unit_eliminated':'Enhets-id' }[cond] || 'Värde';
+  if (valEl.disabled) valEl.value = '';
+}
+
+function generateRulesFromMall(mall) {
+  const rules = [];
+  (mall.omfall || []).forEach(o => {
+    if (!o.cond || !o.action) return;
+    const regel = { condition: o.cond, action: o.action };
+    const needsVal = ['enemy_within','hex_occupied','round_gte','unit_eliminated'];
+    if (o.val && needsVal.includes(o.cond)) regel.value = isNaN(Number(o.val)) ? o.val : Number(o.val);
+    if (o.target) regel.target = o.target;
+    rules.push(regel);
+  });
+  const faser = mall.faser || [];
+  for (let i=0; i<faser.length; i++) {
+    const fas = faser[i];
+    if (!fas.action) continue;
+    const hasNext = faser.slice(i+1).some(f => f.action);
+    const regel = { action: fas.action };
+    if (fas.target) regel.target = fas.target;
+    if (hasNext && fas.till) {
+      regel.condition = 'round_lte';
+      regel.value     = Number(fas.till);
+    } else {
+      regel.condition = 'always';
+    }
+    rules.push(regel);
+    if (regel.condition === 'always') break;
+  }
+  return rules;
+}
+
+function sparaFaser() {
+  const enhetId = $('aiEnhetSel').value;
+  if (!enhetId) { alert('Välj en Red-enhet först.'); return; }
+  if (!SC.aiMallar) SC.aiMallar = {};
+  const mall = {
+    faser: [
+      { action:$('fasInledAction').value, target:$('fasInledTarget').value.trim(), till:$('fasInledTill').value ? Number($('fasInledTill').value) : null },
+      { action:$('fasDärAction').value,   target:$('fasDärTarget').value.trim() },
+      { action:$('fasSlutAction').value,  target:$('fasSlutTarget').value.trim() }
+    ],
+    omfall: [0,1,2].map(i => ({ cond:$('omfall'+i+'Cond').value, val:$('omfall'+i+'Val').value.trim(), action:$('omfall'+i+'Action').value, target:$('omfall'+i+'Target').value.trim() }))
+  };
+  SC.aiMallar[enhetId] = mall;
+  if (!SC.aiRules) SC.aiRules = {};
+  SC.aiRules[enhetId] = generateRulesFromMall(mall);
+  const msg = $('fasarSparadMsg');
+  if (msg) { msg.style.display='block'; setTimeout(()=>{ msg.style.display='none'; }, 2000); }
+  refreshAiRegler();
+}
+
+function regenereraAllaRegler() {
+  if (!SC.aiMallar) return;
+  if (!SC.aiRules) SC.aiRules = {};
+  Object.entries(SC.aiMallar).forEach(([id, mall]) => { SC.aiRules[id] = generateRulesFromMall(mall); });
 }
 
 </script>
