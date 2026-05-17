@@ -303,6 +303,35 @@
   .corner.tr { top: 24px; right: 32px; text-align: right; }
   .corner.bl { bottom: 24px; left: 32px; }
   .corner.br { bottom: 24px; right: 32px; text-align: right; }
+
+  @media (max-width: 700px) {
+    body { overflow-y: auto; justify-content: flex-start; padding: 40px 0 60px; }
+
+    h1 { font-size: clamp(56px, 18vw, 100px); margin-bottom: 20px; }
+
+    .tagline { margin-bottom: 36px; font-size: 14px; }
+
+    .buttons {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+      width: 85vw;
+    }
+
+    .btn {
+      min-width: unset;
+      padding: 22px 28px;
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 16px;
+    }
+
+    .btn-title { font-size: 32px; }
+
+    .btn-label { letter-spacing: 3px; }
+
+    .corner, .url-badge { display: none; }
+  }
 </style>
 </head>
 <body>
