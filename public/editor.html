@@ -512,7 +512,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
 
 <!-- =============== AI-REGLER =============== -->
 <div class="view" id="view-ai">
-  <div class="p" style="display:grid;grid-template-columns:300px 1fr;gap:12px">
+  <div class="p" style="display:grid;grid-template-columns:300px 1fr 260px;gap:12px">
 
     <!-- Vänster: segervillkor + svårighet -->
     <div>
@@ -535,7 +535,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
         </select>
       </label>
       <div id="wcHexFält" style="margin-top:6px">
-        <label>Mål-hex (t.ex. B5)<input id="wcTarget" type="text" placeholder="B5"></label>
+        <label>Mål-hex (t.ex. B5)<input id="wcTarget" type="text" placeholder="B5" data-hexval="1"></label>
       </div>
       <div id="wcEnhetFält" style="margin-top:6px;display:none">
         <label>Enhet-ID<input id="wcUnit" type="text" placeholder="RED_Inf_EA"></label>
@@ -590,7 +590,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
                 <option value="scout">Spana mot →</option>
                 <option value="hold">Avvakta</option>
               </select>
-              <input id="fasInledTarget" type="text" placeholder="Mål-hex"
+              <input id="fasInledTarget" type="text" placeholder="Mål-hex" data-hexval="1"
                 style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
             </div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">
@@ -612,7 +612,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
                 <option value="scout">Spana mot →</option>
                 <option value="hold">Avvakta</option>
               </select>
-              <input id="fasDärTarget" type="text" placeholder="Mål-hex"
+              <input id="fasDärTarget" type="text" placeholder="Mål-hex" data-hexval="1"
                 style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
             </div>
           </div>
@@ -628,7 +628,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
                 <option value="scout">Spana mot →</option>
                 <option value="hold">Avvakta</option>
               </select>
-              <input id="fasSlutTarget" type="text" placeholder="Mål-hex"
+              <input id="fasSlutTarget" type="text" placeholder="Mål-hex" data-hexval="1"
                 style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
             </div>
           </div>
@@ -668,7 +668,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
                 <option value="scout">→ Spana mot</option>
                 <option value="hold">→ Avvakta</option>
               </select>
-              <input id="omfall0Target" type="text" placeholder="Mål-hex"
+              <input id="omfall0Target" type="text" placeholder="Mål-hex" data-hexval="1"
                 style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
             </div>
           </div>
@@ -701,7 +701,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
                 <option value="scout">→ Spana mot</option>
                 <option value="hold">→ Avvakta</option>
               </select>
-              <input id="omfall1Target" type="text" placeholder="Mål-hex"
+              <input id="omfall1Target" type="text" placeholder="Mål-hex" data-hexval="1"
                 style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
             </div>
           </div>
@@ -734,7 +734,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
                 <option value="scout">→ Spana mot</option>
                 <option value="hold">→ Avvakta</option>
               </select>
-              <input id="omfall2Target" type="text" placeholder="Mål-hex"
+              <input id="omfall2Target" type="text" placeholder="Mål-hex" data-hexval="1"
                 style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
             </div>
           </div>
@@ -784,12 +784,20 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
             </div>
             <div>
               <div class="s">Target (hex)</div>
-              <input id="aiActTarget" type="text" placeholder="t.ex. B5" style="margin-top:4px">
+              <input id="aiActTarget" type="text" placeholder="t.ex. B5" style="margin-top:4px" data-hexval="1">
             </div>
           </div>
           <button class="btn pri" id="aiLäggTillBtn">+ Lägg till regel</button>
         </div>
       </div>
+    </div>
+
+    <!-- ===== KARTA ===== -->
+    <div>
+      <h3>Karta</h3>
+      <div class="s" style="margin-bottom:8px">Klicka i ett <span style="color:#f0c040">mål-fält</span> nedan, klicka sedan på en hex för att fylla i.</div>
+      <div id="aiAktivFältInfo" style="font-size:11px;color:#f0c040;margin-bottom:6px;min-height:16px">— välj ett fält först —</div>
+      <canvas id="aiMapCanvas" style="width:100%;display:block;border:1px solid var(--line);border-radius:8px;cursor:crosshair;background:#0a0f24"></canvas>
     </div>
   </div>
 </div>
@@ -838,7 +846,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.getElementById('view-'+t.dataset.view).classList.add('active');
     if(t.dataset.view==='units'){ ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); }
     if(t.dataset.view==='scenario'){ refreshBoardList(); refreshUnitPicker(); refreshPools(); refreshResPicker(); refreshResPools(); }
-    if(t.dataset.view==='ai'){ readScenarioForm(); fillAiForm(); }
+    if(t.dataset.view==='ai'){ readScenarioForm(); fillAiForm(); renderAiKarta(); }
   });
 });
 const tip=document.getElementById('tip');
@@ -2171,6 +2179,132 @@ function regenereraAllaRegler() {
   if (!SC.aiRules) SC.aiRules = {};
   Object.entries(SC.aiMallar).forEach(([id, mall]) => { SC.aiRules[id] = generateRulesFromMall(mall); });
 }
+
+/* ============== AI MINI-MAP ============== */
+let aiAktivtFält = null;
+
+function hexKeyAi(ri, ci) {
+  const cs = SC.map ? (SC.map.coordStyle || 'rowLetters') : (M.coordStyle || 'rowLetters');
+  return cs === 'rowLetters' ? letter(ri) + (ci + 1) : letter(ci) + (ri + 1);
+}
+
+function renderAiKarta() {
+  const canvas = document.getElementById('aiMapCanvas');
+  if (!canvas) return;
+
+  const map = SC.map || M;
+  const orient = map.orient || 'flat';
+  const r = map.hexSize || 50;
+  const rows = map.rows || M.rows || 12;
+  const cols = map.cols || M.cols || 16;
+  const offX = map.gridOffX || 80;
+  const offY = map.gridOffY || 80;
+
+  const dx = orient === 'flat' ? 1.5 * r : Math.sqrt(3) * r;
+  const dy = orient === 'flat' ? Math.sqrt(3) * r : 1.5 * r;
+
+  const totalW = cols * dx + r + offX;
+  const totalH = rows * dy + dy + offY;
+
+  const canvasW = canvas.parentElement ? canvas.parentElement.clientWidth || 240 : 240;
+  const scale = Math.min(1, canvasW / totalW);
+
+  canvas.width  = Math.round(totalW * scale);
+  canvas.height = Math.round(totalH * scale);
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.clearRect(0, 0, totalW, totalH);
+
+  // Draw background image if available (M.boards holds the live Image objects)
+  if (M.boards && M.boards.length > 0 && M.boards[0].img) {
+    try { ctx.drawImage(M.boards[0].img, 0, 0); } catch(e) {}
+  }
+
+  // Draw hexes
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 0.8;
+  ctx.font = Math.max(6, r * scale * 0.28) + 'px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let ri = 0; ri < rows; ri++) {
+    for (let ci = 0; ci < cols; ci++) {
+      const baseX = ci * dx;
+      const baseY = orient === 'flat' ? ri * dy + (ci % 2 ? dy / 2 : 0) : ri * dy;
+      const cx = baseX + offX;
+      const cy = orient === 'flat' ? baseY + offY : baseY + offY + (ci % 2 ? dy / 2 : 0);
+
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (orient === 'flat' ? 0 : 30) * Math.PI / 180 + i * Math.PI / 3;
+        const px = cx + r * Math.cos(a);
+        const py = cy + r * Math.sin(a);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      const key = hexKeyAi(ri, ci);
+      ctx.fillStyle = 'rgba(207,224,255,0.55)';
+      ctx.fillText(key, cx, cy);
+    }
+  }
+}
+
+// Focus tracking: when user clicks a [data-hexval] input inside the AI view, mark it active
+document.getElementById('view-ai').addEventListener('focusin', e => {
+  const t = e.target;
+  if (t && t.dataset && t.dataset.hexval) {
+    aiAktivtFält = t;
+    const lbl = t.placeholder || t.id || '?';
+    const info = document.getElementById('aiAktivFältInfo');
+    if (info) info.textContent = 'Aktivt fält: ' + lbl;
+  }
+});
+
+// Click on mini-map: fill active field with clicked hex ID
+document.getElementById('aiMapCanvas').addEventListener('click', e => {
+  if (!aiAktivtFält) return;
+
+  const canvas = e.currentTarget;
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const py = (e.clientY - rect.top)  * (canvas.height / rect.height);
+
+  const map = SC.map || M;
+  const orient = map.orient || 'flat';
+  const r = map.hexSize || 50;
+  const rows = map.rows || M.rows || 12;
+  const cols = map.cols || M.cols || 16;
+  const offX = map.gridOffX || 80;
+  const offY = map.gridOffY || 80;
+  const dx = orient === 'flat' ? 1.5 * r : Math.sqrt(3) * r;
+  const dy = orient === 'flat' ? Math.sqrt(3) * r : 1.5 * r;
+
+  const totalW = cols * dx + r + offX;
+  const sx = px * totalW / canvas.width;
+  const sy = py * (rows * dy + dy + offY) / canvas.height;
+
+  let best = { d: 1e9, ri: 0, ci: 0 };
+  for (let ri = 0; ri < rows; ri++) {
+    for (let ci = 0; ci < cols; ci++) {
+      const baseX = ci * dx;
+      const baseY = orient === 'flat' ? ri * dy + (ci % 2 ? dy / 2 : 0) : ri * dy;
+      const cx = baseX + offX;
+      const cy = orient === 'flat' ? baseY + offY : baseY + offY + (ci % 2 ? dy / 2 : 0);
+      const d = (cx - sx) * (cx - sx) + (cy - sy) * (cy - sy);
+      if (d < best.d) best = { d, ri, ci };
+    }
+  }
+
+  const hexId = hexKeyAi(best.ri, best.ci);
+  aiAktivtFält.value = hexId;
+  aiAktivtFält.focus();
+
+  const info = document.getElementById('aiAktivFältInfo');
+  if (info) info.textContent = 'Vald hex: ' + hexId + ' → ' + (aiAktivtFält.placeholder || aiAktivtFält.id);
+});
 
 </script>
 
