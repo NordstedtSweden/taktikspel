@@ -107,7 +107,8 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
     </div>
 
     <div class="toolbar">
-      <button class="btn" id="addBoard">+ Lägg till karta (bild)</button>
+      <button class="btn" id="addBoard">+ Lägg till karta (lokal fil)</button>
+      <button class="btn" id="addBoardServer">+ Hämta kartbild från server</button>
       <input id="boardFile" type="file" accept="image/*" class="hide">
       <label>Map filnamn <input id="mapFileName" type="text" placeholder="map.json" class="w120"></label>
       <button class="btn" id="exportMap">Exportera</button>
@@ -210,35 +211,34 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <div id="statsSection">
       <h4 style="margin-top:10px">Stats – Full</h4>
       <div class="grid3">
-        <label>Move<input id="uMoveF" type="number" value="5"></label>
-        <label>Range (hex)<input id="uRangeF" type="number" value="6"></label>
+        <label>Rörelse (hex/runda)<input id="uMoveF" type="number" value="5"></label>
+        <label>Räckvidd (hex)<input id="uRangeF" type="number" value="6"></label>
         <label>FP Normal<input id="uFpNormF" type="number" value="5"></label>
       </div>
-      <div class="grid3">
+      <div class="grid2">
         <label>FP OpFire<input id="uFpOFF" type="number" value="3"></label>
-        <label>Morale N<input id="uMorNF" type="number" value="7"></label>
-        <label>Morale Y<input id="uMorYF" type="number" value="6"></label>
-      </div>
-      <div class="grid3">
-        <label>Morale R<input id="uMorRF" type="number" value="5"></label>
-        <label>LOS Height<input id="uLosH" type="number" value="1"></label>
-        <label>Road bonus<input id="uRoad" type="number" value="1"></label>
+        <label>Vägbonus (road)<input id="uRoad" type="number" value="1"></label>
       </div>
 
       <h4 style="margin-top:10px">Stats – Reduced</h4>
       <div class="grid3">
-        <label>Move<input id="uMoveR" type="number" value="4"></label>
-        <label>Range (hex)<input id="uRangeR" type="number" value="6"></label>
+        <label>Rörelse (hex/runda)<input id="uMoveR" type="number" value="4"></label>
+        <label>Räckvidd (hex)<input id="uRangeR" type="number" value="6"></label>
         <label>FP Normal<input id="uFpNormR" type="number" value="4"></label>
       </div>
-      <div class="grid3">
+      <div class="grid1" style="max-width:33%">
         <label>FP OpFire<input id="uFpOFR" type="number" value="2"></label>
-        <label>Morale N<input id="uMorNR" type="number" value="6"></label>
-        <label>Morale Y<input id="uMorYR" type="number" value="5"></label>
       </div>
-      <div class="grid3">
-        <label>Morale R<input id="uMorRR" type="number" value="4"></label>
-        <div></div><div></div>
+
+      <!-- Dolda fält — sparas/laddas men används ej i beräkningar ännu -->
+      <div style="display:none">
+        <input id="uMorNF" type="number" value="7">
+        <input id="uMorYF" type="number" value="6">
+        <input id="uMorRF" type="number" value="5">
+        <input id="uLosH"  type="number" value="1">
+        <input id="uMorNR" type="number" value="6">
+        <input id="uMorYR" type="number" value="5">
+        <input id="uMorRR" type="number" value="4">
       </div>
 
       </div><!-- /statsSection -->
@@ -1600,6 +1600,50 @@ async function visaServerIkonModal() {
   }
 }
 
+/* ===== Hämta kartbild från server ===== */
+async function visaServerKartaModal() {
+  const modal = $('serverKartaModal');
+  const grid  = $('serverKartaGrid');
+  modal.style.display = 'flex';
+  grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Hämtar kartbilder från servern…</div>';
+  try {
+    const res  = await fetch(SERVER + '/api/kartor');
+    const data = await res.json();
+    if (!data.kartor || !data.kartor.length) {
+      grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Inga kartbilder hittades på servern.</div>';
+      return;
+    }
+    grid.innerHTML = '';
+    data.kartor.forEach(filnamn => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style.cssText = 'padding:6px;display:flex;flex-direction:column;align-items:center;gap:6px;height:auto';
+      const img = document.createElement('img');
+      img.src = SERVER + '/kartor/' + filnamn;
+      img.style.cssText = 'width:100%;height:100px;object-fit:cover;border-radius:6px;background:#0a0f24';
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'font-size:11px;color:#9fb1d4;word-break:break-all;text-align:center';
+      lbl.textContent = filnamn;
+      btn.appendChild(img);
+      btn.appendChild(lbl);
+      btn.onclick = () => {
+        const url = SERVER + '/kartor/' + filnamn;
+        const bild = new Image();
+        bild.onload = () => {
+          M.boards.push({ name: filnamn, src: url, x: 0, y: 0, rot: 0, img: bild });
+          activeBoardIndex = M.boards.length - 1;
+          drawMap(); refreshBoardList(); loadBoardEditor();
+        };
+        bild.src = url;
+        modal.style.display = 'none';
+      };
+      grid.appendChild(btn);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="color:#ff6b6b;grid-column:1/-1">Kunde inte nå servern: ' + e.message + '</div>';
+  }
+}
+
 /* ===== Init ===== */
 function safeInit(){
   $('gridRows').value = M.rows || 12;
@@ -1611,6 +1655,8 @@ function safeInit(){
   $('pickFullServer').addEventListener('click', () => { serverIkonTarget = 'full'; visaServerIkonModal(); });
   $('pickRedServer').addEventListener('click', () => { serverIkonTarget = 'reduced'; visaServerIkonModal(); });
   $('serverIkonStangBtn').onclick = () => { $('serverIkonModal').style.display = 'none'; };
+  $('addBoardServer').onclick = visaServerKartaModal;
+  $('serverKartaStangBtn').onclick = () => { $('serverKartaModal').style.display = 'none'; };
   console.log('v1.17.3 init klar');
 }
 document.addEventListener('DOMContentLoaded', safeInit);
@@ -2127,6 +2173,15 @@ function regenereraAllaRegler() {
     <h3 style="margin:0 0 16px;color:#e8eefc">Välj ikon från servern</h3>
     <div id="serverIkonGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;overflow:auto;flex:1;margin-bottom:16px;padding:4px"></div>
     <button class="btn" id="serverIkonStangBtn" style="align-self:flex-end">Stäng</button>
+  </div>
+</div>
+
+<!-- Modal: hämta kartbild från server -->
+<div id="serverKartaModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:680px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;">
+    <h3 style="margin:0 0 16px;color:#e8eefc">Välj kartbild från servern</h3>
+    <div id="serverKartaGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;overflow:auto;flex:1;margin-bottom:16px;padding:4px"></div>
+    <button class="btn" id="serverKartaStangBtn" style="align-self:flex-end">Stäng</button>
   </div>
 </div>
 
