@@ -512,7 +512,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
 
 <!-- =============== AI-REGLER =============== -->
 <div class="view" id="view-ai">
-  <div class="p" style="display:grid;grid-template-columns:300px 1fr 260px;gap:12px">
+  <div class="p" style="display:grid;grid-template-columns:300px 0.5fr 400px;gap:12px">
 
     <!-- Vänster: segervillkor + svårighet -->
     <div>
@@ -1829,7 +1829,24 @@ $('scHamtaServer').onclick = async () => {
         const paketRes = await fetch(SERVER_URL + '/paket/' + filnamn);
         const paket    = await paketRes.json();
         // Ladda in alla delar av paketet i editorn
-        if (paket.map)      { M = paket.map; }
+        if (paket.map) {
+          M = paket.map;
+          if (!M.snap) M.snap = true;
+          if (M.showCoords === undefined) M.showCoords = true;
+          if (Array.isArray(M.boards)) {
+            M.boards.forEach(b => {
+              if (b.name && !b.img) {
+                const bild = new Image();
+                bild.onload = () => {
+                  b.img = bild;
+                  drawMap();
+                  if (document.getElementById('view-ai').classList.contains('active')) renderAiKarta();
+                };
+                bild.src = SERVER_URL + '/kartor/' + b.name;
+              }
+            });
+          }
+        }
         if (paket.scenario) { SC = paket.scenario; if (!SC.order) SC.order = {blue:'',red:''}; }
         if (paket.units)    { UNITS = paket.units; }
         $('scFileName').value = filnamn;
@@ -2216,10 +2233,19 @@ function renderAiKarta() {
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.clearRect(0, 0, totalW, totalH);
 
-  // Draw background image if available (M.boards holds the live Image objects)
-  if (M.boards && M.boards.length > 0 && M.boards[0].img) {
-    try { ctx.drawImage(M.boards[0].img, 0, 0); } catch(e) {}
-  }
+  // Draw all board images (mirrors drawMap logic)
+  (M.boards || []).forEach(b => {
+    if (!b.img) return;
+    ctx.save();
+    ctx.translate(b.x || 0, b.y || 0);
+    if (b.rot) {
+      ctx.translate(b.img.width / 2, b.img.height / 2);
+      ctx.rotate(b.rot * Math.PI / 180);
+      ctx.translate(-b.img.width / 2, -b.img.height / 2);
+    }
+    try { ctx.drawImage(b.img, 0, 0); } catch(e) {}
+    ctx.restore();
+  });
 
   // Draw hexes
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
