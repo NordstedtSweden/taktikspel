@@ -786,57 +786,183 @@
     "aiRules": {
       "RED_Inf_EA": [
         {
-          "condition": "always",
-          "action": "take",
-          "target": "B5"
-        },
-        {
-          "condition": "enemy_within",
+          "condition": "enemy_past_line",
           "action": "defend",
-          "value": 5
-        },
-        {
-          "condition": "hex_occupied",
-          "action": "take",
-          "value": "D8",
-          "target": "D6"
-        }
-      ],
-      "RED_Inf_FA": [
-        {
-          "condition": "always",
-          "action": "take",
-          "target": "D5"
-        },
-        {
-          "condition": "always",
-          "action": "defend"
+          "value": "→5",
+          "target": "F7"
         },
         {
           "condition": "enemy_within",
           "action": "fallback",
-          "value": 1,
-          "target": "D8"
+          "value": 2,
+          "target": "B7"
+        },
+        {
+          "action": "take",
+          "target": "E6",
+          "condition": "round_lte",
+          "value": 2
+        },
+        {
+          "action": "defend",
+          "target": "E6",
+          "condition": "always"
+        }
+      ],
+      "RED_Inf_FA": [
+        {
+          "condition": "self_reduced",
+          "action": "fallback",
+          "target": "G9"
+        },
+        {
+          "action": "take",
+          "target": "H6",
+          "condition": "always"
         }
       ],
       "RED_Inf_GA": [
         {
-          "condition": "always",
-          "action": "take",
-          "target": "H6"
+          "condition": "self_reduced",
+          "action": "defend",
+          "target": "B8"
         },
         {
-          "condition": "enemy_within",
+          "condition": "enemy_past_line",
           "action": "defend",
-          "value": 5
+          "value": "→5",
+          "target": "G7"
         },
         {
           "condition": "hex_occupied",
           "action": "take",
-          "value": "g8",
           "target": "D8"
+        },
+        {
+          "action": "take",
+          "target": "B5",
+          "condition": "round_lte",
+          "value": 2
+        },
+        {
+          "action": "defend",
+          "target": "B5",
+          "condition": "always"
         }
       ]
+    },
+    "aiMallar": {
+      "RED_Inf_GA": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "B5",
+            "till": 2
+          },
+          {
+            "action": "defend",
+            "target": "B5"
+          },
+          {
+            "action": "defend",
+            "target": "B5"
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "self_reduced",
+            "val": "",
+            "action": "defend",
+            "target": "B8"
+          },
+          {
+            "cond": "enemy_past_line",
+            "val": "→5",
+            "action": "defend",
+            "target": "G7"
+          },
+          {
+            "cond": "hex_occupied",
+            "val": "",
+            "action": "take",
+            "target": "D8"
+          }
+        ]
+      },
+      "RED_Inf_EA": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "E6",
+            "till": 2
+          },
+          {
+            "action": "defend",
+            "target": "E6"
+          },
+          {
+            "action": "defend",
+            "target": "E6"
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "enemy_past_line",
+            "val": "→5",
+            "action": "defend",
+            "target": "F7"
+          },
+          {
+            "cond": "enemy_within",
+            "val": "2",
+            "action": "fallback",
+            "target": "B7"
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "RED_Inf_FA": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "H6",
+            "till": null
+          },
+          {
+            "action": "defend",
+            "target": "H6"
+          },
+          {
+            "action": "defend",
+            "target": "H6"
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "self_reduced",
+            "val": "",
+            "action": "fallback",
+            "target": "G9"
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      }
     }
   }
 }
