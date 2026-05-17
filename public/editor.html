@@ -413,46 +413,14 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       </div>
       <label>Segervillkor<textarea id="scVC" placeholder="Ex: Ta och håll E9 tre rundor; minimera förluster."></textarea></label>
 
-      <h4>Uppdrag per sida</h4>
-      <label>Blue order<textarea id="scBlueOrder" placeholder="Skriv Blue-lagets uppdrag och order här…" rows="4"></textarea></label>
-      <label>Red order<textarea id="scRedOrder" placeholder="Skriv Red-lagets uppdrag och order här…" rows="4"></textarea></label>
-
-      <h4>Resurser per sida</h4>
-      <div class="p" style="margin:0 0 8px">
-        <div class="grid3">
-          <label>Välj resurs
-            <input id="resPicker" list="resList" placeholder="börja skriva…">
-            <datalist id="resList"></datalist>
-          </label>
-          <label>Antal<input id="resCount" type="number" value="1" min="1"></label>
-          <label>Side
-            <select id="resSide"><option value="blue">Blue</option><option value="red">Red</option></select>
-          </label>
-        </div>
-        <div class="row" style="margin-top:6px">
-          <button class="btn pri" id="addResToScenario">+ Lägg till resurs</button>
-        </div>
-      </div>
-      <div class="grid2">
-        <div>
-          <div style="font-weight:700;color:var(--accent);margin-bottom:4px">Blue resurser</div>
-          <div id="blueResPool" class="list" style="min-height:80px"></div>
-        </div>
-        <div>
-          <div style="font-weight:700;color:#ff6b6b;margin-bottom:4px">Red resurser</div>
-          <div id="redResPool" class="list" style="min-height:80px"></div>
-        </div>
-      </div>
-
       <h4>Kartor</h4>
       <div class="s">Hämta in från Karteditorn (inkl. grid-offset/rot och koordinatstil)</div>
       <div id="boardList" class="list" style="max-height:180px"></div>
       <button class="btn" id="scBindBoards">Uppdatera från Karteditor</button>
 
-      <h4>Setup-zoner</h4>
-      <div class="grid2">
-        <label>Blue zoner (A1-A4,B3)<input id="scBlueZones" type="text"></label>
-        <label>Red zoner<input id="scRedZones" type="text"></label>
+      <div style="display:none">
+        <input id="scBlueZones" type="text">
+        <input id="scRedZones" type="text">
       </div>
     </div>
 
@@ -470,7 +438,7 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
           </label>
         </div>
         <div class="grid4">
-          <label>Startzon/område<input id="unitStartZone" type="text" placeholder="t.ex. A1-A4, C3"></label>
+          <label style="display:none">Startzon/område<input id="unitStartZone" type="text" placeholder="t.ex. A1-A4, C3"></label>
           <label>Startrunda<input id="unitStartRound" type="number" value="0"></label>
           <label>Fördefinierad starthex<input id="unitStartHex" type="text" placeholder="t.ex. C5 (valfritt)"></label>
           <label>Side
@@ -491,6 +459,45 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
           <h4>Red enheter</h4>
           <div id="redPool" class="list" style="min-height:160px"></div>
         </div>
+      </div>
+
+      <h4 style="margin-top:12px">Resurser per sida</h4>
+      <div class="p" style="margin:0 0 8px">
+        <div class="grid3">
+          <label>Välj resurs
+            <input id="resPicker" list="resList" placeholder="börja skriva…">
+            <datalist id="resList"></datalist>
+          </label>
+          <label>Antal<input id="resCount" type="number" value="1" min="1"></label>
+          <label>Side
+            <select id="resSide"><option value="blue">Blue</option><option value="red">Red</option></select>
+          </label>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn pri" id="addResToScenario">+ Lägg till resurs</button>
+        </div>
+      </div>
+      <div class="grid2" style="margin-bottom:4px">
+        <div>
+          <div style="font-weight:700;color:var(--accent);margin-bottom:4px">Blue resurser</div>
+          <div id="blueResPool" class="list" style="min-height:60px"></div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#ff6b6b;margin-bottom:4px">Red resurser</div>
+          <div id="redResPool" class="list" style="min-height:60px"></div>
+        </div>
+      </div>
+
+      <h4 style="margin-top:12px">Uppdrag per sida</h4>
+      <div class="grid2">
+        <label>
+          <span style="font-weight:700;color:var(--accent)">Blue order</span>
+          <textarea id="scBlueOrder" placeholder="Skriv Blue-lagets uppdrag och order här…" rows="4"></textarea>
+        </label>
+        <label>
+          <span style="font-weight:700;color:#ff6b6b">Red order</span>
+          <textarea id="scRedOrder" placeholder="Skriv Red-lagets uppdrag och order här…" rows="4"></textarea>
+        </label>
       </div>
 
       <div class="grid3" style="margin-top:10px">
