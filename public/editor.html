@@ -635,18 +635,22 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
           <!-- Omfall 0, 1, 2 -->
           <div id="omfallRad0" style="margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
             <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 1</div>
-            <div style="display:grid;grid-template-columns:1fr 80px;gap:4px;margin-bottom:5px">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:4px;margin-bottom:5px">
               <select id="omfall0Cond" onchange="uppdateraOmfallValLabel(0)"
                 style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
                 <option value="">— inaktivt —</option>
                 <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="enemy_past_line">Fiende passerar linje (rad/kol)</option>
                 <option value="hex_occupied">Fiende vid hex X</option>
                 <option value="round_gte">Från och med runda X</option>
                 <option value="self_reduced">Enheten reduceras</option>
                 <option value="unit_eliminated">Enhet X eliminerad</option>
               </select>
-              <input id="omfall0Val" type="text" placeholder="Värde" disabled
-                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              <div style="display:flex;gap:3px;align-items:center">
+                <button id="omfall0DirBtn" onclick="toggleOmfallDir(0)" title="Klicka för att byta riktning" style="display:none;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#f0c040;font-size:14px;cursor:pointer;line-height:1">→</button>
+                <input id="omfall0Val" type="text" placeholder="Värde" disabled
+                  style="width:58px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 90px;gap:4px">
               <select id="omfall0Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
@@ -664,18 +668,22 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
 
           <div id="omfallRad1" style="margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
             <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 2</div>
-            <div style="display:grid;grid-template-columns:1fr 80px;gap:4px;margin-bottom:5px">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:4px;margin-bottom:5px">
               <select id="omfall1Cond" onchange="uppdateraOmfallValLabel(1)"
                 style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
                 <option value="">— inaktivt —</option>
                 <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="enemy_past_line">Fiende passerar linje (rad/kol)</option>
                 <option value="hex_occupied">Fiende vid hex X</option>
                 <option value="round_gte">Från och med runda X</option>
                 <option value="self_reduced">Enheten reduceras</option>
                 <option value="unit_eliminated">Enhet X eliminerad</option>
               </select>
-              <input id="omfall1Val" type="text" placeholder="Värde" disabled
-                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              <div style="display:flex;gap:3px;align-items:center">
+                <button id="omfall1DirBtn" onclick="toggleOmfallDir(1)" title="Klicka för att byta riktning" style="display:none;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#f0c040;font-size:14px;cursor:pointer;line-height:1">→</button>
+                <input id="omfall1Val" type="text" placeholder="Värde" disabled
+                  style="width:58px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 90px;gap:4px">
               <select id="omfall1Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
@@ -693,18 +701,22 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
 
           <div id="omfallRad2" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
             <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 3</div>
-            <div style="display:grid;grid-template-columns:1fr 80px;gap:4px;margin-bottom:5px">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:4px;margin-bottom:5px">
               <select id="omfall2Cond" onchange="uppdateraOmfallValLabel(2)"
                 style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
                 <option value="">— inaktivt —</option>
                 <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="enemy_past_line">Fiende passerar linje (rad/kol)</option>
                 <option value="hex_occupied">Fiende vid hex X</option>
                 <option value="round_gte">Från och med runda X</option>
                 <option value="self_reduced">Enheten reduceras</option>
                 <option value="unit_eliminated">Enhet X eliminerad</option>
               </select>
-              <input id="omfall2Val" type="text" placeholder="Värde" disabled
-                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              <div style="display:flex;gap:3px;align-items:center">
+                <button id="omfall2DirBtn" onclick="toggleOmfallDir(2)" title="Klicka för att byta riktning" style="display:none;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#f0c040;font-size:14px;cursor:pointer;line-height:1">→</button>
+                <input id="omfall2Val" type="text" placeholder="Värde" disabled
+                  style="width:58px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 90px;gap:4px">
               <select id="omfall2Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
@@ -1859,10 +1871,12 @@ function aiCondText(r) {
   switch(r.condition) {
     case 'enemy_within':     return `OM fiende inom ${r.value||'?'} hex`;
     case 'enemy_not_within': return `OM ingen fiende inom ${r.value||'?'} hex`;
+    case 'enemy_past_line':  { const v=String(r.value||'?'); const arrows=['→','↓','←','↑']; const arrow=arrows.includes(v.charAt(0))?v.charAt(0):'→'; const linval=arrows.includes(v.charAt(0))?v.slice(1):v; return `OM fiende passerar linje ${arrow} ${linval}`; }
     case 'round_gte':        return `OM runda ≥ ${r.value||'?'}`;
     case 'round_lte':        return `OM runda ≤ ${r.value||'?'}`;
     case 'hex_occupied':     return `OM fiende på hex ${r.value||'?'}`;
     case 'unit_eliminated':  return `OM ${r.value||'?'} är eliminerad`;
+    case 'self_reduced':     return 'OM enheten reduceras';
     case 'always':           return 'ALLTID';
     default: return r.condition;
   }
@@ -2003,21 +2017,45 @@ function fillEnkelvy(enhetId) {
   for (let i=0; i<3; i++) {
     const o = omfall[i] || {};
     $('omfall'+i+'Cond').value   = o.cond   || '';
-    $('omfall'+i+'Val').value    = o.val    || '';
     $('omfall'+i+'Action').value = o.action || '';
     $('omfall'+i+'Target').value = o.target || '';
     uppdateraOmfallValLabel(i);
+    // Separera riktningsprefixet från värdet för enemy_past_line
+    let rawVal = o.val || '';
+    if (o.cond === 'enemy_past_line') {
+      const dirBtn = document.getElementById('omfall'+i+'DirBtn');
+      const arrows = ['→','↓','←','↑'];
+      if (dirBtn && arrows.includes(rawVal.charAt(0))) {
+        dirBtn.textContent = rawVal.charAt(0);
+        rawVal = rawVal.slice(1);
+      } else if (dirBtn) {
+        dirBtn.textContent = '→';
+        if (rawVal.startsWith('>')) rawVal = rawVal.slice(1);
+      }
+    }
+    $('omfall'+i+'Val').value = rawVal;
   }
 }
 
 function uppdateraOmfallValLabel(i) {
-  const cond  = $('omfall'+i+'Cond').value;
-  const valEl = $('omfall'+i+'Val');
+  const cond   = $('omfall'+i+'Cond').value;
+  const valEl  = $('omfall'+i+'Val');
+  const dirBtn = document.getElementById('omfall'+i+'DirBtn');
   if (!valEl) return;
-  const needsVal = ['enemy_within','hex_occupied','round_gte','unit_eliminated'];
+  const needsVal = ['enemy_within','enemy_past_line','hex_occupied','round_gte','unit_eliminated'];
+  const isPastLine = cond === 'enemy_past_line';
   valEl.disabled   = !needsVal.includes(cond);
-  valEl.placeholder = { 'enemy_within':'Antal hex','hex_occupied':'Hex-id','round_gte':'Runda nr','unit_eliminated':'Enhets-id' }[cond] || 'Värde';
+  valEl.placeholder = { 'enemy_within':'Antal hex','enemy_past_line':'D eller 9','hex_occupied':'Hex-id','round_gte':'Runda nr','unit_eliminated':'Enhets-id' }[cond] || 'Värde';
   if (valEl.disabled) valEl.value = '';
+  if (dirBtn) dirBtn.style.display = isPastLine ? 'inline-block' : 'none';
+}
+
+function toggleOmfallDir(i) {
+  const btn = document.getElementById('omfall'+i+'DirBtn');
+  if (!btn) return;
+  const seq = ['→','↓','←','↑'];
+  const cur = btn.textContent.trim();
+  btn.textContent = seq[(seq.indexOf(cur) + 1) % seq.length];
 }
 
 function generateRulesFromMall(mall) {
@@ -2025,7 +2063,7 @@ function generateRulesFromMall(mall) {
   (mall.omfall || []).forEach(o => {
     if (!o.cond || !o.action) return;
     const regel = { condition: o.cond, action: o.action };
-    const needsVal = ['enemy_within','hex_occupied','round_gte','unit_eliminated'];
+    const needsVal = ['enemy_within','enemy_past_line','hex_occupied','round_gte','unit_eliminated'];
     if (o.val && needsVal.includes(o.cond)) regel.value = isNaN(Number(o.val)) ? o.val : Number(o.val);
     if (o.target) regel.target = o.target;
     rules.push(regel);
@@ -2059,7 +2097,13 @@ function sparaFaser() {
       { action:$('fasDärAction').value,   target:$('fasDärTarget').value.trim() },
       { action:$('fasSlutAction').value,  target:$('fasSlutTarget').value.trim() }
     ],
-    omfall: [0,1,2].map(i => ({ cond:$('omfall'+i+'Cond').value, val:$('omfall'+i+'Val').value.trim(), action:$('omfall'+i+'Action').value, target:$('omfall'+i+'Target').value.trim() }))
+    omfall: [0,1,2].map(i => {
+      const cond   = $('omfall'+i+'Cond').value;
+      const rawVal = $('omfall'+i+'Val').value.trim();
+      const dirBtn = document.getElementById('omfall'+i+'DirBtn');
+      const dir    = (cond === 'enemy_past_line' && dirBtn) ? dirBtn.textContent.trim() : '';
+      return { cond, val: dir + rawVal, action:$('omfall'+i+'Action').value, target:$('omfall'+i+'Target').value.trim() };
+    })
   };
   SC.aiMallar[enhetId] = mall;
   if (!SC.aiRules) SC.aiRules = {};

@@ -8464,6 +8464,21 @@ function checkAiCondition(regel, unit, enemies, round, placed) {
       return round <= (regel.value || 99);
     case 'hex_occupied':
       return enemies.some(e => e.hex === regel.value && !e.eliminated);
+    case 'enemy_past_line': {
+      const raw = String(regel.value || '');
+      const firstChar = raw.charAt(0);
+      const gte = firstChar !== '<' && firstChar !== '←' && firstChar !== '↑';
+      const lineVal = raw.replace(/^[→↓←↑><]/, '');
+      const isLetter = /^[A-Za-z]$/.test(lineVal);
+      const hexParts = (hex) => { const m = /^([A-Za-z]+)(\d+)$/.exec(hex||''); return m ? { letter: m[1].toUpperCase(), num: parseInt(m[2],10) } : null; };
+      return enemies.some(e => {
+        if (e.eliminated) return false;
+        const p = hexParts(e.hex);
+        if (!p) return false;
+        if (isLetter) return gte ? p.letter >= lineVal.toUpperCase() : p.letter <= lineVal.toUpperCase();
+        return gte ? p.num >= parseInt(lineVal, 10) : p.num <= parseInt(lineVal, 10);
+      });
+    }
     case 'unit_eliminated': {
       const u = placed.find(u => u.id === regel.value || u.name === regel.value);
       return !u || u.eliminated;
