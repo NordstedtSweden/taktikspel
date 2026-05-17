@@ -387,16 +387,19 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
       <h3>Scenario</h3>
       <div class="grid3">
         <button class="btn pri" id="scNew">Nytt</button>
-        <button class="btn" id="scImport">Importera</button>
+        <button class="btn" id="scImport">Importera (lokalt)</button>
         <button class="btn" id="scHamtaServer">Hämta från server…</button>
         <div class="row"><label class="s">Scenario filnamn</label><input id="scFileName" type="text" placeholder="scenario.json"></div>
-        <button class="btn ok" id="scExport">Exportera</button>
         <button class="btn pri" id="scPublicera">Publicera på server</button>
-<button class="btn" id="laddaUppKarta">Ladda upp kartbild</button>
-<button class="btn" id="laddaUppIkon">Ladda upp enhetsikon</button>
+        <button class="btn pri" id="scExportPaket">Exportera (lokalt)</button>
+        <!-- Dolda knappar med dubbel funktion -->
+        <span style="display:none">
+          <button id="scExport">Exportera</button>
+          <button id="laddaUppKarta">Ladda upp kartbild</button>
+          <button id="laddaUppIkon">Ladda upp enhetsikon</button>
+        </span>
 <input type="file" id="kartaFil" accept="image/*" style="display:none">
 <input type="file" id="ikonFil" accept="image/png" multiple style="display:none">
-        <button class="btn pri" id="scExportPaket">Exportera spelpaket</button>
       </div>
       <input id="scFile" type="file" accept="application/json" class="hide"/>
 
