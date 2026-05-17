@@ -340,12 +340,9 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
         <label>Kapacitet (#)<input id="uTcap" type="number" value="0"></label>
         <label>Tillåtna typer<input id="uTallow" type="text" placeholder="infantry,gun"></label>
       </div>
-      <div class="grid3">
-        <label>Tow gun?
-          <select id="uTowCan"><option value="no">no</option><option value="yes">yes</option></select>
-        </label>
-        <label>Tow types<input id="uTowTypes" type="text" placeholder="gun"></label>
-        <div></div>
+      <div style="display:none">
+        <select id="uTowCan"><option value="no">no</option><option value="yes">yes</option></select>
+        <input id="uTowTypes" type="text">
       </div>
 
       <div class="grid3" style="margin-top:10px">
