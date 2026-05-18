@@ -46,17 +46,17 @@ button{cursor:pointer}
   background:#0a0f24;
   width: 100%;
   min-width: 0;
-  height: 300px;
+  height: auto;
+  min-height: calc(100vh - 150px);
   overflow: hidden;
 }
 .dold-for-spelare { display: none !important; }
 .gm-only { display: none !important; }
 #mapCanvas{background:#0a0f24}
 .kbd{display:inline-block;padding:0 6px;border:1px solid var(--line);border-radius:6px;background:#0b1324;font-size:12px}
-.legend{display:flex;flex-wrap:wrap;gap:6px;padding:4px 2px;margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .legend span{display:flex;gap:6px;align-items:center}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2)}
-.floating{position:absolute;left:8px;bottom:8px;background:rgba(12,18,40,0.82);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
 .unitIcon{position:absolute;transform:translate(-50%,-50%);user-select:none;--icon-size:40px}
 .unitIcon img{width:var(--icon-size);height:auto;image-rendering:pixelated}
 .unitIcon .order{position:absolute;left:-8px;top:-8px;font-size:calc(var(--icon-size) * 0.35)}
@@ -433,15 +433,15 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   <div class="p" style="position:relative">
     <div class="canvasWrap" id="mapWrap">
       <canvas id="mapCanvas" width="2400" height="1600"></canvas>
-    </div>
-    <div id="infoBox" style="font-size:13px;color:#c8d8ff;min-height:20px;margin-top:4px">—</div>
-    <div class="legend">
-      <span><i style="background:#5B7FA3"></i>Open</span>
-      <span><i style="background:#2e7d32"></i>Woods</span>
-      <span><i style="background:#6b4a3a"></i>Stone Bldg</span>
-      <span><i style="background:#4aa7ff"></i>River/Water</span>
-      <span><i style="background:#b5b5b5"></i>Road</span>
-      <span class="s">…enligt editor</span>
+      <!-- Hex/terräng-overlay för Blue/Red (GM ser detta i högerkolumnen istället) -->
+      <div id="infoBoxMap" style="display:none;position:absolute;left:8px;bottom:44px;background:rgba(12,18,40,0.82);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:13px;color:#c8d8ff">—</div>
+      <div id="legendMap" style="display:none;position:absolute;left:8px;bottom:8px;flex-wrap:wrap;gap:6px;background:rgba(12,18,40,0.82);border:1px solid var(--line);border-radius:8px;padding:4px 8px">
+        <span style="display:flex;gap:6px;align-items:center"><i style="display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:#5B7FA3"></i>Open</span>
+        <span style="display:flex;gap:6px;align-items:center"><i style="display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:#2e7d32"></i>Woods</span>
+        <span style="display:flex;gap:6px;align-items:center"><i style="display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:#6b4a3a"></i>Stone Bldg</span>
+        <span style="display:flex;gap:6px;align-items:center"><i style="display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:#4aa7ff"></i>River/Water</span>
+        <span style="display:flex;gap:6px;align-items:center"><i style="display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:#b5b5b5"></i>Road</span>
+      </div>
     </div>
   </div>
 
@@ -507,6 +507,16 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <hr>
     <h4 class="h" id="zonesHeader">Setup-zoner</h4>
     <div id="zonesInfo" class="list"></div>
+    <hr>
+    <h4 class="h">Hex / Terräng</h4>
+    <div id="infoBox" class="s" style="margin-bottom:6px">—</div>
+    <div class="legend">
+      <span><i style="background:#5B7FA3"></i>Open</span>
+      <span><i style="background:#2e7d32"></i>Woods</span>
+      <span><i style="background:#6b4a3a"></i>Stone Bldg</span>
+      <span><i style="background:#4aa7ff"></i>River/Water</span>
+      <span><i style="background:#b5b5b5"></i>Road</span>
+    </div>
     <div id="boardsInfo" style="display:none"></div>
   </div>
 </div>
@@ -1632,6 +1642,13 @@ if (window.spelRoll === 'blue' || window.spelRoll === 'red') {
   if (gmLosToggle) {
     gmLosToggle.classList.toggle('hidden', !gm);
   }
+
+  // Kartoverlay för hex/terräng och legend: visas för Blue/Red, döljs för GM (GM ser det i högerkolumnen)
+  const isPlayer = (effektivRoll === 'blue' || effektivRoll === 'red');
+  const infoBoxMap = document.getElementById('infoBoxMap');
+  const legendMap  = document.getElementById('legendMap');
+  if (infoBoxMap) infoBoxMap.style.display = isPlayer ? 'block' : 'none';
+  if (legendMap)  legendMap.style.display  = isPlayer ? 'flex'  : 'none';
 
 
   // READY-panel + "Nästa runda"-knapp
@@ -4788,19 +4805,7 @@ let cam={z:1,vx:0,vy:0,pan:false,lx:0,ly:0};
 // --- Auto-adjust map area height to fill screen ---
 // Vi låter nu CSS (max-height + overflow:auto) sköta höjden och ritar bara om.
 function fitCanvasWrapHeight() {
-  if (!MAP || !MAP.rows || !MAP.hexSize) return;
-  const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
-  // BLUE/RED-vyn hanteras separat med calc(100vh-50px)
-  if (role !== 'gm') return;
-  const r  = MAP.hexSize;
-  const dy = (MAP.orient === 'flat') ? Math.sqrt(3) * r : 1.5 * r;
-  // Understa hex-raden i canvas-koordinater (inkl. offset för udda kolumner)
-  const canvasBottom = MAP.gridOffY + (MAP.rows - 1) * dy + dy * 0.75 + r;
-  const screenBottom = (canvasBottom - cam.vy) * cam.z;
-  const newH = Math.max(150, Math.round(screenBottom + 16));
-  if (wrap && Math.abs(wrap.clientHeight - newH) > 2) {
-    wrap.style.height = newH + 'px';
-  }
+  if (typeof drawAll === 'function') drawAll();
 }
 
 
@@ -5729,7 +5734,6 @@ if ($('roleSel')?.value === 'gm' && showLOS && typeof drawLOSOverlay === 'functi
   } finally {
     if (_livePLACED !== null) { PLACED = _livePLACED; PLACERADE_RESURSER = _liveRES; }
   }
-  fitCanvasWrapHeight();
 }
 function drawUnitsAndOrders(){
 
@@ -6537,7 +6541,9 @@ wrap.addEventListener('mousemove',e=>{
   if(hit){
     const hex=hexKey(hit.ri,hit.ci);
     const terr=MAP.terrain[hex]||'open';
-    $('infoBox').textContent = `${hex} • terräng: ${TERRA.palette[terr]?.label||terr}`;
+    const infoTxt = `${hex} • terräng: ${TERRA.palette[terr]?.label||terr}`;
+    $('infoBox').textContent = infoTxt;
+    const ibm = $('infoBoxMap'); if (ibm) ibm.textContent = infoTxt;
   }
 });
 cv.addEventListener('mousedown',e=>{
