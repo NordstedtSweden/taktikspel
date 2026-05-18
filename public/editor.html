@@ -2141,8 +2141,9 @@ function toggleOmfallDir(i) {
 function generateRulesFromMall(mall) {
   const rules = [];
   (mall.omfall || []).forEach(o => {
-    if (!o.cond || !o.action) return;
-    const regel = { condition: o.cond, action: o.action };
+    if (!o.cond) return;
+    const action = o.action || 'hold'; // tom action = ingen order = stanna
+    const regel = { condition: o.cond, action };
     const needsVal = ['enemy_within','enemy_past_line','hex_occupied','round_gte','unit_eliminated'];
     if (o.val && needsVal.includes(o.cond)) regel.value = isNaN(Number(o.val)) ? o.val : Number(o.val);
     if (o.target) regel.target = o.target;

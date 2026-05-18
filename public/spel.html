@@ -8444,8 +8444,9 @@ function executeAiTurn(aiSide, placed, round, aiRules) {
           applyAiAction(regel, unit, playerUnits);
           if (typeof logEvent === 'function')
             logEvent(`[AI] ${unit.name||unit.id} — ${regel.condition} → ${regel.action}${regel.target?' '+regel.target:''}`);
+          break; // regel tillämpades — sluta utvärdera
         }
-        break;
+        // svårighetsgrad-miss: prova nästa matchande regel
       }
     }
   }
@@ -8519,6 +8520,9 @@ function applyAiAction(regel, unit, enemies) {
       break;
     }
     case 'hold':
+      unit.order = null;
+      unit.orderTarget = null; // avbryt rörelse mot gammalt mål
+      break;
     default:
       unit.order = null;
       break;
