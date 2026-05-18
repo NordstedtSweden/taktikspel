@@ -425,14 +425,13 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <div id="unitPoolBlue" class="list" style="display:none"></div>
     <div id="poolRedHdr" class="s" style="margin-top:10px;display:none"><b>RED</b> (återstående)</div>
     <div id="unitPoolRed" class="list" style="display:none"></div>
-    <hr>
-    <div class="s">Dra en enhet till en giltig setup-hex för att placera den. Utan scenario: placera var som helst.</div>
-    <!-- Resurspanel dold — resurser visas i ordermenyn istället -->
-    <div id="resursPoolPanel" style="display:none!important">
-      <div id="gmResBlueHdr" style="display:none"></div>
-      <div id="gmResBlue" style="display:none"></div>
-      <div id="gmResRedHdr" style="display:none"></div>
-      <div id="gmResRed" style="display:none"></div>
+    <div id="resursPoolPanel" style="display:none">
+      <hr>
+      <h3 class="h" style="margin-top:6px">Resurser</h3>
+      <div id="gmResBlueHdr" class="s" style="margin-top:6px;display:none"><b>BLUE</b> (återstående)</div>
+      <div id="gmResBlue" class="list" style="display:none"></div>
+      <div id="gmResRedHdr" class="s" style="margin-top:10px;display:none"><b>RED</b> (återstående)</div>
+      <div id="gmResRed" class="list" style="display:none"></div>
     </div>
   </div>
 
@@ -2030,7 +2029,6 @@ function refreshResursPool() {
   const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
   const harNågon = GM_RESURSER.blue.length + GM_RESURSER.red.length > 0;
   const klientSida = (role === 'blue' || role === 'red') ? role : null;
-  // GM ser alla, Blue/Red ser bara sin sida
   const visaFörRoll = role === 'gm' ? harNågon
     : klientSida ? GM_RESURSER[klientSida]?.length > 0 : false;
   panel.style.display = visaFörRoll ? 'block' : 'none';
@@ -2040,18 +2038,24 @@ function refreshResursPool() {
     const hdr = document.getElementById(hdrId), box = document.getElementById(boxId);
     const arr = GM_RESURSER[side];
     if (!hdr || !box) return;
-    // Klienter ser bara sin egen sida
     const synlig = arr.length && (role === 'gm' || role === side);
     hdr.style.display = synlig ? 'block' : 'none';
     box.style.display = synlig ? 'block' : 'none';
     box.innerHTML = '';
     arr.forEach(r => {
       const d = document.createElement('div');
-      d.className = 'uitem';
+      d.className = `uitem uitem-${side}`;
       d.style.opacity = r.kvar <= 0 ? '0.4' : '1';
       d.style.cursor = r.kvar <= 0 ? 'default' : 'pointer';
-      d.innerHTML = `<b>${r.def?.name||r.id}</b> <span class="badge">${RESURS_ETIKETT[r.def?.type]||r.def?.type}</span><span class="badge" style="float:right">${r.kvar}/${r.count} kvar</span>`;
-      if (r.kvar > 0) d.onclick = () => aktiveraPendingResurs(r, side);
+      d.innerHTML = `<div><b>${r.def?.name||r.id}</b> <span class="badge">${RESURS_ETIKETT[r.def?.type]||r.def?.type}</span> <span class="badge" style="float:right">${r.kvar}/${r.count} kvar</span></div>`;
+      if (r.kvar > 0) {
+        d.onclick = () => {
+          // Rensa tidigare markering
+          document.querySelectorAll('.uitem.pending-place').forEach(el => el.classList.remove('pending-place'));
+          d.classList.add('pending-place');
+          aktiveraPendingResurs(r, side);
+        };
+      }
       box.appendChild(d);
     });
   });
@@ -5625,7 +5629,7 @@ function openOrderMenuAt(x,y,unit){
 function showHint(t){
   const h=$('hint'); const sp=$('hintText'); if(sp) sp.textContent=t; else h.textContent=t; h.classList.remove('hidden');
   const avbrytBtn=$('hintAvbryt');
-  if(avbrytBtn) avbrytBtn.style.display=(pendingResurs||(typeof pendingTarget!=='undefined'&&pendingTarget))?'':'none';
+  if(avbrytBtn) avbrytBtn.style.display=(pendingResurs||(typeof pendingTarget!=='undefined'&&pendingTarget)||(typeof pendingPlace!=='undefined'&&pendingPlace))?'':'none';
 }
 function hideHint(){ $('hint').classList.add('hidden'); }
 
@@ -5636,6 +5640,8 @@ function avbrytPendingAction() {
     if (pendingPlace.el) pendingPlace.el.classList.remove('pending-place');
     pendingPlace = null;
   }
+  // Rensa gul markering på resurskort i panelen
+  document.querySelectorAll('.uitem.pending-place').forEach(el => el.classList.remove('pending-place'));
   hideHint();
   if (typeof drawAll === 'function') drawAll();
 }
