@@ -5766,7 +5766,7 @@ function drawUnitsAndOrders(){
 
 // [NYTT] synlighetsurval
 let toDraw = [];
-if (role === 'gm') {
+if (role === 'gm' || REPLAY_AKTIV) {
   toDraw = PLACED.slice();
 } else {
   // 1) Klientens egen LOS-karta (för fog/LOS-overlay m.m.)
