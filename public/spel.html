@@ -33,8 +33,11 @@ button{cursor:pointer}
 
 .h{margin:6px 0 10px}
 .list{max-height:72vh;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#0e1730;padding:6px}
-.uitem{border:1px solid var(--line);border-radius:8px;background:#0a0f24;padding:8px;margin-bottom:8px}
+.uitem{border:1px solid var(--line);border-radius:8px;background:#0a0f24;padding:8px;margin-bottom:8px;cursor:pointer}
 .uitem.dragging{opacity:.6}
+.uitem-blue{border-left:3px solid #4da6ff}
+.uitem-red{border-left:3px solid #ff6b6b}
+.uitem.pending-place{outline:2px solid #f2c94c;background:#17224a}
 .badge{display:inline-block;padding:2px 6px;border-radius:6px;background:#0b1326;border:1px solid var(--line);font-size:11px;color:#9fb1d4;margin-right:6px}
 .canvasWrap{
   position:relative;
@@ -1607,12 +1610,9 @@ function applyRoleUI() {
     const effektivRoll = window.spelRoll || role;
 const gm = (effektivRoll === 'gm');
 if (window.__savedSpelRoll) window.spelRoll = window.__savedSpelRoll;
-    // GM placerar som: bara synlig i GM-vy
+    // gmPlaceBox tas inte längre i bruk (sida läses från enhetskortet)
 const gmPlaceBox = document.getElementById('gmPlaceBox');
-if (gmPlaceBox) {
-  const visaGmPlace = window.spelRoll === 'gm';
-  gmPlaceBox.classList.toggle('hidden', !visaGmPlace);
-}
+if (gmPlaceBox) gmPlaceBox.classList.add('hidden');
 
 
   // Top-radens fil-knappar: bara GM ska se dessa
@@ -5425,8 +5425,8 @@ function renderPoolSide(side){
     const allowShow = (role==='gm') || (role===side);
     if(!allowShow) return;
 
-    const d=document.createElement('div'); 
-    d.className='uitem'; 
+    const d=document.createElement('div');
+    d.className=`uitem uitem-${side}`;
     d.draggable = rem>0;
     d.innerHTML=`<div><b>${item.id}</b> <span class="badge">x${rem}</span> <span class="badge">${item.state}</span> ${missing?'<span class="badge" style="border-color:#ff6b6b;color:#ff6b6b">saknas i units.json</span>':''}</div>
                  <div class="s">${def?.name||'-'} [${def?.type||'-'}]</div>`;
@@ -5436,6 +5436,13 @@ function renderPoolSide(side){
         ev.dataTransfer.setData('application/json', JSON.stringify({side,id:item.id,state:item.state}));
       });
       d.addEventListener('dragend',()=>d.classList.remove('dragging'));
+      d.addEventListener('click', () => {
+        // Klick-placera: markera enhet och vänta på klick på kartan
+        if (pendingPlace?.el) pendingPlace.el.classList.remove('pending-place');
+        pendingPlace = { side, id: item.id, state: item.state, el: d };
+        d.classList.add('pending-place');
+        showHint(`Klicka på kartan för att placera ${item.id} (${side.toUpperCase()})…`);
+      });
     } else {
       d.style.opacity=0.6;
     }
@@ -5457,81 +5464,54 @@ function mousePosOnWrap(ev){
   return { x: ev.clientX - rect.left + wrap.scrollLeft,
            y: ev.clientY - rect.top  + wrap.scrollTop };
 }
-wrap.addEventListener('dragover', ev => ev.preventDefault());
-wrap.addEventListener('drop', ev => {
-  ev.preventDefault();
+let pendingPlace = null; // { side, id, state, el } — klick-placera enhet
 
-  // 🔒 Endast GM får faktiskt placera enheter på kartan
-  const roleNow = (typeof getCurrentRole === 'function')
-    ? getCurrentRole()
-    : (document.getElementById('roleSel')?.value || 'gm');
-
-  if (roleNow !== 'gm') {
-    // Klienter (BLUE/RED) ignorerar droppet – GM är alltid auktoritativ
-    return;
+function placeUnitOnHex(side, id, state, hex) {
+  if (SC && !isHexAllowedForSide(hex, side)) {
+    alert(`Hex ${hex} ligger inte i ${side}-setup.`); return false;
   }
-
-  const payload = ev.dataTransfer.getData('application/json'); 
-  if (!payload) return;
-  const data = JSON.parse(payload); // {side,id,state}
-  let placeSide = data.side;
-  if (roleNow === 'gm') {
-    placeSide = $('gmPlaceSide').value;
+  if (remainingCountGrouped(side, id, state) <= 0) {
+    alert(`Inga ${id} (${state}) kvar i ${side}-poolen.`); return false;
   }
-
-  const m  = mousePosOnWrap(ev);
-  const ws = screenToWorld(m.x,m.y);
-  const p  = invRot(ws.x,ws.y, MAP.gridOffX,MAP.gridOffY,MAP.gridAngle);
-  const hit= nearestHex(p.x,p.y); 
-  if (!hit) return;
-  const hex = hexKey(hit.ri,hit.ci);
-
-  if(SC && !isHexAllowedForSide(hex,placeSide)){
-    alert(`Hex ${hex} ligger inte i ${placeSide}-setup.`); 
-    return;
-  }
-  if(remainingCountGrouped(placeSide,data.id,data.state)<=0){
-    alert(`Inga ${data.id} (${data.state}) kvar i ${placeSide}-poolen.`);
-    return;
-  }
-   // Ny stacking-regel: max 1 egen enhet per hex
   const friendlyThere = PLACED.some(u =>
-    u.side === placeSide &&
-    u.hex === hex &&
-    !u.eliminated &&
+    u.side === side && u.hex === hex && !u.eliminated &&
     String(u.state||'').toLowerCase() !== 'eliminated'
   );
   if (friendlyThere) {
-    alert(`Det står redan en ${placeSide}-enhet i ${hex}.`);
-    return;
-  }  
-// [v2.9-pre B1/C1 PATCH] – skapa objekt, backfilla runtime, pusha
-const obj = {
-  side: placeSide,
-  id: data.id,
-  hex,
-  state: data.state,               // "full" | "reduced"
-  order: null,
-  orderTarget: null,
-  suppressed: null,                // null | "yellow" | "red"
-  suppressedRounds: 0,             // valfritt, bra för framtida logik
-  eliminated: false,               // NYTT
-  hasFired: false,                 // NYTT (en gång per runda)
-  fireTarget: null,                // NYTT (senare för visuell "bang")
-  spottedBy: { blue:false, red:false }
-};
+    alert(`Det står redan en ${side}-enhet i ${hex}.`); return false;
+  }
+  const obj = {
+    side, id, hex, state,
+    order: null, orderTarget: null,
+    suppressed: null, suppressedRounds: 0,
+    eliminated: false, hasFired: false, fireTarget: null,
+    spottedBy: { blue: false, red: false }
+  };
+  backfillRuntime(obj);
+  PLACED.push(obj);
+  renderPools(); drawAll(); renderOrders();
+  if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+  return true;
+}
 
-// Lägg till/normalisera nya runtime-fält (hasFired, suppression etc.)
-backfillRuntime(obj);
+wrap.addEventListener('dragover', ev => ev.preventDefault());
+wrap.addEventListener('drop', ev => {
+  ev.preventDefault();
+  const roleNow = (typeof getCurrentRole === 'function')
+    ? getCurrentRole()
+    : (document.getElementById('roleSel')?.value || 'gm');
+  if (roleNow !== 'gm') return;
 
-PLACED.push(obj);
+  const payload = ev.dataTransfer.getData('application/json');
+  if (!payload) return;
+  const data = JSON.parse(payload); // {side,id,state}
 
-
-  renderPools(); 
-  drawAll(); 
-  renderOrders();
-   // GM: berätta för klienterna att en ny enhet placerats
-  if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM(); 
+  const m   = mousePosOnWrap(ev);
+  const ws  = screenToWorld(m.x, m.y);
+  const p   = invRot(ws.x, ws.y, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
+  const hit = nearestHex(p.x, p.y);
+  if (!hit) return;
+  placeUnitOnHex(data.side, data.id, data.state, hexKey(hit.ri, hit.ci));
 });
 
 /* ===== Ordermeny + målval ===== */
@@ -5652,6 +5632,10 @@ function hideHint(){ $('hint').classList.add('hidden'); }
 function avbrytPendingAction() {
   pendingResurs = null;
   if (typeof pendingTarget !== 'undefined') pendingTarget = null;
+  if (typeof pendingPlace !== 'undefined' && pendingPlace) {
+    if (pendingPlace.el) pendingPlace.el.classList.remove('pending-place');
+    pendingPlace = null;
+  }
   hideHint();
   if (typeof drawAll === 'function') drawAll();
 }
@@ -6572,7 +6556,7 @@ window.addEventListener('mousemove',e=>{
 });
 window.addEventListener('mouseup',()=>cam.pan=false);
 window.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && (pendingResurs || pendingTarget)) {
+  if (e.key === 'Escape' && (pendingResurs || pendingTarget || pendingPlace)) {
     avbrytPendingAction();
   }
 });
@@ -6645,7 +6629,25 @@ cv.addEventListener('touchend', e => {
 cv.addEventListener('click', e => {
   if (REPLAY_AKTIV) return;
 
-  // 0) Resursplacering (GM direkt, klienter via socket)
+  // 0a) Enhetplacering via klick (GM)
+  if (pendingPlace) {
+    const m = mousePosOnCanvas(e);
+    const ws = screenToWorld(m.x, m.y);
+    const p = invRot(ws.x, ws.y, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
+    const hit = nearestHex(p.x, p.y);
+    if (hit) {
+      const hex = hexKey(hit.ri, hit.ci);
+      const ok = placeUnitOnHex(pendingPlace.side, pendingPlace.id, pendingPlace.state, hex);
+      if (ok) {
+        if (pendingPlace.el) pendingPlace.el.classList.remove('pending-place');
+        pendingPlace = null;
+        hideHint();
+      }
+    }
+    return;
+  }
+
+  // 0b) Resursplacering (GM direkt, klienter via socket)
   if (pendingResurs) {
     const m = mousePosOnCanvas(e);
     const ws = screenToWorld(m.x, m.y);
