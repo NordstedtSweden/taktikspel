@@ -786,12 +786,6 @@
     "aiRules": {
       "RED_Inf_EA": [
         {
-          "condition": "enemy_past_line",
-          "action": "defend",
-          "value": "↓5",
-          "target": "B6"
-        },
-        {
           "condition": "enemy_within",
           "action": "fallback",
           "value": 2,
@@ -801,6 +795,12 @@
           "condition": "self_reduced",
           "action": "fallback",
           "target": "D8"
+        },
+        {
+          "condition": "enemy_past_line",
+          "action": "defend",
+          "value": "↓5",
+          "target": "B6"
         },
         {
           "action": "take",
