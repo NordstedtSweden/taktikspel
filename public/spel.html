@@ -8496,7 +8496,7 @@ function applyAiAction(regel, unit, enemies) {
   switch (regel.action) {
     case 'defend':
       unit.order = 'defend';
-      unit.orderTarget = unit.hex;
+      unit.orderTarget = regel.target || unit.hex;
       break;
     case 'take':
       unit.order = 'take';
