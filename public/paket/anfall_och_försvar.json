@@ -801,7 +801,7 @@
           "action": "take",
           "target": "B5",
           "condition": "round_lte",
-          "value": 2
+          "value": 4
         },
         {
           "action": "defend",
@@ -814,6 +814,12 @@
           "condition": "self_reduced",
           "action": "fallback",
           "target": "D8"
+        },
+        {
+          "condition": "enemy_past_line",
+          "action": "defend",
+          "value": "↓5",
+          "target": "D6"
         },
         {
           "action": "take",
@@ -894,7 +900,7 @@
           {
             "action": "take",
             "target": "B5",
-            "till": 2
+            "till": 4
           },
           {
             "action": "defend",
@@ -950,10 +956,10 @@
             "target": "D8"
           },
           {
-            "cond": "",
-            "val": "",
-            "action": "",
-            "target": ""
+            "cond": "enemy_past_line",
+            "val": "↓5",
+            "action": "defend",
+            "target": "D6"
           },
           {
             "cond": "",
