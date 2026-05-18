@@ -798,6 +798,11 @@
           "target": "B7"
         },
         {
+          "condition": "self_reduced",
+          "action": "fallback",
+          "target": "D8"
+        },
+        {
           "action": "take",
           "target": "B5",
           "condition": "round_lte",
@@ -813,7 +818,7 @@
         {
           "condition": "self_reduced",
           "action": "fallback",
-          "target": "D8"
+          "target": "C9"
         },
         {
           "condition": "enemy_past_line",
@@ -837,7 +842,7 @@
           "condition": "enemy_past_line",
           "action": "defend",
           "value": "↓5",
-          "target": "G6"
+          "target": "F8"
         },
         {
           "condition": "hex_occupied",
@@ -885,7 +890,7 @@
             "cond": "enemy_past_line",
             "val": "↓5",
             "action": "defend",
-            "target": "G6"
+            "target": "F8"
           },
           {
             "cond": "hex_occupied",
@@ -925,10 +930,10 @@
             "target": "B7"
           },
           {
-            "cond": "",
+            "cond": "self_reduced",
             "val": "",
-            "action": "",
-            "target": ""
+            "action": "fallback",
+            "target": "D8"
           }
         ]
       },
@@ -953,7 +958,7 @@
             "cond": "self_reduced",
             "val": "",
             "action": "fallback",
-            "target": "D8"
+            "target": "C9"
           },
           {
             "cond": "enemy_past_line",
