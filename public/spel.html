@@ -54,7 +54,7 @@ button{cursor:pointer}
 .gm-only { display: none !important; }
 #mapCanvas{background:#0a0f24}
 .kbd{display:inline-block;padding:0 6px;border:1px solid var(--line);border-radius:6px;background:#0b1324;font-size:12px}
-.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.legend{position:absolute;bottom:48px;left:8px;display:flex;flex-wrap:wrap;gap:6px;background:rgba(12,18,40,0.82);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
 .legend span{display:flex;gap:6px;align-items:center}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px;border:1px solid rgba(255,255,255,.2)}
 .floating{position:absolute;left:8px;bottom:8px;background:rgba(12,18,40,0.82);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
@@ -440,14 +440,14 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <div class="canvasWrap" id="mapWrap">
       <canvas id="mapCanvas" width="2400" height="1600"></canvas>
       <div id="infoBox" class="floating">—</div>
-    </div>
-    <div class="legend">
-      <span><i style="background:#5B7FA3"></i>Open</span>
-      <span><i style="background:#2e7d32"></i>Woods</span>
-      <span><i style="background:#6b4a3a"></i>Stone Bldg</span>
-      <span><i style="background:#4aa7ff"></i>River/Water</span>
-      <span><i style="background:#b5b5b5"></i>Road</span>
-      <span class="s">…enligt editor</span>
+      <div class="legend">
+        <span><i style="background:#5B7FA3"></i>Open</span>
+        <span><i style="background:#2e7d32"></i>Woods</span>
+        <span><i style="background:#6b4a3a"></i>Stone Bldg</span>
+        <span><i style="background:#4aa7ff"></i>River/Water</span>
+        <span><i style="background:#b5b5b5"></i>Road</span>
+        <span class="s">…enligt editor</span>
+      </div>
     </div>
   </div>
 
