@@ -8436,19 +8436,28 @@ function executeAiTurn(aiSide, placed, round, aiRules) {
     return Math.random() < 0.85; // normal
   };
 
+  console.log('[AI-TURN] runda=' + round + ' | blå enheter:', playerUnits.map(e => e.id + '@' + e.hex));
+
   for (const unit of aiUnits) {
     const regler = aiRules[unit.id] || aiRules[unit.name] || [];
+    console.log('[AI-TURN]', unit.id, '@ hex=' + unit.hex, '| state=' + unit.state, '| regler:', regler.length, regler.map(r => r.condition + '(' + (r.value ?? '') + ')→' + r.action));
+    let firedRegel = false;
     for (const regel of regler) {
-      if (checkAiCondition(regel, unit, playerUnits, round, placed)) {
+      const match = checkAiCondition(regel, unit, playerUnits, round, placed);
+      console.log('  regel:', regel.condition + '(' + (regel.value ?? '') + ')', '→ match=', match);
+      if (match) {
         if (följRegel()) {
           applyAiAction(regel, unit, playerUnits);
           if (typeof logEvent === 'function')
             logEvent(`[AI] ${unit.name||unit.id} — ${regel.condition} → ${regel.action}${regel.target?' '+regel.target:''}`);
+          firedRegel = true;
           break; // regel tillämpades — sluta utvärdera
         }
         // svårighetsgrad-miss: prova nästa matchande regel
       }
     }
+    if (!firedRegel && typeof logEvent === 'function')
+      logEvent(`[AI] ${unit.name||unit.id} — ingen regel träffade (${regler.length} regler)`);
   }
 }
 
