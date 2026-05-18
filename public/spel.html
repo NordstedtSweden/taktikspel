@@ -3907,7 +3907,7 @@ function dist2BetweenHexes(hexA, hexB) {
 }
 
 function chooseNearestTarget(shooter) {
-  const enemies = PLACED.filter(e => e.side !== shooter.side && !e.eliminated && !e.spanarNu);
+  const enemies = PLACED.filter(e => e.side !== shooter.side && !e.eliminated && !(e.spanarNu && !e.revealed));
   let best = null, bestD2 = Infinity;
   for (const e of enemies) {
     if (hasLOS(shooter.hex, e.hex)) {
@@ -5783,8 +5783,8 @@ if (role === 'gm' || REPLAY_AKTIV) {
     const hx = liveHex(p);
     const losVisible = hx ? visHexes.has(hx) : false;
 
-    // Spanar dolt — syns aldrig för fienden oavsett LOS eller tidigare kontakt
-    if (p.spanarNu) return false;
+    // Spanar dolt — syns aldrig för fienden oavsett LOS eller tidigare kontakt (såvida inte röjd)
+    if (p.spanarNu && !p.revealed) return false;
 
     const spottedBySide =
       p.spottedBy && (p.spottedBy[role] === true);
@@ -6172,7 +6172,7 @@ const DRONE_MAX_RANGE_HEX = 2; // max hex-räckvidd för att bekämpa drönare
 
 function chooseNearestTarget(shooter){
   const enemies = PLACED.filter(e => {
-    if (e.side === shooter.side || e.eliminated || e.spanarNu) return false;
+    if (e.side === shooter.side || e.eliminated || (e.spanarNu && !e.revealed)) return false;
     if (!e.kanBekämpas && e.isDrone) return false; // obekämpbar drönare
     return true;
   });
@@ -6440,7 +6440,7 @@ function computeVisibleHexes(side){
   for (const v of PLACED) {
     if (!v || v.eliminated || v.state === 'eliminated') continue;
     if (v.side !== enemySide) continue;
-    if (v.spanarNu) continue; // i spaningsläge — syns inte för fienden
+    if (v.spanarNu && !v.revealed) continue; // i spaningsläge — syns inte för fienden (såvida inte röjd)
     // Drönare syns bara om en fiende är inom 2 hex (litet mål, svårt att se)
     if (v.isDrone) {
       const vHex2 = liveHex(v);
@@ -6716,6 +6716,15 @@ cv.addEventListener('click', e => {
   const hit = nearestHex(p.x, p.y);
   if (hit) {
     const hex = hexKey(hit.ri, hit.ci);
+
+    // Kontrollera att mål-hex erbjuder skydd för spaningsorder
+    if (ord === 'scout') {
+      const conceal = (typeof getTerrainConceal === 'function') ? getTerrainConceal(hex) : 0;
+      if (conceal === 0) {
+        showHint('Ej möjligt att spana — skyl saknas i ' + hex + '. Välj ett hex med skog, byggnad eller annat skydd.');
+        return;
+      }
+    }
 
     // Låt sendOrderCommand sköta allt:
     // - om roll = GM: applicera direkt + broadcast
@@ -8131,6 +8140,23 @@ if (stepChanged || liveChanged) {
       }
     }
 
+    // Röjning: spanare röjs om fiende befinner sig i angränsande hex
+    for (const u of PLACED) {
+      if (!u.spanarNu || u.eliminated || u.state === 'eliminated') continue;
+      const grannar = (typeof hexNeighbors === 'function') ? hexNeighbors(u.hex) : [];
+      const fiendeNära = PLACED.some(e =>
+        e.side !== u.side && !e.eliminated && e.state !== 'eliminated' && grannar.includes(e.hex)
+      );
+      if (fiendeNära && !u.revealed) {
+        u.revealed = true;
+        if (typeof logEvent === 'function') {
+          logEvent(`${fmtSide(u)} ${fmtName(u)} röjs — fiende i anslutande hex! 👁️`);
+        }
+      } else if (!fiendeNära) {
+        u.revealed = false;
+      }
+    }
+
     if (typeof updateLOS === "function") updateLOS();
     if (typeof drawAll  === "function") drawAll();
 
@@ -8511,12 +8537,17 @@ function applyAiAction(regel, unit, enemies) {
       unit.orderTarget = regel.target || unit.hex;
       break;
     case 'fallback': {
-      const närmast = enemies.reduce((bäst, e) => {
-        const d = (typeof hexDistance === 'function') ? hexDistance(unit.hex, e.hex) : 999;
-        return (!bäst || d < bäst.d) ? { e, d } : bäst;
-      }, null);
-      unit.order = 'take';
-      unit.orderTarget = närmast ? findFallbackHex(unit, närmast.e) : unit.hex;
+      if (regel.target) {
+        unit.order = 'take';
+        unit.orderTarget = regel.target;
+      } else {
+        const närmast = enemies.reduce((bäst, e) => {
+          const d = (typeof hexDistance === 'function') ? hexDistance(unit.hex, e.hex) : 999;
+          return (!bäst || d < bäst.d) ? { e, d } : bäst;
+        }, null);
+        unit.order = 'take';
+        unit.orderTarget = närmast ? findFallbackHex(unit, närmast.e) : unit.hex;
+      }
       break;
     }
     case 'hold':
