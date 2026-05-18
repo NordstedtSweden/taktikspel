@@ -406,7 +406,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <label>Visa grid <input type="checkbox" id="showGrid" checked></label>
     <label id="gmLosToggle" class="hidden">Visa LOS <input type="checkbox" id="toggleLOS" checked></label>
     <button class="btn" id="centerBtn">Centrera</button>
-    <button class="btn" id="bindBoardsBtn">Binda kartbilder…</button>
+    <button class="btn" id="bindBoardsBtn" style="display:none">Binda kartbilder…</button>
     <span class="s">Pan: <span class="kbd">Ctrl/Alt/Shift</span> + dra • Zoom: <span class="kbd">Ctrl/Alt</span> + hjul</span>
   </div>
 </div>
@@ -513,9 +513,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <hr>
     <h4 class="h" id="zonesHeader">Setup-zoner</h4>
     <div id="zonesInfo" class="list"></div>
-    <hr>
-    <h4 class="h" id="boardsHeader">Kartbilder</h4>
-    <div id="boardsInfo" class="list"></div>
+    <div id="boardsInfo" style="display:none"></div>
   </div>
 </div>
 
