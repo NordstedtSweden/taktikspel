@@ -1695,7 +1695,7 @@ if (effektivRoll === 'gm') {
     if (mainCenter) mainCenter.style.flex    = '';
     if (mainRight)  mainRight.style.display  = '';
 
-    [logHeader,eventLog,ordersHeader,ordersInfo,zonesHeader,zonesInfo,boardsHeader,boardsInfo].forEach(el => {
+    [logHeader,eventLog,ordersHeader,ordersInfo,zonesHeader,zonesInfo].forEach(el => {
       if (el) el.style.display = '';
     });
   } else {
@@ -5336,22 +5336,7 @@ function bindImageForBoard(name){
   };
   inp.click();
 }
-function refreshBoardsInfo(){
-  const box=$('boardsInfo'); box.innerHTML='';
-  if(!MAP.boards?.length){ box.innerHTML='<div class="s">— Inga boards —</div>'; return; }
-  MAP.boards.forEach(b=>{
-    const has=!!boardImgs.get(b.name);
-    const el=document.createElement('div'); el.className='uitem';
-    el.innerHTML=`
-      <b>${b.name}</b> ${has?'<span class="badge">bild✔</span>':'<span class="badge">bild saknas</span>'}
-      <div class="s">x:${b.x||0} y:${b.y||0} rot:${b.rot||0}° sc:${b.scale||1}</div>
-      <div class="s">src: ${b.src||'—'}</div>
-      <button class="btn" data-bind="${b.name}">Bind…</button>
-    `;
-    el.querySelector('button').onclick=()=>bindImageForBoard(b.name);
-    box.appendChild(el);
-  });
-}
+function refreshBoardsInfo(){ /* dold — kartbildsinfo visas inte i panelen */ }
 
 /* ===== Pool-hjälp (NY: grupperad pool + korrekt “remaining”) ===== */
 function groupPoolByIdState(side){
