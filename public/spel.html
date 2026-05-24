@@ -5953,6 +5953,45 @@ if (icon){
 
 }
 
+// Beräkna alla hexar som enheter på en sida faktiskt KAN SE via LOS
+function computeFOWVisible(side) {
+  const vis = new Set();
+  if (!Array.isArray(PLACED) || !MAP) return vis;
+  const DEFAULT_SIGHT = 6; // hexar en vanlig enhet ser
+
+  for (const u of PLACED) {
+    if (!u || u.eliminated || u.state === 'eliminated') continue;
+    if (u.side !== side) continue;
+    const fromHex = liveHex(u);
+    if (!fromHex) continue;
+    vis.add(fromHex); // enheten ser alltid sin egen hex
+
+    const radie = u.losRadie > 0 ? u.losRadie : DEFAULT_SIGHT;
+
+    // Samla alla hexar inom räckvidd med BFS
+    const kandidater = new Set([fromHex]);
+    let front = [fromHex];
+    for (let steg = 0; steg < radie; steg++) {
+      const nästa = [];
+      for (const h of front) {
+        const grannar = typeof hexNeighbors === 'function' ? hexNeighbors(h) : [];
+        for (const g of grannar) {
+          if (!kandidater.has(g)) { kandidater.add(g); nästa.push(g); }
+        }
+      }
+      front = nästa;
+    }
+
+    // Testa LOS mot varje kandidat
+    for (const targetHex of kandidater) {
+      if (typeof hasLOS === 'function' && hasLOS(fromHex, targetHex)) {
+        vis.add(targetHex);
+      }
+    }
+  }
+  return vis;
+}
+
 function drawFogOfWar() {
   if (!MAP || !MAP.rows) return;
   const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
@@ -5968,44 +6007,31 @@ function drawFogOfWar() {
 
   if (role === 'gm' || isReplay) {
     if (!showFOW && !isReplay) { ctx.restore(); return; }
-    // GM / Replay: blått synfält för blå, rött för röd, mörkt för ingen
-    const visBlue = computeVisibleHexes('blue');
-    const visRed  = computeVisibleHexes('red');
+    const visBlue = computeFOWVisible('blue');
+    const visRed  = computeFOWVisible('red');
     gridLoop((ri, ci, cx, cy, r) => {
       const hex = hexKey(ri, ci);
-      const seesBlue = visBlue.has(hex);
-      const seesRed  = visRed.has(hex);
+      const b = visBlue.has(hex);
+      const rd = visRed.has(hex);
       drawHex(cx, cy, r, MAP.orient);
-      if (seesBlue && !seesRed) {
-        ctx.fillStyle = 'rgba(50,120,255,0.18)';
-        ctx.fill();
-      } else if (seesRed && !seesBlue) {
-        ctx.fillStyle = 'rgba(255,60,60,0.18)';
-        ctx.fill();
-      } else if (seesBlue && seesRed) {
-        // Båda ser — blå + röd overlay ger lila ton
-        ctx.fillStyle = 'rgba(50,120,255,0.12)';
-        ctx.fill();
+      if (b && !rd) {
+        ctx.fillStyle = 'rgba(50,120,255,0.18)'; ctx.fill();
+      } else if (rd && !b) {
+        ctx.fillStyle = 'rgba(255,60,60,0.18)'; ctx.fill();
+      } else if (b && rd) {
+        ctx.fillStyle = 'rgba(50,120,255,0.12)'; ctx.fill();
         drawHex(cx, cy, r, MAP.orient);
-        ctx.fillStyle = 'rgba(255,60,60,0.12)';
-        ctx.fill();
+        ctx.fillStyle = 'rgba(255,60,60,0.12)'; ctx.fill();
       } else {
-        // Ingen ser
-        ctx.fillStyle = 'rgba(0,0,10,0.20)';
-        ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,10,0.20)'; ctx.fill();
       }
     });
   } else {
-    // Blue / Red / Solo: 40% mörkt utanför LOS
     const visSide = (role === 'blue' || role === 'red') ? role : 'blue';
-    const vis = computeVisibleHexes(visSide);
+    const vis = computeFOWVisible(visSide);
     ctx.fillStyle = 'rgba(0,0,10,0.40)';
     gridLoop((ri, ci, cx, cy, r) => {
-      const hex = hexKey(ri, ci);
-      if (!vis.has(hex)) {
-        drawHex(cx, cy, r, MAP.orient);
-        ctx.fill();
-      }
+      if (!vis.has(hexKey(ri, ci))) { drawHex(cx, cy, r, MAP.orient); ctx.fill(); }
     });
   }
 
