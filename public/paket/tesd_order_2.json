@@ -299,8 +299,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/Inf-green.png",
-          "icon_reduced": "assets/units/Inf-green-back.png"
+          "icon_front": "assets/units/front.png",
+          "icon_reduced": "assets/units/back.png"
         },
         "stats": {
           "full": {
@@ -338,6 +338,7 @@
             "stone_building",
             "road",
             "trail",
+            "marsh",
             "hedge",
             "bocage",
             "hill",
