@@ -1107,6 +1107,19 @@
           "startHex": "P12"
         }
       ]
-    }
+    },
+    "resurser": {
+      "blue": [],
+      "red": []
+    },
+    "aiRules": {},
+    "aiMallar": {},
+    "soloWinCondition": {
+      "type": "take_hex",
+      "target": "",
+      "rounds": null
+    },
+    "soloKompatibel": false,
+    "soloSvårighet": "normal"
   }
 }
