@@ -399,6 +399,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
     <label>Visa terräng <input type="checkbox" id="showTerrain"></label>
     <label>Visa grid <input type="checkbox" id="showGrid" checked></label>
     <label id="gmLosToggle" class="hidden">Visa LOS <input type="checkbox" id="toggleLOS" checked></label>
+    <label id="gmFowToggle" class="hidden">Synfält <input type="checkbox" id="toggleFOW" checked></label>
     <button class="btn" id="centerBtn">Centrera</button>
     <button class="btn" id="bindBoardsBtn" style="display:none">Binda kartbilder…</button>
     <span class="s">Pan: <span class="kbd">Ctrl/Alt/Shift</span> + dra • Zoom: <span class="kbd">Ctrl/Alt</span> + hjul</span>
@@ -1639,9 +1640,9 @@ if (window.spelRoll === 'blue' || window.spelRoll === 'red') {
 
   // LOS-toggle endast i GM-läge
   const gmLosToggle = document.getElementById('gmLosToggle');
-  if (gmLosToggle) {
-    gmLosToggle.classList.toggle('hidden', !gm);
-  }
+  if (gmLosToggle) gmLosToggle.classList.toggle('hidden', !gm);
+  const gmFowToggle = document.getElementById('gmFowToggle');
+  if (gmFowToggle) gmFowToggle.classList.toggle('hidden', !gm);
 
   // Kartoverlay för hex/terräng och legend: visas för Blue/Red, döljs för GM (GM ser det i högerkolumnen)
   const isPlayer = (effektivRoll === 'blue' || effektivRoll === 'red');
@@ -5722,6 +5723,10 @@ if (typeof applyAnimPositions === 'function') applyAnimPositions();
     gridLoop((ri,ci,cx,cy,r)=>{ ctx.fillText(hexKey(ri,ci), cx-r*0.3, cy+4); });
   }
   ctx.restore();
+
+  // Fog of war
+  if (typeof drawFogOfWar === 'function') drawFogOfWar();
+
 // LOS-overlay (endast GM + om ikryssat)
 if ($('roleSel')?.value === 'gm' && showLOS && typeof drawLOSOverlay === 'function') {
   drawLOSOverlay();
@@ -5946,6 +5951,65 @@ if (icon){
     });
   });
 
+}
+
+function drawFogOfWar() {
+  if (!MAP || !MAP.rows) return;
+  const role = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
+  const showFOW = $('toggleFOW') ? $('toggleFOW').checked : true;
+  const isReplay = typeof REPLAY_AKTIV !== 'undefined' && REPLAY_AKTIV;
+
+  ctx.save();
+  if (MAP.gridAngle) {
+    ctx.translate(MAP.gridOffX, MAP.gridOffY);
+    ctx.rotate(MAP.gridAngle * Math.PI / 180);
+    ctx.translate(-MAP.gridOffX, -MAP.gridOffY);
+  }
+
+  if (role === 'gm' || isReplay) {
+    if (!showFOW && !isReplay) { ctx.restore(); return; }
+    // GM / Replay: blått synfält för blå, rött för röd, mörkt för ingen
+    const visBlue = computeVisibleHexes('blue');
+    const visRed  = computeVisibleHexes('red');
+    gridLoop((ri, ci, cx, cy, r) => {
+      const hex = hexKey(ri, ci);
+      const seesBlue = visBlue.has(hex);
+      const seesRed  = visRed.has(hex);
+      drawHex(cx, cy, r, MAP.orient);
+      if (seesBlue && !seesRed) {
+        ctx.fillStyle = 'rgba(50,120,255,0.18)';
+        ctx.fill();
+      } else if (seesRed && !seesBlue) {
+        ctx.fillStyle = 'rgba(255,60,60,0.18)';
+        ctx.fill();
+      } else if (seesBlue && seesRed) {
+        // Båda ser — blå + röd overlay ger lila ton
+        ctx.fillStyle = 'rgba(50,120,255,0.12)';
+        ctx.fill();
+        drawHex(cx, cy, r, MAP.orient);
+        ctx.fillStyle = 'rgba(255,60,60,0.12)';
+        ctx.fill();
+      } else {
+        // Ingen ser
+        ctx.fillStyle = 'rgba(0,0,10,0.20)';
+        ctx.fill();
+      }
+    });
+  } else {
+    // Blue / Red / Solo: 40% mörkt utanför LOS
+    const visSide = (role === 'blue' || role === 'red') ? role : 'blue';
+    const vis = computeVisibleHexes(visSide);
+    ctx.fillStyle = 'rgba(0,0,10,0.40)';
+    gridLoop((ri, ci, cx, cy, r) => {
+      const hex = hexKey(ri, ci);
+      if (!vis.has(hex)) {
+        drawHex(cx, cy, r, MAP.orient);
+        ctx.fill();
+      }
+    });
+  }
+
+  ctx.restore();
 }
 
 function drawLOSOverlay(){
@@ -6825,7 +6889,8 @@ function autoloadBoards(){
   $('gmPlaceBox').classList.add('hidden');
   refreshBoardsInfo(); renderPools(); refreshZonesInfo(); 
   document.getElementById('toggleLOS')?.addEventListener('change', drawAll);
-document.getElementById('gmLosToggle')?.addEventListener('change', drawAll);
+  document.getElementById('gmLosToggle')?.addEventListener('change', drawAll);
+  document.getElementById('toggleFOW')?.addEventListener('change', drawAll);
 drawAll(); 
  fitCanvasWrapHeight();
 })();
