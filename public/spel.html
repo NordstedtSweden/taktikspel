@@ -242,7 +242,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 
 <!-- Replay: kontrollpanel längst ner -->
 <div id="replayKontroll" class="hidden" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0e1730;border:1px solid #3a4a7a;border-radius:14px;padding:12px 20px;z-index:95;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:420px;box-shadow:0 4px 20px rgba(0,0,0,.6)">
-  <div id="replayRubrik" style="font-weight:700;color:#9fb1d4;font-size:14px">📽 Replay</div>
+  <div id="replayRubrik" style="font-weight:700;color:#9fb1d4;font-size:14px;user-select:none">📽 Replay <span id="replayDragHint" style="font-size:10px;font-weight:400;color:#4a5a8a;margin-left:6px">Ctrl+drag för att flytta</span></div>
   <div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap">
     <button class="btn" id="replayFörstaBtn" title="Första rundan">⏮</button>
     <button class="btn" id="replayPrevRundBtn" title="Föregående runda">⏪</button>
@@ -4914,6 +4914,54 @@ function öppnaReplay() {
   document.getElementById('replayKontroll').classList.remove('hidden');
   ställInRunda(SPELHISTORIK.length - 1);
 }
+
+// ===== Drag-stöd för replay-kontrollpanelen (Ctrl+drag) =====
+(function() {
+  let dragging = false, offX = 0, offY = 0;
+
+  document.addEventListener('keydown', e => {
+    if (!e.ctrlKey) return;
+    const panel = document.getElementById('replayKontroll');
+    if (panel && !panel.classList.contains('hidden')) panel.style.cursor = 'grab';
+  });
+  document.addEventListener('keyup', () => {
+    const panel = document.getElementById('replayKontroll');
+    if (panel) panel.style.cursor = '';
+  });
+
+  document.addEventListener('mousedown', e => {
+    if (!e.ctrlKey) return;
+    const panel = document.getElementById('replayKontroll');
+    if (!panel || panel.classList.contains('hidden')) return;
+    if (!panel.contains(e.target)) return;
+    e.preventDefault();
+    dragging = true;
+    panel.style.cursor = 'grabbing';
+    // Byt från transform-centrering till explicit left/top
+    const rect = panel.getBoundingClientRect();
+    panel.style.left      = rect.left + 'px';
+    panel.style.top       = rect.top  + 'px';
+    panel.style.bottom    = 'auto';
+    panel.style.transform = 'none';
+    offX = e.clientX - rect.left;
+    offY = e.clientY - rect.top;
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const panel = document.getElementById('replayKontroll');
+    if (!panel) return;
+    panel.style.left = (e.clientX - offX) + 'px';
+    panel.style.top  = (e.clientY - offY) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    const panel = document.getElementById('replayKontroll');
+    if (panel) panel.style.cursor = '';
+  });
+})();
 
 function stängReplay() {
   if (_replayAnimLoop !== null) { clearInterval(_replayAnimLoop); _replayAnimLoop = null; }
