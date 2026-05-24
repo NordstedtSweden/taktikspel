@@ -376,8 +376,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/Inf-green.png",
-          "icon_reduced": "assets/units/Inf-green-back.png"
+          "icon_front": "assets/units/front2.png",
+          "icon_reduced": "assets/units/back2.png"
         },
         "stats": {
           "full": {
