@@ -354,6 +354,18 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   </div>
 </div>
 
+<!-- Överlämningsmodal (observatörsfas → aktiv fas) -->
+<div id="soloOverlämnModal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.82);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #6cb2ff;border-radius:16px;padding:28px;max-width:480px;width:90vw;text-align:center">
+    <div id="soloOverlämnBildWrap" style="display:none;margin-bottom:14px">
+      <img id="soloOverlämnBildEl" style="max-width:100%;max-height:200px;border-radius:8px;object-fit:contain">
+    </div>
+    <h2 id="soloOverlämnTitel" style="color:#6cb2ff;margin:0 0 12px"></h2>
+    <p  id="soloOverlämnText"  style="color:#e8eefc;font-size:14px;line-height:1.6;margin:0 0 20px;white-space:pre-wrap"></p>
+    <button id="soloOverlämnKnapp" class="btn pri" style="width:100%;padding:14px;font-size:16px;font-weight:700">Ta befälet!</button>
+  </div>
+</div>
+
 <!-- Spelslut-overlay (alla spelare) -->
 <div id="spelslutOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;flex-direction:column;text-align:center;">
   <div style="background:#0f1832;border:2px solid #f2c94c;border-radius:16px;padding:40px;max-width:500px;width:92vw;">
@@ -493,7 +505,10 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 
 <!-- Solo-läge: visas istället för readyPanel -->
 <div id="soloKlarRad" style="display:none;margin-top:8px">
-  <button id="soloKlarBtn" class="btn ok" style="width:100%;padding:12px;font-size:16px;font-weight:700">
+  <button id="soloStartaBtn" class="btn pri" style="width:100%;padding:12px;font-size:16px;font-weight:700;display:none" onclick="soloStartaSpelet()">
+    ▶ Starta spelet
+  </button>
+  <button id="soloKlarBtn" class="btn ok" style="width:100%;padding:12px;font-size:16px;font-weight:700;display:none">
     ✔ Klar — kör AI-rundan
   </button>
   <div id="soloRundInfo" class="s" style="text-align:center;margin-top:6px">—</div>
@@ -3186,6 +3201,15 @@ function sendOrderCommand(unit, order, targetHex) {
 
   // Solo-läge: ingen GM-kanal finns — applicera ordern direkt
   if (typeof soloMode !== 'undefined' && soloMode) {
+    if (soloObsFas) {
+      if (typeof showHint === 'function') showHint('Observatörsfas pågår — du kan inte ge order just nu.');
+      return;
+    }
+    const alltidAi = soloValtPaket?.scenario?.alltidAiEnheter || SC?.alltidAiEnheter || [];
+    if (alltidAi.includes(unit.id) || alltidAi.includes(unit.name)) {
+      if (typeof showHint === 'function') showHint(`${unit.name || unit.id} styrs alltid av AI och tar inte emot order.`);
+      return;
+    }
     applyOrderFromCommand(unit, order, targetHex);
     if (typeof renderOrders === 'function') renderOrders();
     if (typeof drawAll === 'function')      drawAll();
@@ -8372,9 +8396,11 @@ if (stepChanged || liveChanged) {
 
 const soloMode = new URLSearchParams(location.search).get('mode') === 'solo';
 const SOLO_SERVER = 'https://taktikspel.onrender.com';
-let soloValtPaket = null;   // det laddade paketet
-let soloSpelSlut  = false;  // förhindrar att Klar-knappen körs efter spelslut
-let soloHeldRounds = 0;     // räknare för hold_hex-villkoret
+let soloValtPaket  = null;   // det laddade paketet
+let soloSpelSlut   = false;  // förhindrar att Klar-knappen körs efter spelslut
+let soloHeldRounds = 0;      // räknare för hold_hex-villkoret
+let soloObsFas     = false;  // observatörsfas aktiv
+let soloObsFasKör  = false;  // auto-loop körs
 
 // ----------------------------------------------------------------
 // INIT: byt ut anslutPanel mot soloPanel om mode=solo
@@ -8505,8 +8531,16 @@ function soloStartaPaket(paket) {
   }
 
   soloUppdateraRundInfo();
+  soloObsFas    = false;
+  soloObsFasKör = false;
   if (typeof drawAll === 'function') drawAll();
   if (typeof updateLOS === 'function') updateLOS();
+
+  // Visa start-knappen — spelet startar inte förrän eleven klickar
+  const startaBtn = document.getElementById('soloStartaBtn');
+  const klarBtn   = document.getElementById('soloKlarBtn');
+  if (startaBtn) startaBtn.style.display = 'block';
+  if (klarBtn)   klarBtn.style.display   = 'none';
 }
 
 function soloAutoPlace() {
@@ -8551,6 +8585,149 @@ function soloUppdateraRundInfo() {
 }
 
 // ----------------------------------------------------------------
+// STARTA SPELET (eleven klickar när hen är redo)
+// ----------------------------------------------------------------
+function soloStartaSpelet() {
+  // Stäng uppdragsmodalen om den är öppen
+  const uppdragModal = document.getElementById('uppdragModal');
+  if (uppdragModal) uppdragModal.style.display = 'none';
+
+  // Byt ut start-knappen mot Klar-knappen
+  const startaBtn = document.getElementById('soloStartaBtn');
+  const klarBtn   = document.getElementById('soloKlarBtn');
+  if (startaBtn) startaBtn.style.display = 'none';
+  if (klarBtn)   klarBtn.style.display   = 'block';
+
+  // Starta spelet (observer-fas eller direkt aktiv fas)
+  soloInitObsFas();
+}
+
+// ----------------------------------------------------------------
+// OBSERVATÖRSFAS
+// ----------------------------------------------------------------
+function soloInitObsFas() {
+  const ov = soloValtPaket?.scenario?.observatörsFas || SC?.observatörsFas;
+  if (!ov || !ov.aktiv) { soloObsFas = false; return; }
+  soloObsFas = true;
+  soloObsFasKör = false;
+  const btn = document.getElementById('soloKlarBtn');
+  if (btn) {
+    if (ov.autoRundByte !== false) {
+      btn.textContent = 'Observatörsfas pågår…';
+      btn.style.background = '#5a3a00';
+      btn.disabled = true;
+    } else {
+      btn.textContent = '▶ Kör observatörsrunda';
+      btn.style.background = '#5a3a00';
+      btn.onclick = soloKöreObsFasManual;
+    }
+  }
+  const info = document.getElementById('soloRundInfo');
+  if (info) info.textContent = 'Observatörsfas — AI styr båda sidor';
+  if (ov.autoRundByte !== false) soloObsFasAutoLoop();
+}
+
+async function soloObsFasAutoLoop() {
+  if (soloObsFasKör) return;
+  soloObsFasKör = true;
+  while (soloObsFas && !soloSpelSlut) {
+    await new Promise(r => setTimeout(r, 800));
+    if (!soloObsFas || soloSpelSlut) break;
+    await soloKöreObsFasRunda();
+  }
+  soloObsFasKör = false;
+}
+
+async function soloKöreObsFasManual() {
+  if (!soloObsFas || soloSpelSlut) return;
+  const btn = document.getElementById('soloKlarBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'AI kör…'; }
+  await new Promise(r => setTimeout(r, 80));
+  await soloKöreObsFasRunda();
+  if (soloObsFas && !soloSpelSlut && btn) {
+    btn.disabled = false;
+    btn.textContent = '▶ Kör observatörsrunda';
+  }
+}
+
+async function soloKöreObsFasRunda() {
+  const ov    = soloValtPaket?.scenario?.observatörsFas || SC?.observatörsFas || {};
+  const round = typeof currentRound === 'number' ? currentRound : 0;
+
+  if (typeof sparaRundSnapshot === 'function') sparaRundSnapshot();
+
+  const aiRulesRed  = soloValtPaket?.scenario?.aiRules     || SC?.aiRules     || {};
+  const aiRulesBlue = soloValtPaket?.scenario?.aiRulesBlue || SC?.aiRulesBlue || {};
+  executeAiTurn('red',  PLACED, round, aiRulesRed);
+  executeAiTurn('blue', PLACED, round, aiRulesBlue);
+
+  if (typeof nextRound === 'function') nextRound();
+  if (typeof drawAll   === 'function') drawAll();
+  if (typeof updateLOS === 'function') updateLOS();
+
+  const newRound = typeof currentRound === 'number' ? currentRound : 0;
+  soloUppdateraRundInfo();
+
+  const wc = soloValtPaket?.scenario?.soloWinCondition || SC?.soloWinCondition;
+  const maxRundor = SC?.rounds || 999;
+  const resultat  = checkSoloWinCondition(wc, PLACED, newRound, maxRundor);
+  if (resultat.result !== 'ongoing') {
+    soloObsFas = false;
+    soloSpelSlut = true;
+    soloVisaSlut(resultat);
+    return;
+  }
+
+  const fördröjning = ov.rundFördröjning ?? 2;
+  if (newRound >= fördröjning && checkObsFasTrigger(ov, newRound)) {
+    soloObsFas = false;
+    soloVisaOverlämnModal(ov.modal || {});
+  }
+}
+
+function checkObsFasTrigger(ov, round) {
+  const villkor  = ov.slutVillkor || 'runda';
+  const rundaOk  = round >= (ov.slutRunda || 3);
+  const hexOk    = !!(ov.slutEnhet && ov.slutHex &&
+    PLACED.some(u => (u.id === ov.slutEnhet || u.name === ov.slutEnhet) &&
+                     u.hex === ov.slutHex && !u.eliminated));
+  if (villkor === 'runda')      return rundaOk;
+  if (villkor === 'hex')        return hexOk;
+  if (villkor === 'kombinerat') return rundaOk && hexOk;
+  return false;
+}
+
+function soloVisaOverlämnModal(modal) {
+  const m = modal || {};
+  const t = document.getElementById('soloOverlämnTitel');
+  const p = document.getElementById('soloOverlämnText');
+  const k = document.getElementById('soloOverlämnKnapp');
+  const w = document.getElementById('soloOverlämnBildWrap');
+  const b = document.getElementById('soloOverlämnBildEl');
+  if (t) t.textContent = m.titel || 'Ny fas';
+  if (p) p.textContent = m.text  || '';
+  if (b && m.bild) { b.src = m.bild; if (w) w.style.display = 'block'; }
+  else if (w) w.style.display = 'none';
+  if (k) { k.textContent = m.knapp || 'Ta befälet!'; k.onclick = soloTaBefälet; }
+  const overlay = document.getElementById('soloOverlämnModal');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function soloTaBefälet() {
+  const overlay = document.getElementById('soloOverlämnModal');
+  if (overlay) overlay.style.display = 'none';
+  const btn = document.getElementById('soloKlarBtn');
+  if (btn) {
+    btn.textContent  = '✔ Klar — kör AI-rundan';
+    btn.style.background = '';
+    btn.disabled     = false;
+    btn.onclick      = soloKlarClicked;
+  }
+  soloUppdateraRundInfo();
+  if (typeof drawAll === 'function') drawAll();
+}
+
+// ----------------------------------------------------------------
 // KLAR-KNAPPEN: kör AI-rundan, sedan nextRound
 // ----------------------------------------------------------------
 async function soloKlarClicked() {
@@ -8566,9 +8743,20 @@ async function soloKlarClicked() {
   // Spara replay-snapshot manuellt (nextRound gör det bara för GM)
   if (typeof sparaRundSnapshot === 'function') sparaRundSnapshot();
 
-  // Kör AI
+  const round = typeof currentRound === 'number' ? currentRound : 0;
+
+  // Kör AI (Red)
   const aiRules = soloValtPaket?.scenario?.aiRules || SC?.aiRules || {};
-  executeAiTurn('red', PLACED, typeof currentRound === 'number' ? currentRound : 0, aiRules);
+  executeAiTurn('red', PLACED, round, aiRules);
+
+  // Kör AI för alltid-AI-styrda Blue-enheter
+  const alltidAi    = soloValtPaket?.scenario?.alltidAiEnheter || SC?.alltidAiEnheter || [];
+  const aiRulesBlue = soloValtPaket?.scenario?.aiRulesBlue     || SC?.aiRulesBlue     || {};
+  if (alltidAi.length > 0) {
+    const alwaysRules = {};
+    alltidAi.forEach(id => { if (aiRulesBlue[id]) alwaysRules[id] = aiRulesBlue[id]; });
+    if (Object.keys(alwaysRules).length > 0) executeAiTurn('blue', PLACED, round, alwaysRules);
+  }
 
   // Kör runda (strid + rörelse)
   if (typeof nextRound === 'function') nextRound();

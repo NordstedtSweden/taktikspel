@@ -554,14 +554,77 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
         </select>
       </label>
       <div class="s" style="margin-top:6px">Svårighetsgraden styr hur ofta AI:n följer sina egna regler.</div>
+
+      <hr>
+      <h4>Observatörsfas</h4>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <input type="checkbox" id="ovFasAktiv" style="width:16px;height:16px" onchange="ovFasVillkorChange()">
+        <span>Aktivera observatörsfas</span>
+      </label>
+      <div class="s" style="margin-bottom:10px">AI styr båda sidor. Spelet överlämnas till spelaren när villkoret uppfylls.</div>
+      <div id="ovFasInst" style="display:none">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input type="checkbox" id="ovAutoRund" style="width:16px;height:16px" checked>
+          <span>Automatisk rundframryckning</span>
+        </label>
+        <label style="margin-bottom:8px;display:block">Fördröjning (rundor innan kontroll börjar)
+          <input id="ovRundFördröjning" type="number" value="2" min="0" style="margin-top:4px">
+        </label>
+        <label style="margin-bottom:8px;display:block">Överlämningsvillkor
+          <select id="ovSlutVillkor" style="margin-top:4px" onchange="ovFasVillkorChange()">
+            <option value="runda">Specifik runda</option>
+            <option value="hex">Enhet når hex</option>
+            <option value="kombinerat">Kombinerat (runda OCH hex)</option>
+          </select>
+        </label>
+        <div id="ovRundaFält" style="margin-bottom:8px">
+          <label>Överlämning vid runda
+            <input id="ovSlutRunda" type="number" value="3" min="1" style="margin-top:4px">
+          </label>
+        </div>
+        <div id="ovHexFält" style="display:none;margin-bottom:8px">
+          <label>Enhet-ID (når hex)
+            <input id="ovSlutEnhet" type="text" placeholder="t.ex. BLU_Inf_EA" style="margin-top:4px">
+          </label>
+          <label style="margin-top:6px;display:block">Mål-hex
+            <input id="ovSlutHex" type="text" placeholder="t.ex. D5" data-hexval="1" style="margin-top:4px">
+          </label>
+        </div>
+        <div class="p" style="padding:10px;margin-top:2px">
+          <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#54d18c;text-transform:uppercase;margin-bottom:8px">Överlämningsmodal</div>
+          <label style="margin-bottom:6px;display:block">Rubrik
+            <input id="ovModalTitel" type="text" placeholder="t.ex. Anfallet börjar!" style="margin-top:4px">
+          </label>
+          <label style="margin-bottom:6px;display:block">Brödtext
+            <textarea id="ovModalText" placeholder="Beskriv situationen..." style="margin-top:4px;min-height:60px"></textarea>
+          </label>
+          <label style="margin-bottom:6px;display:block">Bild-URL (valfri)
+            <input id="ovModalBild" type="text" placeholder="https://..." style="margin-top:4px">
+          </label>
+          <label style="display:block">Knapptext
+            <input id="ovModalKnapp" type="text" placeholder="Ta befälet!" value="Ta befälet!" style="margin-top:4px">
+          </label>
+        </div>
+      </div>
+
+      <hr>
+      <h4>Alltid AI-styrda enheter</h4>
+      <div class="s" style="margin-bottom:6px">Enheter som alltid styrs av AI — oavsett fas. Spelaren kan inte ge dem order. Ange ett ID per rad.</div>
+      <textarea id="alltidAiEnheter" placeholder="BLU_Inf_EA&#10;BLU_Armor_01" style="min-height:72px;margin-top:2px;font-family:monospace;font-size:12px"></textarea>
     </div>
 
     <!-- Höger: per-enhet AI-regler -->
     <div>
-      <h3>AI-regler per enhet (Red)</h3>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+        <h3 style="margin-bottom:4px">AI-regler per enhet</h3>
+        <div style="display:flex;gap:6px">
+          <button id="aiSidaBlåBtn" class="btn" onclick="setAiSida('blue')" style="padding:5px 12px;font-size:12px">Blue</button>
+          <button id="aiSidaRödBtn" class="btn pri" onclick="setAiSida('red')" style="padding:5px 12px;font-size:12px">Red</button>
+        </div>
+      </div>
 
       <div style="margin-top:10px">
-        <label class="s">Välj Red-enhet</label>
+        <label class="s" id="aiEnhetSelLabel">Välj Red-enhet</label>
         <select id="aiEnhetSel" onchange="aiEnhetBytt()"
           style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;
                  background:#0e1730;color:#e8eefc;margin-top:4px;font-size:14px"></select>
@@ -1464,7 +1527,7 @@ function readScenarioForm(){
   if (!SC.resurser) SC.resurser={blue:[],red:[]};
   if (typeof readAiForm === 'function') readAiForm();
 }
-$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, aiMallar:{}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal', soloKompatibel:false}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, aiMallar:{}, aiRulesBlue:{}, aiMallarBlue:{}, alltidAiEnheter:[], observatörsFas:{aktiv:false,autoRundByte:true,rundFördröjning:2,slutVillkor:'runda',slutRunda:3,slutEnhet:'',slutHex:'',modal:{titel:'',text:'',bild:'',knapp:'Ta befälet!'}}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal', soloKompatibel:false}; fillScenarioForm(); alert('Nytt scenario.'); };
 $('scImport').onclick=()=>$('scFile').click();
 $('scFile').onchange=(ev)=>{
   const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
@@ -1871,19 +1934,45 @@ if (_stangScenarioBtn) _stangScenarioBtn.onclick = () => {
 
 /* ================= AI-REGLER ================= */
 
+let aiSida = 'red';
+
+function setAiSida(sida) {
+  aiSida = sida;
+  const blåBtn = $('aiSidaBlåBtn');
+  const rödBtn = $('aiSidaRödBtn');
+  if (blåBtn) blåBtn.className = sida === 'blue' ? 'btn pri' : 'btn';
+  if (rödBtn) rödBtn.className = sida === 'red'  ? 'btn pri' : 'btn';
+  const lbl = $('aiEnhetSelLabel');
+  if (lbl) lbl.textContent = sida === 'blue' ? 'Välj Blue-enhet' : 'Välj Red-enhet';
+  refreshAiEnhetsPicker();
+  const isEnkel = document.getElementById('aiEnkelDiv')?.style.display !== 'none';
+  if (isEnkel) fillEnkelvy($('aiEnhetSel')?.value || '');
+  else refreshAiRegler();
+}
+
+function ovFasVillkorChange() {
+  const aktiv    = $('ovFasAktiv')?.checked;
+  const inst     = $('ovFasInst');
+  if (inst) inst.style.display = aktiv ? 'block' : 'none';
+  const villkor  = $('ovSlutVillkor')?.value || 'runda';
+  const rundaFält = $('ovRundaFält');
+  const hexFält   = $('ovHexFält');
+  if (rundaFält) rundaFält.style.display = (villkor === 'runda' || villkor === 'kombinerat') ? 'block' : 'none';
+  if (hexFält)   hexFält.style.display   = (villkor === 'hex'   || villkor === 'kombinerat') ? 'block' : 'none';
+}
+
 function refreshAiEnhetsPicker() {
   const sel = $('aiEnhetSel');
   if (!sel) { console.warn('[AI] aiEnhetSel hittades inte i DOM'); return; }
-  console.log('[AI] refreshAiEnhetsPicker — SC.orbat.red:', JSON.stringify(SC.orbat?.red), '| UNITS.units:', UNITS?.units?.length, 'st');
   sel.innerHTML = '<option value="">— välj enhet —</option>';
   const specialTyper = ['larmminor','minor','dronare','indirektEld'];
-  const redOrbat = SC.orbat?.red || [];
+  const sideOrbat = (aiSida === 'blue' ? SC.orbat?.blue : SC.orbat?.red) || [];
 
-  if (redOrbat.length > 0) {
-    // Visa enheter från scenariots Red-orbat
+  const sidLabel = aiSida === 'blue' ? 'Blue' : 'Red';
+  if (sideOrbat.length > 0) {
     const grp = document.createElement('optgroup');
-    grp.label = 'I detta scenario (Red)';
-    redOrbat.forEach(rad => {
+    grp.label = `I detta scenario (${sidLabel})`;
+    sideOrbat.forEach(rad => {
       const opt = document.createElement('option');
       opt.value = rad.id;
       opt.textContent = rad.id + (rad.count > 1 ? ' ×'+rad.count : '');
@@ -1893,13 +1982,13 @@ function refreshAiEnhetsPicker() {
   }
 
   // Visa alla övriga enheter från biblioteket (inte special, inte redan i orbat)
-  const orbatIds = new Set(redOrbat.map(r => r.id));
+  const orbatIds = new Set(sideOrbat.map(r => r.id));
   const övriga = (UNITS.units || []).filter(u =>
     !specialTyper.includes(u.type) && !orbatIds.has(u.id)
   );
   if (övriga.length > 0) {
     const grp = document.createElement('optgroup');
-    grp.label = redOrbat.length > 0 ? 'Övriga enheter (bibliotek)' : 'Alla enheter (bibliotek)';
+    grp.label = sideOrbat.length > 0 ? 'Övriga enheter (bibliotek)' : 'Alla enheter (bibliotek)';
     övriga.forEach(u => {
       const opt = document.createElement('option');
       opt.value = u.id;
@@ -1909,7 +1998,7 @@ function refreshAiEnhetsPicker() {
     sel.appendChild(grp);
   }
 
-  if (redOrbat.length === 0 && övriga.length === 0) {
+  if (sideOrbat.length === 0 && övriga.length === 0) {
     const opt = document.createElement('option');
     opt.disabled = true;
     opt.textContent = '— Inga enheter laddade ännu —';
@@ -1920,12 +2009,15 @@ function refreshAiEnhetsPicker() {
 function refreshAiRegler() {
   const enhetId = $('aiEnhetSel').value;
   const lista   = $('aiRegelLista');
+  const sidLabel = aiSida === 'blue' ? 'Blue' : 'Red';
   if (!enhetId) {
-    lista.innerHTML = '<div class="s">— Välj en Red-enhet ovan —</div>';
+    lista.innerHTML = `<div class="s">— Välj en ${sidLabel}-enhet ovan —</div>`;
     return;
   }
-  if (!SC.aiRules) SC.aiRules = {};
-  const regler = SC.aiRules[enhetId] || [];
+  if (!SC.aiRules)     SC.aiRules = {};
+  if (!SC.aiRulesBlue) SC.aiRulesBlue = {};
+  const rulesStore = aiSida === 'blue' ? SC.aiRulesBlue : SC.aiRules;
+  const regler = rulesStore[enhetId] || [];
   if (!regler.length) {
     lista.innerHTML = '<div class="s">— Inga regler än. Lägg till nedan. —</div>';
     return;
@@ -1939,9 +2031,9 @@ function refreshAiRegler() {
         <span style="flex:1;font-size:13px">
           <b>${i+1}.</b> ${aiCondText(r)} &rarr; ${aiActText(r)}
         </span>
-        <button class="btn" onclick="aiFlyttaUpp('${enhetId}',${i})" ${i===0?'disabled':''}>↑</button>
-        <button class="btn" onclick="aiFlyttaNer('${enhetId}',${i})" ${i===regler.length-1?'disabled':''}>↓</button>
-        <button class="btn bad" onclick="aiTaBort('${enhetId}',${i})">✕</button>
+        <button class="btn" onclick="aiFlyttaUpp('${enhetId}',${i},'${aiSida}')" ${i===0?'disabled':''}>↑</button>
+        <button class="btn" onclick="aiFlyttaNer('${enhetId}',${i},'${aiSida}')" ${i===regler.length-1?'disabled':''}>↓</button>
+        <button class="btn bad" onclick="aiTaBort('${enhetId}',${i},'${aiSida}')">✕</button>
       </div>`;
     lista.appendChild(div);
   });
@@ -1973,20 +2065,28 @@ function aiActText(r) {
   }
 }
 
-function aiFlyttaUpp(enhetId, i) {
-  const regler = SC.aiRules[enhetId];
-  if (i <= 0) return;
+function _aiRulesStore(sida) {
+  sida = sida || aiSida;
+  if (sida === 'blue') { if (!SC.aiRulesBlue) SC.aiRulesBlue = {}; return SC.aiRulesBlue; }
+  if (!SC.aiRules) SC.aiRules = {}; return SC.aiRules;
+}
+function aiFlyttaUpp(enhetId, i, sida) {
+  const store = _aiRulesStore(sida);
+  const regler = store[enhetId];
+  if (!regler || i <= 0) return;
   [regler[i-1], regler[i]] = [regler[i], regler[i-1]];
   refreshAiRegler();
 }
-function aiFlyttaNer(enhetId, i) {
-  const regler = SC.aiRules[enhetId];
-  if (i >= regler.length-1) return;
+function aiFlyttaNer(enhetId, i, sida) {
+  const store = _aiRulesStore(sida);
+  const regler = store[enhetId];
+  if (!regler || i >= regler.length-1) return;
   [regler[i], regler[i+1]] = [regler[i+1], regler[i]];
   refreshAiRegler();
 }
-function aiTaBort(enhetId, i) {
-  SC.aiRules[enhetId].splice(i, 1);
+function aiTaBort(enhetId, i, sida) {
+  const store = _aiRulesStore(sida);
+  if (store[enhetId]) store[enhetId].splice(i, 1);
   refreshAiRegler();
 }
 
@@ -1998,12 +2098,12 @@ $('aiLäggTillBtn').onclick = () => {
   const action    = $('aiActSel').value;
   const target    = $('aiActTarget').value.trim();
   if (!condition || !action) { alert('Välj condition och action.'); return; }
-  if (!SC.aiRules) SC.aiRules = {};
-  if (!SC.aiRules[enhetId]) SC.aiRules[enhetId] = [];
+  const store = _aiRulesStore();
+  if (!store[enhetId]) store[enhetId] = [];
   const regel = { condition, action };
   if (value)  regel.value  = isNaN(Number(value))  ? value  : Number(value);
   if (target) regel.target = target;
-  SC.aiRules[enhetId].push(regel);
+  store[enhetId].push(regel);
   $('aiCondVal').value = '';
   $('aiActTarget').value = '';
   refreshAiRegler();
@@ -2019,8 +2119,13 @@ $('wcType').onchange = () => {
 
 function fillAiForm() {
   if (!SC.aiRules)          SC.aiRules = {};
+  if (!SC.aiRulesBlue)      SC.aiRulesBlue = {};
   if (!SC.aiMallar)         SC.aiMallar = {};
+  if (!SC.aiMallarBlue)     SC.aiMallarBlue = {};
   if (!SC.soloWinCondition) SC.soloWinCondition = { type:'take_hex', target:'', rounds:null };
+  if (!SC.observatörsFas)   SC.observatörsFas = { aktiv:false, autoRundByte:true, rundFördröjning:2, slutVillkor:'runda', slutRunda:3, slutEnhet:'', slutHex:'', modal:{titel:'',text:'',bild:'',knapp:'Ta befälet!'} };
+  if (!SC.alltidAiEnheter)  SC.alltidAiEnheter = [];
+
   const wc = SC.soloWinCondition;
   $('soloKompatibel').checked  = !!SC.soloKompatibel;
   $('wcType').value            = wc.type   || 'take_hex';
@@ -2029,6 +2134,24 @@ function fillAiForm() {
   $('wcRounds').value          = wc.rounds || 3;
   $('soloSvårighet').value     = SC.soloSvårighet || 'normal';
   if (typeof $('wcType').onchange === 'function') $('wcType').onchange();
+
+  const ov = SC.observatörsFas;
+  if ($('ovFasAktiv'))        $('ovFasAktiv').checked        = !!ov.aktiv;
+  if ($('ovAutoRund'))        $('ovAutoRund').checked        = ov.autoRundByte !== false;
+  if ($('ovRundFördröjning')) $('ovRundFördröjning').value   = ov.rundFördröjning ?? 2;
+  if ($('ovSlutVillkor'))     $('ovSlutVillkor').value       = ov.slutVillkor || 'runda';
+  if ($('ovSlutRunda'))       $('ovSlutRunda').value         = ov.slutRunda || 3;
+  if ($('ovSlutEnhet'))       $('ovSlutEnhet').value         = ov.slutEnhet || '';
+  if ($('ovSlutHex'))         $('ovSlutHex').value           = ov.slutHex  || '';
+  const m = ov.modal || {};
+  if ($('ovModalTitel')) $('ovModalTitel').value = m.titel || '';
+  if ($('ovModalText'))  $('ovModalText').value  = m.text  || '';
+  if ($('ovModalBild'))  $('ovModalBild').value  = m.bild  || '';
+  if ($('ovModalKnapp')) $('ovModalKnapp').value = m.knapp || 'Ta befälet!';
+  ovFasVillkorChange();
+
+  if ($('alltidAiEnheter')) $('alltidAiEnheter').value = (SC.alltidAiEnheter || []).join('\n');
+
   refreshAiEnhetsPicker();
   refreshAiRegler();
 }
@@ -2040,6 +2163,25 @@ function readAiForm() {
   SC.soloKompatibel   = $('soloKompatibel').checked;
   SC.soloWinCondition = { type, target, rounds };
   SC.soloSvårighet    = $('soloSvårighet').value;
+
+  SC.observatörsFas = {
+    aktiv:           !!($('ovFasAktiv')?.checked),
+    autoRundByte:    !!($('ovAutoRund')?.checked),
+    rundFördröjning: +($('ovRundFördröjning')?.value ?? 2),
+    slutVillkor:     $('ovSlutVillkor')?.value || 'runda',
+    slutRunda:       +($('ovSlutRunda')?.value || 3),
+    slutEnhet:       $('ovSlutEnhet')?.value.trim() || '',
+    slutHex:         $('ovSlutHex')?.value.trim()   || '',
+    modal: {
+      titel: $('ovModalTitel')?.value.trim() || '',
+      text:  $('ovModalText')?.value.trim()  || '',
+      bild:  $('ovModalBild')?.value.trim()  || '',
+      knapp: $('ovModalKnapp')?.value.trim() || 'Ta befälet!'
+    }
+  };
+
+  SC.alltidAiEnheter = ($('alltidAiEnheter')?.value || '')
+    .split('\n').map(s => s.trim()).filter(Boolean);
 }
 
 /* ===== ENKEL VY — TAKTISKA MALLAR ===== */
@@ -2086,8 +2228,7 @@ function clearFasForm() {
 function fillEnkelvy(enhetId) {
   clearFasForm();
   if (!enhetId) return;
-  if (!SC.aiMallar) SC.aiMallar = {};
-  const mall = SC.aiMallar[enhetId];
+  const mall = _aiMallarStore()[enhetId];
   if (!mall) return;
   const faser  = mall.faser  || [];
   const omfall = mall.omfall || [];
@@ -2168,10 +2309,18 @@ function generateRulesFromMall(mall) {
   return rules;
 }
 
+function _aiMallarStore(sida) {
+  sida = sida || aiSida;
+  if (sida === 'blue') { if (!SC.aiMallarBlue) SC.aiMallarBlue = {}; return SC.aiMallarBlue; }
+  if (!SC.aiMallar) SC.aiMallar = {}; return SC.aiMallar;
+}
+
 function sparaFaser() {
   const enhetId = $('aiEnhetSel').value;
-  if (!enhetId) { alert('Välj en Red-enhet först.'); return; }
-  if (!SC.aiMallar) SC.aiMallar = {};
+  const sidLabel = aiSida === 'blue' ? 'Blue' : 'Red';
+  if (!enhetId) { alert(`Välj en ${sidLabel}-enhet först.`); return; }
+  const mallarStore = _aiMallarStore();
+  const rulesStore  = _aiRulesStore();
   const mall = {
     faser: [
       { action:$('fasInledAction').value, target:$('fasInledTarget').value.trim(), till:$('fasInledTill').value ? Number($('fasInledTill').value) : null },
@@ -2186,18 +2335,16 @@ function sparaFaser() {
       return { cond, val: dir + rawVal, action:$('omfall'+i+'Action').value, target:$('omfall'+i+'Target').value.trim() };
     })
   };
-  SC.aiMallar[enhetId] = mall;
-  if (!SC.aiRules) SC.aiRules = {};
-  SC.aiRules[enhetId] = generateRulesFromMall(mall);
+  mallarStore[enhetId] = mall;
+  rulesStore[enhetId]  = generateRulesFromMall(mall);
   const msg = $('fasarSparadMsg');
   if (msg) { msg.style.display='block'; setTimeout(()=>{ msg.style.display='none'; }, 2000); }
   refreshAiRegler();
 }
 
 function regenereraAllaRegler() {
-  if (!SC.aiMallar) return;
-  if (!SC.aiRules) SC.aiRules = {};
-  Object.entries(SC.aiMallar).forEach(([id, mall]) => { SC.aiRules[id] = generateRulesFromMall(mall); });
+  if (SC.aiMallar)     { if (!SC.aiRules)     SC.aiRules     = {}; Object.entries(SC.aiMallar).forEach(([id, mall]) => { SC.aiRules[id]     = generateRulesFromMall(mall); }); }
+  if (SC.aiMallarBlue) { if (!SC.aiRulesBlue) SC.aiRulesBlue = {}; Object.entries(SC.aiMallarBlue).forEach(([id, mall]) => { SC.aiRulesBlue[id] = generateRulesFromMall(mall); }); }
 }
 
 /* ============== AI MINI-MAP ============== */
