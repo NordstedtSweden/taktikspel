@@ -3816,9 +3816,9 @@
     "observatörsFas": {
       "aktiv": true,
       "autoRundByte": true,
-      "rundFördröjning": 0,
-      "slutVillkor": "hex",
-      "slutRunda": 3,
+      "rundFördröjning": 4,
+      "slutVillkor": "runda",
+      "slutRunda": 4,
       "slutEnhet": "BLUE_Easy_2_Baker",
       "slutHex": "AJ27",
       "modal": {
