@@ -3134,32 +3134,702 @@
       ],
       "red": []
     },
-    "aiRules": {},
-    "aiRulesBlue": {},
-    "aiMallar": {},
-    "aiMallarBlue": {},
+    "aiRules": {
+      "RED_Inf_EA": [
+        {
+          "action": "defend",
+          "target": "AA24",
+          "condition": "always"
+        }
+      ],
+      "RED_Inf_FA": [
+        {
+          "action": "defend",
+          "target": "AF22",
+          "condition": "always"
+        }
+      ],
+      "RED_Inf_GA": [
+        {
+          "action": "defend",
+          "target": "AK22",
+          "condition": "always"
+        }
+      ],
+      "RED_Inf_EB": [
+        {
+          "action": "defend",
+          "target": "V20",
+          "condition": "always"
+        }
+      ],
+      "RED_Inf_GB": [
+        {
+          "action": "defend",
+          "target": "AO14",
+          "condition": "always"
+        }
+      ],
+      "Red_Tank": [
+        {
+          "action": "defend",
+          "target": "AE20",
+          "condition": "round_lte",
+          "value": 10
+        },
+        {
+          "action": "take",
+          "target": "AN21",
+          "condition": "always"
+        }
+      ]
+    },
+    "aiRulesBlue": {
+      "Blue_Easy_1_Abel": [
+        {
+          "action": "take",
+          "target": "E26",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_1_Charlie": [
+        {
+          "action": "take",
+          "target": "L28",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_1_Baker": [
+        {
+          "action": "take",
+          "target": "I27",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_2_Abel": [
+        {
+          "action": "take",
+          "target": "AC27",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_2_Baker": [
+        {
+          "action": "take",
+          "target": "AJ27",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_2_Charlie": [
+        {
+          "action": "take",
+          "target": "AO26",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_3_Abel": [
+        {
+          "action": "take",
+          "target": "BI14",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_3_Baker": [
+        {
+          "action": "take",
+          "target": "BJ19",
+          "condition": "always"
+        }
+      ],
+      "BLUE_Easy_3_Charlie": [
+        {
+          "action": "take",
+          "target": "BI20",
+          "condition": "always"
+        }
+      ]
+    },
+    "aiMallar": {
+      "RED_Inf_EA": {
+        "faser": [
+          {
+            "action": "defend",
+            "target": "AA24",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "RED_Inf_FA": {
+        "faser": [
+          {
+            "action": "defend",
+            "target": "AF22",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "RED_Inf_GA": {
+        "faser": [
+          {
+            "action": "defend",
+            "target": "AK22",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "RED_Inf_EB": {
+        "faser": [
+          {
+            "action": "defend",
+            "target": "V20",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "RED_Inf_GB": {
+        "faser": [
+          {
+            "action": "defend",
+            "target": "AO14",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "Red_Tank": {
+        "faser": [
+          {
+            "action": "defend",
+            "target": "AE20",
+            "till": 10
+          },
+          {
+            "action": "take",
+            "target": "AN21"
+          },
+          {
+            "action": "defend",
+            "target": "AE19"
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      }
+    },
+    "aiMallarBlue": {
+      "Blue_Easy_1_Abel": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "E26",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_1_Charlie": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "L28",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_1_Baker": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "I27",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_2_Abel": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "AC27",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_2_Baker": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "AJ27",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_2_Charlie": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "AO26",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_3_Abel": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "BI14",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_3_Baker": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "BJ19",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      },
+      "BLUE_Easy_3_Charlie": {
+        "faser": [
+          {
+            "action": "take",
+            "target": "BI20",
+            "till": null
+          },
+          {
+            "action": "",
+            "target": ""
+          },
+          {
+            "action": "",
+            "target": ""
+          }
+        ],
+        "omfall": [
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          },
+          {
+            "cond": "",
+            "val": "",
+            "action": "",
+            "target": ""
+          }
+        ]
+      }
+    },
     "soloWinCondition": {
-      "type": "take_hex",
+      "type": "eliminate_all",
       "target": "",
       "rounds": null
     },
     "observatörsFas": {
       "aktiv": true,
       "autoRundByte": true,
-      "rundFördröjning": 2,
-      "slutVillkor": "runda",
+      "rundFördröjning": 0,
+      "slutVillkor": "hex",
       "slutRunda": 3,
-      "slutEnhet": "",
-      "slutHex": "",
+      "slutEnhet": "BLUE_Easy_2_Baker",
+      "slutHex": "AJ27",
       "modal": {
-        "titel": "",
-        "text": "",
-        "bild": "",
+        "titel": "Ta befälet!",
+        "text": "Mj Winters -\"Dike har brutit ihop! Ta över kompaniet NU, lös uppgiften och ta byn!\"",
+        "bild": "https://1drv.ms/i/c/6c047b757702c42c/IQBgQGLJXP6GTLxDSXR51Bc1AdlV-EYZLybwflEaabATIqw?e=d3oT6d",
         "knapp": "Ta befälet!"
       }
     },
     "alltidAiEnheter": [],
-    "soloKompatibel": false,
+    "soloKompatibel": true,
     "soloSvårighet": "normal"
   }
 }
