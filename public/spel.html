@@ -1886,9 +1886,13 @@ function maybeAutoAdvanceRound() {
 
 if (blueReadyBtn) {
   blueReadyBtn.addEventListener('click', () => {
-    // Solo-läge: Blue Ready-knappen triggar soloKlarClicked istället
+    // Solo-läge: knappen är antingen "Starta spelet" eller "Klar"
     if (typeof soloMode !== 'undefined' && soloMode) {
-      if (typeof soloKlarClicked === 'function') soloKlarClicked();
+      if (!soloHarStartat) {
+        if (typeof soloStartaSpelet === 'function') soloStartaSpelet();
+      } else {
+        if (typeof soloKlarClicked === 'function') soloKlarClicked();
+      }
       return;
     }
 
@@ -8401,6 +8405,7 @@ let soloSpelSlut   = false;  // förhindrar att Klar-knappen körs efter spelslu
 let soloHeldRounds = 0;      // räknare för hold_hex-villkoret
 let soloObsFas     = false;  // observatörsfas aktiv
 let soloObsFasKör  = false;  // auto-loop körs
+let soloHarStartat = false;  // spelet har startats (förbi Starta-knappen)
 
 // ----------------------------------------------------------------
 // INIT: byt ut anslutPanel mot soloPanel om mode=solo
@@ -8537,10 +8542,15 @@ function soloStartaPaket(paket) {
   }
 
   soloUppdateraRundInfo();
-  soloObsFas    = false;
-  soloObsFasKör = false;
+  soloObsFas     = false;
+  soloObsFasKör  = false;
+  soloHarStartat = false;
   if (typeof drawAll === 'function') drawAll();
   if (typeof updateLOS === 'function') updateLOS();
+
+  // Ändra BLUE READY-knappen till "Starta spelet"
+  const blåBtn = document.getElementById('blueReadyBtn');
+  if (blåBtn) { blåBtn.textContent = '▶ Starta spelet'; blåBtn.style.background = '#1a6b3a'; }
 }
 
 function soloAutoPlace() {
@@ -8588,11 +8598,17 @@ function soloUppdateraRundInfo() {
 // STARTA SPELET (eleven klickar när hen är redo)
 // ----------------------------------------------------------------
 function soloStartaSpelet() {
+  soloHarStartat = true;
+
   // Stäng uppdragsmodalen om den är öppen
   const uppdragModal = document.getElementById('uppdragModal');
   if (uppdragModal) uppdragModal.style.display = 'none';
 
-  // Byt ut start-knappen mot Klar-knappen
+  // Återställ BLUE READY-knappen till normal solo-text
+  const blåBtn = document.getElementById('blueReadyBtn');
+  if (blåBtn) { blåBtn.textContent = '✔ Klar'; blåBtn.style.background = ''; }
+
+  // Byt ut start-knappen mot Klar-knappen (om sidopanelen är synlig)
   const startaBtn = document.getElementById('soloStartaBtn');
   const klarBtn   = document.getElementById('soloKlarBtn');
   if (startaBtn) startaBtn.style.display = 'none';
@@ -8610,17 +8626,16 @@ function soloInitObsFas() {
   if (!ov || !ov.aktiv) { soloObsFas = false; return; }
   soloObsFas = true;
   soloObsFasKör = false;
-  const btn = document.getElementById('soloKlarBtn');
-  if (btn) {
-    if (ov.autoRundByte !== false) {
-      btn.textContent = 'Observatörsfas pågår…';
-      btn.style.background = '#5a3a00';
-      btn.disabled = true;
-    } else {
-      btn.textContent = '▶ Kör observatörsrunda';
-      btn.style.background = '#5a3a00';
-      btn.onclick = soloKöreObsFasManual;
-    }
+  // Uppdatera sidopanel-knapp om den är synlig
+  const klarBtn = document.getElementById('soloKlarBtn');
+  // Uppdatera BLUE READY-knappen (alltid synlig)
+  const blåBtn = document.getElementById('blueReadyBtn');
+  if (ov.autoRundByte !== false) {
+    if (klarBtn) { klarBtn.textContent = 'Observatörsfas pågår…'; klarBtn.style.background = '#5a3a00'; klarBtn.disabled = true; }
+    if (blåBtn)  { blåBtn.textContent  = 'Observatörsfas pågår…'; blåBtn.style.background  = '#5a3a00'; blåBtn.disabled  = true; }
+  } else {
+    if (klarBtn) { klarBtn.textContent = '▶ Kör observatörsrunda'; klarBtn.style.background = '#5a3a00'; klarBtn.onclick = soloKöreObsFasManual; }
+    if (blåBtn)  { blåBtn.textContent  = '▶ Kör observatörsrunda'; blåBtn.style.background  = '#5a3a00'; }
   }
   const info = document.getElementById('soloRundInfo');
   if (info) info.textContent = 'Observatörsfas — AI styr båda sidor';
@@ -8716,13 +8731,10 @@ function soloVisaOverlämnModal(modal) {
 function soloTaBefälet() {
   const overlay = document.getElementById('soloOverlämnModal');
   if (overlay) overlay.style.display = 'none';
-  const btn = document.getElementById('soloKlarBtn');
-  if (btn) {
-    btn.textContent  = '✔ Klar — kör AI-rundan';
-    btn.style.background = '';
-    btn.disabled     = false;
-    btn.onclick      = soloKlarClicked;
-  }
+  const klarBtn = document.getElementById('soloKlarBtn');
+  if (klarBtn) { klarBtn.textContent = '✔ Klar — kör AI-rundan'; klarBtn.style.background = ''; klarBtn.disabled = false; klarBtn.onclick = soloKlarClicked; }
+  const blåBtn = document.getElementById('blueReadyBtn');
+  if (blåBtn)  { blåBtn.textContent  = '✔ Klar'; blåBtn.style.background = ''; blåBtn.disabled = false; }
   soloUppdateraRundInfo();
   if (typeof drawAll === 'function') drawAll();
 }
