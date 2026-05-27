@@ -8518,6 +8518,12 @@ function soloStartaPaket(paket) {
   const nextBtn = document.getElementById('nextRoundBtn');
   if (nextBtn) nextBtn.style.display = 'none';
 
+  // Visa start-knappen DIREKT — syns oavsett vad som händer sen
+  const startaBtn = document.getElementById('soloStartaBtn');
+  const klarBtn   = document.getElementById('soloKlarBtn');
+  if (startaBtn) startaBtn.style.display = 'block';
+  if (klarBtn)   klarBtn.style.display   = 'none';
+
   // Auto-placera alla enheter med fördefinierad starthex (tyst)
   soloAutoPlace();
 
@@ -8535,12 +8541,6 @@ function soloStartaPaket(paket) {
   soloObsFasKör = false;
   if (typeof drawAll === 'function') drawAll();
   if (typeof updateLOS === 'function') updateLOS();
-
-  // Visa start-knappen — spelet startar inte förrän eleven klickar
-  const startaBtn = document.getElementById('soloStartaBtn');
-  const klarBtn   = document.getElementById('soloKlarBtn');
-  if (startaBtn) startaBtn.style.display = 'block';
-  if (klarBtn)   klarBtn.style.display   = 'none';
 }
 
 function soloAutoPlace() {
