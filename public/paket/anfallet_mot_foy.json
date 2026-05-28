@@ -1,0 +1,2369 @@
+{
+  "version": "1.0",
+  "map": {
+    "hexSize": 40,
+    "orient": "flat",
+    "coordStyle": "rowLetters",
+    "gridAngle": 0,
+    "gridOffX": 80,
+    "gridOffY": 80,
+    "rows": 23,
+    "cols": 41,
+    "terrain": {
+      "L20": "road",
+      "L21": "road",
+      "L19": "road",
+      "K22": "road",
+      "J22": "road",
+      "J23": "road",
+      "I24": "road",
+      "I25": "road",
+      "H26": "road",
+      "H27": "road",
+      "G28": "road",
+      "F28": "road",
+      "F29": "road",
+      "F30": "road",
+      "G29": "road",
+      "K18": "road",
+      "K17": "road",
+      "J16": "road",
+      "K15": "road",
+      "J14": "road",
+      "J13": "road",
+      "I12": "road",
+      "I11": "road",
+      "H10": "road",
+      "H9": "road",
+      "H8": "road",
+      "H7": "road",
+      "G6": "road",
+      "G5": "road",
+      "F4": "road",
+      "G3": "road",
+      "F2": "road",
+      "F1": "road",
+      "L22": "road",
+      "M21": "road",
+      "M23": "road",
+      "M24": "road",
+      "N25": "road",
+      "N26": "road",
+      "N27": "road",
+      "N28": "road",
+      "O29": "road",
+      "N30": "road",
+      "O31": "road",
+      "O32": "road",
+      "P33": "road",
+      "M19": "road",
+      "M18": "road",
+      "N17": "road",
+      "N16": "road",
+      "O15": "road",
+      "O14": "road",
+      "P13": "road",
+      "P12": "road",
+      "Q11": "road",
+      "Q10": "road",
+      "R9": "road",
+      "R8": "road",
+      "S7": "road",
+      "S6": "road",
+      "T5": "road",
+      "T4": "road",
+      "U3": "road",
+      "U2": "road",
+      "V1": "road",
+      "F27": "road",
+      "E26": "road",
+      "E25": "road",
+      "D24": "road",
+      "D23": "road",
+      "C22": "road",
+      "C21": "road",
+      "C20": "road",
+      "C19": "road",
+      "B18": "road",
+      "B17": "road",
+      "B16": "road",
+      "B15": "road",
+      "A14": "road",
+      "A13": "road",
+      "F31": "road",
+      "E32": "road",
+      "E33": "road",
+      "D34": "road",
+      "D35": "road",
+      "C36": "road",
+      "C37": "road",
+      "B38": "road",
+      "B39": "road",
+      "A40": "road",
+      "A41": "road",
+      "F32": "trail",
+      "G33": "trail",
+      "G34": "trail",
+      "G35": "trail",
+      "G36": "trail",
+      "H37": "trail",
+      "H38": "trail",
+      "I39": "trail",
+      "H40": "trail",
+      "I41": "trail",
+      "I42": "trail",
+      "J41": "trail",
+      "J40": "trail",
+      "K39": "trail",
+      "J38": "trail",
+      "K37": "trail",
+      "K36": "trail",
+      "K35": "trail",
+      "L35": "trail",
+      "K34": "trail",
+      "L33": "trail",
+      "L32": "trail",
+      "L31": "trail",
+      "L30": "trail",
+      "M29": "trail",
+      "L28": "trail",
+      "M27": "trail",
+      "M26": "trail",
+      "P34": "road",
+      "Q35": "road",
+      "Q36": "road",
+      "R37": "road",
+      "R38": "road",
+      "S39": "road",
+      "S40": "road",
+      "T41": "road",
+      "K20": "open",
+      "K21": "open",
+      "J20": "stone_building",
+      "J18": "stone_building",
+      "L23": "stone_building",
+      "L24": "stone_building",
+      "M25": "stone_building",
+      "J24": "stone_building",
+      "H24": "stone_building",
+      "I23": "stone_building",
+      "I26": "stone_building",
+      "H28": "stone_building",
+      "L18": "stone_building",
+      "L17": "stone_building",
+      "M15": "stone_building",
+      "L14": "stone_building",
+      "O17": "stone_building",
+      "N18": "stone_building",
+      "N20": "stone_building",
+      "M22": "stone_building",
+      "N23": "stone_building",
+      "N24": "stone_building",
+      "M20": "stone_building",
+      "L27": "wood_building",
+      "K26": "wood_building",
+      "I21": "wood_building",
+      "H22": "wood_building",
+      "I18": "wood_building",
+      "J17": "wood_building",
+      "J15": "wood_building",
+      "I14": "wood_building",
+      "H15": "wood_building",
+      "H14": "orchard",
+      "K13": "wood_building",
+      "J11": "wood_building",
+      "I10": "wood_building",
+      "P14": "wood_building",
+      "Q15": "wood_building",
+      "N29": "wood_building",
+      "P31": "wood_building",
+      "O30": "wood_building",
+      "H31": "wood_building",
+      "G30": "wood_building",
+      "F26": "wood_building",
+      "E24": "wood_building",
+      "F24": "wood_building",
+      "F23": "wood_building",
+      "D21": "wood_building",
+      "D20": "wood_building",
+      "R5": "woods",
+      "Q4": "woods",
+      "Q3": "woods",
+      "U11": "woods",
+      "T10": "woods",
+      "U9": "woods",
+      "K5": "woods",
+      "G15": "woods",
+      "H18": "woods",
+      "B22": "woods",
+      "B21": "woods",
+      "B20": "woods",
+      "B19": "woods",
+      "C23": "woods",
+      "C24": "woods",
+      "J34": "hedge",
+      "K33": "hedge",
+      "K32": "hedge",
+      "J36": "hedge",
+      "E28": "hedge",
+      "E27": "hedge",
+      "D26": "hedge",
+      "C35": "hedge",
+      "J26": "hedge",
+      "J25": "hedge",
+      "G26": "hedge",
+      "M17": "hedge",
+      "M16": "hedge",
+      "N15": "hedge",
+      "P15": "hedge",
+      "O12": "hedge",
+      "M12": "hedge",
+      "I8": "hedge",
+      "E22": "hedge",
+      "F15": "orchard",
+      "F14": "orchard",
+      "F13": "orchard",
+      "E12": "orchard",
+      "E11": "orchard",
+      "D10": "orchard",
+      "D9": "orchard",
+      "D8": "orchard",
+      "D19": "orchard",
+      "A16": "orchard",
+      "A15": "orchard",
+      "A12": "orchard",
+      "A11": "orchard",
+      "A10": "orchard",
+      "F18": "orchard",
+      "G19": "orchard",
+      "G20": "orchard",
+      "H21": "orchard",
+      "F16": "orchard",
+      "J29": "orchard",
+      "J30": "orchard",
+      "K31": "orchard",
+      "I28": "orchard",
+      "P32": "orchard",
+      "Q9": "orchard",
+      "Q8": "orchard",
+      "R7": "orchard",
+      "P8": "orchard",
+      "P7": "orchard",
+      "R6": "orchard",
+      "P11": "orchard",
+      "L11": "orchard",
+      "K11": "orchard",
+      "J6": "orchard",
+      "K4": "orchard",
+      "G8": "woods",
+      "E4": "woods",
+      "F3": "woods",
+      "E2": "woods",
+      "E1": "woods",
+      "F6": "woods",
+      "G7": "orchard",
+      "H6": "orchard",
+      "H5": "orchard",
+      "G4": "orchard",
+      "H11": "orchard",
+      "L16": "orchard",
+      "O21": "orchard",
+      "P19": "orchard",
+      "S22": "woods",
+      "T22": "woods",
+      "T21": "woods",
+      "T23": "woods",
+      "U23": "woods",
+      "T24": "woods",
+      "T25": "woods",
+      "T26": "woods",
+      "U25": "woods",
+      "U24": "woods",
+      "V23": "woods",
+      "V24": "woods",
+      "V25": "woods",
+      "U26": "woods",
+      "U27": "woods",
+      "T28": "woods",
+      "U28": "woods",
+      "V27": "woods",
+      "V26": "woods",
+      "W25": "woods",
+      "W26": "woods",
+      "W27": "woods",
+      "V28": "woods",
+      "V29": "woods",
+      "U30": "woods",
+      "U31": "woods",
+      "T30": "woods",
+      "U29": "woods",
+      "W28": "woods",
+      "W29": "woods",
+      "W30": "woods",
+      "W31": "woods",
+      "V30": "woods",
+      "V31": "woods",
+      "U32": "woods",
+      "V32": "woods",
+      "W32": "woods",
+      "W33": "woods",
+      "W34": "woods",
+      "V34": "woods",
+      "V33": "woods",
+      "U33": "woods",
+      "T34": "woods",
+      "U34": "woods",
+      "S34": "woods",
+      "S35": "woods",
+      "R36": "woods",
+      "S37": "woods",
+      "S38": "woods",
+      "T37": "woods",
+      "S36": "woods",
+      "T35": "woods",
+      "T36": "woods",
+      "U35": "woods",
+      "V35": "woods",
+      "U36": "woods",
+      "U37": "woods",
+      "T38": "woods",
+      "T39": "woods",
+      "T40": "woods",
+      "U39": "woods",
+      "U38": "woods",
+      "V37": "woods",
+      "V36": "woods",
+      "W35": "woods",
+      "W36": "woods",
+      "W37": "woods",
+      "W38": "woods",
+      "V38": "woods",
+      "W39": "woods",
+      "V39": "woods",
+      "W40": "woods",
+      "V40": "woods",
+      "U40": "woods",
+      "U41": "woods",
+      "V41": "woods",
+      "W41": "woods",
+      "S41": "woods",
+      "R41": "woods",
+      "R40": "woods",
+      "R39": "woods",
+      "Q38": "woods",
+      "Q37": "woods",
+      "P36": "woods",
+      "P35": "woods",
+      "P29": "hill",
+      "P28": "hill",
+      "Q27": "hill",
+      "Q26": "hill",
+      "R25": "hill",
+      "R24": "hill",
+      "Q29": "hill",
+      "P30": "hill",
+      "Q28": "hill",
+      "T19": "hill",
+      "S18": "hill",
+      "T17": "hill",
+      "S16": "hill",
+      "N32": "hill",
+      "N33": "hill",
+      "M34": "hill",
+      "O33": "hill",
+      "P24": "field",
+      "Q23": "field",
+      "Q22": "field",
+      "P22": "field",
+      "P23": "field",
+      "Q21": "field",
+      "Q16": "field",
+      "Q17": "field",
+      "Q18": "field",
+      "R19": "field",
+      "S13": "field",
+      "S12": "field",
+      "T13": "field",
+      "S14": "field",
+      "M9": "field",
+      "M8": "field",
+      "L8": "field",
+      "L7": "field",
+      "M7": "field",
+      "L6": "field",
+      "I4": "field",
+      "J3": "field",
+      "I3": "field",
+      "I2": "field",
+      "C13": "field",
+      "C14": "field",
+      "D15": "field",
+      "D16": "field",
+      "I32": "field",
+      "I33": "field",
+      "H34": "field",
+      "I35": "field",
+      "I34": "field",
+      "L38": "field",
+      "L40": "field",
+      "M39": "field",
+      "N37": "field",
+      "N40": "field",
+      "E39": "field",
+      "E37": "field",
+      "D39": "field",
+      "F37": "field",
+      "G38": "field",
+      "G39": "field",
+      "F40": "field",
+      "B30": "field",
+      "C31": "field",
+      "C30": "field",
+      "D29": "field",
+      "A35": "field",
+      "A36": "field",
+      "A25": "field",
+      "A24": "field",
+      "A26": "field",
+      "A30": "hedge",
+      "B29": "hedge",
+      "B28": "hedge",
+      "A31": "hedge",
+      "S20": "hill",
+      "S23": "hill"
+    },
+    "boards": [
+      {
+        "name": "Foy.jpg",
+        "x": 0,
+        "y": 0,
+        "rot": 0
+      }
+    ]
+  },
+  "units": {
+    "schema": "taktik.units.v3",
+    "units": [
+      {
+        "id": "Blue_Easy_1_Abel",
+        "name": "Easy_1_Abel",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_1_Baker",
+        "name": "Easy_1_Baker",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_1_Charlie",
+        "name": "Easy_1_Charlie",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_2_Abel",
+        "name": "Easy_2_Abel",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_2_Baker",
+        "name": "Easy_2_Baker",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_2_Charlie",
+        "name": "Easy_2_Charlie",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_3_Abel",
+        "name": "Easy_3_Abel",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_3_Baker",
+        "name": "Easy_3_Baker",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "BLUE_Easy_3_Charlie",
+        "name": "Easy_3_Charlie",
+        "faction": "Blue",
+        "type": "infantry",
+        "size": "",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_EA",
+        "name": "RED_Inf_EA",
+        "faction": "Red",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_FA",
+        "name": "RED_Inf_FA",
+        "faction": "Red",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_GA",
+        "name": "RED_Inf_GA",
+        "faction": "Red",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_EB",
+        "name": "RED_Inf_EB",
+        "faction": "Red",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_FB",
+        "name": "RED_Inf_FB",
+        "faction": "Red",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "RED_Inf_GB",
+        "name": "RED_Inf_GB",
+        "faction": "Red",
+        "type": "infantry",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Inf2-red.png",
+          "icon_reduced": "assets/units/Inf2-red-r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "infantryAT": {
+            "enabled": false,
+            "fp_normal": 0,
+            "fp_opfire": 0,
+            "range_hex": 0,
+            "shots_per_turn": 1,
+            "notes": ""
+          }
+        }
+      },
+      {
+        "id": "Red_Tank",
+        "name": "Red_Tank",
+        "faction": "Red",
+        "type": "vehicle",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "assets/units/Tank_red.png",
+          "icon_reduced": "assets/units/Tank_red_r.png"
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 7,
+            "fp_normal": 7,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 1,
+            "range_hex": 7,
+            "fp_normal": 5,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "road",
+            "trail",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {}
+      },
+      {
+        "id": "Blue_GRK",
+        "name": "Blue_GRK",
+        "faction": "Blue",
+        "type": "indirektEld",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "indirektEld": {
+            "spridning": 2,
+            "effektRadie": 1,
+            "effektCentrum": "reduced",
+            "effektPeriferi": "suppressed"
+          }
+        }
+      }
+    ]
+  },
+  "scenario": {
+    "title": "Anfallet mot Foy",
+    "desc": "",
+    "rounds": 100,
+    "initiative": "Blue",
+    "setupMin": 0,
+    "vc": "Ta Foy",
+    "order": {
+      "blue": "Militärhistorisk inramning:\nDet är förmiddagen den 13 januari 1945. Ardenneroffensiven har nått sitt kritiska skede. Efter veckor av utnötning i skyttegravarna runt Bastogne har 101st Airborne Division slutligen gått över till offensiven för att trycka tillbaka de tyska förbanden.\n\nDin bataljon (2. bataljonen, 506th PIR) har fått i uppgift att rensa och säkra den strategiskt viktiga byn Foy. Om Foy faller bryts tyskarnas grepp om huvudvägen (N30), vilket möjliggör en framryckning mot Noville i norr.\n\nUtgångsläge i spelet:\nDu startar scenariot som observatör. Operationsordern nedan är gällande. Klockan är 09:00. Du ser hur Easy Companys tre plutoner påbörjar sin framryckning från Fontaine-skogens nordöstra kant, ut över det helt öppna, snötäckta fältet. Granatkastarspärrar slår ner och tysk eld skär genom luften.\n\n\nOPERATIONSORDER (OpO) – ANFALLET MOT FOY\nHögkvarter: 2. Bataljonen, 506th Parachute Infantry Regiment (101st Airborne)\nPlats: Stabsplats, Fontaine-skogen (sydväst om Foy)\nTidpunkt: 13 Januari 1945, Kl 08:00\nGällande för: E-Company (Easy) samt underställda/samverkande förband\n\n1. ORIENTERING\na) Fienden\nElement ur den tyska 26. Volksgrenadier-divisionen samt pansarstöd ur 2. Panzer-divisionen har upprättat ett väl förberett djupförsvar i Foy (Stützpunkt Foy).\n\nGruppering: Fienden försvarar i starkpunkter baserade på byns stenhus.\n\nEn framskjuten förpostlinje med lätta kulsprutenästen (MG42) är grupperad i ladorna i västra och södra utkanten för att bestryka de öppna fälten.\n\nMinst en tung kulspruta samt en skarpskytt är placerad i byggnaderna direkt norr om kyrkan (byns centrum).\n\nDolda pansarfordon (Panzer IV/Stug III) är positionerade i skydd bakom stenhusen i centrum, redo för rörligt pansarvärn och lokala motanfall.\n\nHandlingsalternativ: Fienden bedöms försvara Foy till sista blodsdroppen för att förhindra att framryckningsvägen N30 mot Noville faller i allierade händer.\n\nb) Egna förband\n2. Bataljonen (506th PIR): Anfaller i nordlig riktning för att slå fienden i sektorn och öppna väg N30.\n\nI-Company (Item): (Samverkande förband) Utgångsställning sydöst om Foy. Genomför ett avledande skenanfall längs väg N30.\n\nD-Company (Dog) & F-Company (Fox): Bataljonsreserv. Grupperade i Bois Jacques, beredda att understödja eller säkra flanker.\n\nc) Terräng och Väder\nTerräng: Mellan vår utgångsställning (Fontaine-skogen) och byn ligger ett 200–300 meter brett, helt öppet jordbruksfält. Terrängen sluttar svagt nedåt mot byn, vilket ger fienden optimala siktlinjer (LOS) och skottfält. Byns byggnader består av kraftig natursten som ger gott skydd mot finkalibrig eld.\n\nVäder: Extrem kyla (-15°C), djup snö som kraftigt reducerar framryckningshastigheten (hög MP-kostnad i öppna hexes). Tidvis tät dimma/snöglopp som begränsar sikten på långt håll.\n\n2. UPPGIFT (Mission)\nEasy Company (E-Co) ska klockan 09:00 anfalla från Fontaine-skogen, ta och rensa Foy, samt därefter säkra byns norra utkant mot Noville för att möjliggöra bataljonens vidare framryckning.\n\n3. GENOMFÖRANDE\na) Chefens avsikt i stort (Concept of Operations)\nMin avsikt är att genomföra ett snabbt och aggressivt anfall i tre plutonsaxlar samtidigt som fiendens uppmärksamhet splittras av I-Companys skenanfall från söder. Framgång beror helt på högsta möjliga framryckningstakt över det öppna fältet för att minimera tiden i fiendens skottfält. Fiendens starkpunkter ska därefter isoleras och nedkämpas hus-för-hus genom närstrid.\n\nb) Manöverenheternas uppgifter\n1:a Pluton (Easy One / Foley): Anfallsaxel VÄNSTER.\n\nUppgift: Ryck fram över fältets vänstra del, ta och tysta det fientliga kulsprutenästet i ladan vid den västra vägen (Rue de Libramont). Säkra västra flanken.\n\n2:a Pluton (Easy Two / Lipton): Anfallsaxel CENTER (Huvudstyrka).\n\nUppgift: Frontalanfall över det öppna fältet med högsta hastighet. Bryt igenom den yttre försvarslinjen och ta de första stenhusen i byns sydvästra del. Rensa därefter fram mot kyrkan och byns centrum.\n\n3:e Pluton (Easy Three / Shames): Anfallsaxel HÖGER.\n\nUppgift: Ryck fram längs den östra sidovägen/häckarna. Säkra högerflanken, skär av fiendens flyktvägar österut och upprätta fysisk förbindelse med samverkande I-Company.\n\nc) Samverkande förband\nI-Company (Item): Påbörjar skenanfall klockan 10:00 (60 minuter efter Easy Companys start) längs väg N30 söderifrån, rakt mot kyrkan. Detta för att binda upp det tyska pansaret och dra bort eld från Easy Companys plutoner på fältet.\n\nd) Reserv\nKompaniets HQ-pluton utgör lokal reserv bakom 2:a pluton.\n\ne) Understöd (Fire Support)\nBataljonens tunga granatkastare (81mm): Ligger i eldställning bakom Fontaine-skogen.\n\nPrioritering: * Kl 08:55–09:00: Förberedande eld mot kända MG42-positioner i byns utkant.\n\nKl 09:00–09:10: Rökridå (Smoke screen) framför byns centrum för att blinda fiendens siktlinjer över det öppna fältet under Easy Companys initiala framryckning.\n\nDärefter: Eld enligt begäran från plutonscheferna mot identifierade starkpunkter (t.ex. krypskyttshuset).\n\n4. LOGISTIK (Service Support)\nAmmunition: Extra tilldelning av handgranater och ammunition till framskjutna enheter. Varje gruppchef ansvarar för att sprida ut tillgängliga Bazooka-raketer för pansarvärn.\n\nSjukvård: Bataljonens förbandsplats (Aid Station) är upprättad i Bois Jacques. Kompaniets sjukvårdare följer HQ-plutonen. Skadade på fältet kan inte evakueras förrän kulsprutenästena i utkanten har tystats.\n\n5. LEDNING (Command & Signal)\na) Plats för chefen\nKompanichefens (Easy 6) stabsplats rör sig initialt i Fontaine-skogens kant, och följer därefter bakom 2:a pluton under framryckningen.\n\nb) Samband (Radio Call Signs)\nBataljonschef (Winters): Peerless 6\n\nEasy Kompanichef (Dike / Du): Easy 6\n\n1:a Pluton (Foley): Easy 1-6 (Grupper: Easy 1-Able, Baker, Charlie)\n\n2:a Pluton (Lipton): Easy 2-6 (Grupper: Easy 2-Able, Baker, Charlie)\n\n3:e Pluton (Shames): Easy 3-6 (Grupper: Easy 3-Able, Baker, Charlie)\n\nc) Lösenord (Challenge & Sign)\nUtmaning (Challenge): Barnaby\n\nSvar (Sign): Saratoga",
+      "red": ""
+    },
+    "boards": [
+      {
+        "name": "Foy.jpg",
+        "x": 0,
+        "y": 0,
+        "rot": 0,
+        "index": 0
+      }
+    ],
+    "map": {
+      "hexSize": 40,
+      "orient": "flat",
+      "coordStyle": "rowLetters",
+      "gridAngle": 0,
+      "gridOffX": 80,
+      "gridOffY": 80,
+      "terrain": {
+        "L20": "road",
+        "L21": "road",
+        "L19": "road",
+        "K22": "road",
+        "J22": "road",
+        "J23": "road",
+        "I24": "road",
+        "I25": "road",
+        "H26": "road",
+        "H27": "road",
+        "G28": "road",
+        "F28": "road",
+        "F29": "road",
+        "F30": "road",
+        "G29": "road",
+        "K18": "road",
+        "K17": "road",
+        "J16": "road",
+        "K15": "road",
+        "J14": "road",
+        "J13": "road",
+        "I12": "road",
+        "I11": "road",
+        "H10": "road",
+        "H9": "road",
+        "H8": "road",
+        "H7": "road",
+        "G6": "road",
+        "G5": "road",
+        "F4": "road",
+        "G3": "road",
+        "F2": "road",
+        "F1": "road",
+        "L22": "road",
+        "M21": "road",
+        "M23": "road",
+        "M24": "road",
+        "N25": "road",
+        "N26": "road",
+        "N27": "road",
+        "N28": "road",
+        "O29": "road",
+        "N30": "road",
+        "O31": "road",
+        "O32": "road",
+        "P33": "road",
+        "M19": "road",
+        "M18": "road",
+        "N17": "road",
+        "N16": "road",
+        "O15": "road",
+        "O14": "road",
+        "P13": "road",
+        "P12": "road",
+        "Q11": "road",
+        "Q10": "road",
+        "R9": "road",
+        "R8": "road",
+        "S7": "road",
+        "S6": "road",
+        "T5": "road",
+        "T4": "road",
+        "U3": "road",
+        "U2": "road",
+        "V1": "road",
+        "F27": "road",
+        "E26": "road",
+        "E25": "road",
+        "D24": "road",
+        "D23": "road",
+        "C22": "road",
+        "C21": "road",
+        "C20": "road",
+        "C19": "road",
+        "B18": "road",
+        "B17": "road",
+        "B16": "road",
+        "B15": "road",
+        "A14": "road",
+        "A13": "road",
+        "F31": "road",
+        "E32": "road",
+        "E33": "road",
+        "D34": "road",
+        "D35": "road",
+        "C36": "road",
+        "C37": "road",
+        "B38": "road",
+        "B39": "road",
+        "A40": "road",
+        "A41": "road",
+        "F32": "trail",
+        "G33": "trail",
+        "G34": "trail",
+        "G35": "trail",
+        "G36": "trail",
+        "H37": "trail",
+        "H38": "trail",
+        "I39": "trail",
+        "H40": "trail",
+        "I41": "trail",
+        "I42": "trail",
+        "J41": "trail",
+        "J40": "trail",
+        "K39": "trail",
+        "J38": "trail",
+        "K37": "trail",
+        "K36": "trail",
+        "K35": "trail",
+        "L35": "trail",
+        "K34": "trail",
+        "L33": "trail",
+        "L32": "trail",
+        "L31": "trail",
+        "L30": "trail",
+        "M29": "trail",
+        "L28": "trail",
+        "M27": "trail",
+        "M26": "trail",
+        "P34": "road",
+        "Q35": "road",
+        "Q36": "road",
+        "R37": "road",
+        "R38": "road",
+        "S39": "road",
+        "S40": "road",
+        "T41": "road",
+        "K20": "open",
+        "K21": "open",
+        "J20": "stone_building",
+        "J18": "stone_building",
+        "L23": "stone_building",
+        "L24": "stone_building",
+        "M25": "stone_building",
+        "J24": "stone_building",
+        "H24": "stone_building",
+        "I23": "stone_building",
+        "I26": "stone_building",
+        "H28": "stone_building",
+        "L18": "stone_building",
+        "L17": "stone_building",
+        "M15": "stone_building",
+        "L14": "stone_building",
+        "O17": "stone_building",
+        "N18": "stone_building",
+        "N20": "stone_building",
+        "M22": "stone_building",
+        "N23": "stone_building",
+        "N24": "stone_building",
+        "M20": "stone_building",
+        "L27": "wood_building",
+        "K26": "wood_building",
+        "I21": "wood_building",
+        "H22": "wood_building",
+        "I18": "wood_building",
+        "J17": "wood_building",
+        "J15": "wood_building",
+        "I14": "wood_building",
+        "H15": "wood_building",
+        "H14": "orchard",
+        "K13": "wood_building",
+        "J11": "wood_building",
+        "I10": "wood_building",
+        "P14": "wood_building",
+        "Q15": "wood_building",
+        "N29": "wood_building",
+        "P31": "wood_building",
+        "O30": "wood_building",
+        "H31": "wood_building",
+        "G30": "wood_building",
+        "F26": "wood_building",
+        "E24": "wood_building",
+        "F24": "wood_building",
+        "F23": "wood_building",
+        "D21": "wood_building",
+        "D20": "wood_building",
+        "R5": "woods",
+        "Q4": "woods",
+        "Q3": "woods",
+        "U11": "woods",
+        "T10": "woods",
+        "U9": "woods",
+        "K5": "woods",
+        "G15": "woods",
+        "H18": "woods",
+        "B22": "woods",
+        "B21": "woods",
+        "B20": "woods",
+        "B19": "woods",
+        "C23": "woods",
+        "C24": "woods",
+        "J34": "hedge",
+        "K33": "hedge",
+        "K32": "hedge",
+        "J36": "hedge",
+        "E28": "hedge",
+        "E27": "hedge",
+        "D26": "hedge",
+        "C35": "hedge",
+        "J26": "hedge",
+        "J25": "hedge",
+        "G26": "hedge",
+        "M17": "hedge",
+        "M16": "hedge",
+        "N15": "hedge",
+        "P15": "hedge",
+        "O12": "hedge",
+        "M12": "hedge",
+        "I8": "hedge",
+        "E22": "hedge",
+        "F15": "orchard",
+        "F14": "orchard",
+        "F13": "orchard",
+        "E12": "orchard",
+        "E11": "orchard",
+        "D10": "orchard",
+        "D9": "orchard",
+        "D8": "orchard",
+        "D19": "orchard",
+        "A16": "orchard",
+        "A15": "orchard",
+        "A12": "orchard",
+        "A11": "orchard",
+        "A10": "orchard",
+        "F18": "orchard",
+        "G19": "orchard",
+        "G20": "orchard",
+        "H21": "orchard",
+        "F16": "orchard",
+        "J29": "orchard",
+        "J30": "orchard",
+        "K31": "orchard",
+        "I28": "orchard",
+        "P32": "orchard",
+        "Q9": "orchard",
+        "Q8": "orchard",
+        "R7": "orchard",
+        "P8": "orchard",
+        "P7": "orchard",
+        "R6": "orchard",
+        "P11": "orchard",
+        "L11": "orchard",
+        "K11": "orchard",
+        "J6": "orchard",
+        "K4": "orchard",
+        "G8": "woods",
+        "E4": "woods",
+        "F3": "woods",
+        "E2": "woods",
+        "E1": "woods",
+        "F6": "woods",
+        "G7": "orchard",
+        "H6": "orchard",
+        "H5": "orchard",
+        "G4": "orchard",
+        "H11": "orchard",
+        "L16": "orchard",
+        "O21": "orchard",
+        "P19": "orchard",
+        "S22": "woods",
+        "T22": "woods",
+        "T21": "woods",
+        "T23": "woods",
+        "U23": "woods",
+        "T24": "woods",
+        "T25": "woods",
+        "T26": "woods",
+        "U25": "woods",
+        "U24": "woods",
+        "V23": "woods",
+        "V24": "woods",
+        "V25": "woods",
+        "U26": "woods",
+        "U27": "woods",
+        "T28": "woods",
+        "U28": "woods",
+        "V27": "woods",
+        "V26": "woods",
+        "W25": "woods",
+        "W26": "woods",
+        "W27": "woods",
+        "V28": "woods",
+        "V29": "woods",
+        "U30": "woods",
+        "U31": "woods",
+        "T30": "woods",
+        "U29": "woods",
+        "W28": "woods",
+        "W29": "woods",
+        "W30": "woods",
+        "W31": "woods",
+        "V30": "woods",
+        "V31": "woods",
+        "U32": "woods",
+        "V32": "woods",
+        "W32": "woods",
+        "W33": "woods",
+        "W34": "woods",
+        "V34": "woods",
+        "V33": "woods",
+        "U33": "woods",
+        "T34": "woods",
+        "U34": "woods",
+        "S34": "woods",
+        "S35": "woods",
+        "R36": "woods",
+        "S37": "woods",
+        "S38": "woods",
+        "T37": "woods",
+        "S36": "woods",
+        "T35": "woods",
+        "T36": "woods",
+        "U35": "woods",
+        "V35": "woods",
+        "U36": "woods",
+        "U37": "woods",
+        "T38": "woods",
+        "T39": "woods",
+        "T40": "woods",
+        "U39": "woods",
+        "U38": "woods",
+        "V37": "woods",
+        "V36": "woods",
+        "W35": "woods",
+        "W36": "woods",
+        "W37": "woods",
+        "W38": "woods",
+        "V38": "woods",
+        "W39": "woods",
+        "V39": "woods",
+        "W40": "woods",
+        "V40": "woods",
+        "U40": "woods",
+        "U41": "woods",
+        "V41": "woods",
+        "W41": "woods",
+        "S41": "woods",
+        "R41": "woods",
+        "R40": "woods",
+        "R39": "woods",
+        "Q38": "woods",
+        "Q37": "woods",
+        "P36": "woods",
+        "P35": "woods",
+        "P29": "hill",
+        "P28": "hill",
+        "Q27": "hill",
+        "Q26": "hill",
+        "R25": "hill",
+        "R24": "hill",
+        "Q29": "hill",
+        "P30": "hill",
+        "Q28": "hill",
+        "T19": "hill",
+        "S18": "hill",
+        "T17": "hill",
+        "S16": "hill",
+        "N32": "hill",
+        "N33": "hill",
+        "M34": "hill",
+        "O33": "hill",
+        "P24": "field",
+        "Q23": "field",
+        "Q22": "field",
+        "P22": "field",
+        "P23": "field",
+        "Q21": "field",
+        "Q16": "field",
+        "Q17": "field",
+        "Q18": "field",
+        "R19": "field",
+        "S13": "field",
+        "S12": "field",
+        "T13": "field",
+        "S14": "field",
+        "M9": "field",
+        "M8": "field",
+        "L8": "field",
+        "L7": "field",
+        "M7": "field",
+        "L6": "field",
+        "I4": "field",
+        "J3": "field",
+        "I3": "field",
+        "I2": "field",
+        "C13": "field",
+        "C14": "field",
+        "D15": "field",
+        "D16": "field",
+        "I32": "field",
+        "I33": "field",
+        "H34": "field",
+        "I35": "field",
+        "I34": "field",
+        "L38": "field",
+        "L40": "field",
+        "M39": "field",
+        "N37": "field",
+        "N40": "field",
+        "E39": "field",
+        "E37": "field",
+        "D39": "field",
+        "F37": "field",
+        "G38": "field",
+        "G39": "field",
+        "F40": "field",
+        "B30": "field",
+        "C31": "field",
+        "C30": "field",
+        "D29": "field",
+        "A35": "field",
+        "A36": "field",
+        "A25": "field",
+        "A24": "field",
+        "A26": "field",
+        "A30": "hedge",
+        "B29": "hedge",
+        "B28": "hedge",
+        "A31": "hedge",
+        "S20": "hill",
+        "S23": "hill"
+      }
+    },
+    "setup": {
+      "blue": "",
+      "red": ""
+    },
+    "orbat": {
+      "blue": [
+        {
+          "id": "Blue_Easy_1_Abel",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "V18"
+        },
+        {
+          "id": "BLUE_Easy_1_Baker",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "V19"
+        },
+        {
+          "id": "BLUE_Easy_1_Charlie",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "V21"
+        },
+        {
+          "id": "BLUE_Easy_2_Abel",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "S24"
+        },
+        {
+          "id": "BLUE_Easy_2_Baker",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "S25"
+        },
+        {
+          "id": "BLUE_Easy_2_Charlie",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "R27"
+        },
+        {
+          "id": "BLUE_Easy_3_Abel",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "R36"
+        },
+        {
+          "id": "BLUE_Easy_3_Baker",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "S37"
+        },
+        {
+          "id": "BLUE_Easy_3_Charlie",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "S38"
+        }
+      ],
+      "red": [
+        {
+          "id": "RED_Inf_EA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "O17"
+        },
+        {
+          "id": "RED_Inf_FA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "N20"
+        },
+        {
+          "id": "RED_Inf_GA",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "N24"
+        },
+        {
+          "id": "RED_Inf_EB",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "L14"
+        },
+        {
+          "id": "RED_Inf_FB",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "J20"
+        },
+        {
+          "id": "RED_Inf_GB",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "H28"
+        },
+        {
+          "id": "Red_Tank",
+          "count": 1,
+          "state": "full",
+          "startZone": "",
+          "startRound": 0,
+          "startHex": "L19"
+        }
+      ]
+    },
+    "resurser": {
+      "blue": [
+        {
+          "id": "Blue_GRK",
+          "count": 10
+        }
+      ],
+      "red": []
+    },
+    "aiRules": {},
+    "aiRulesBlue": {},
+    "aiMallar": {},
+    "aiMallarBlue": {},
+    "soloWinCondition": {
+      "type": "take_hex",
+      "target": "",
+      "rounds": null
+    },
+    "observatörsFas": {
+      "aktiv": false,
+      "autoRundByte": true,
+      "rundFördröjning": 2,
+      "slutVillkor": "runda",
+      "slutRunda": 3,
+      "slutEnhet": "",
+      "slutHex": "",
+      "modal": {
+        "titel": "",
+        "text": "",
+        "bild": "",
+        "knapp": "Ta befälet!"
+      }
+    },
+    "alltidAiEnheter": [],
+    "soloKompatibel": false,
+    "soloSvårighet": "normal"
+  }
+}
