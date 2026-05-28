@@ -598,8 +598,22 @@ button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);back
           <label style="margin-bottom:6px;display:block">Brödtext
             <textarea id="ovModalText" placeholder="Beskriv situationen..." style="margin-top:4px;min-height:60px"></textarea>
           </label>
-          <label style="margin-bottom:6px;display:block">Bild-URL (valfri)
-            <input id="ovModalBild" type="text" placeholder="https://..." style="margin-top:4px">
+          <label style="margin-bottom:6px;display:block">Bild (valfri)
+            <div style="margin-top:4px;display:flex;flex-direction:column;gap:5px">
+              <select id="ovModalBildVälj" onchange="ovVäljBild(this.value)" style="width:100%">
+                <option value="">— Välj befintlig bild från servern —</option>
+              </select>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button type="button" class="btn s" onclick="document.getElementById('ovModalBildFil').click()">⬆ Ladda upp bild</button>
+                <input type="file" id="ovModalBildFil" accept="image/*" style="display:none" onchange="ovLaddaUppBild(this)">
+                <span id="ovModalBildStatus" class="s" style="color:#9fb1d4"></span>
+              </div>
+              <div id="ovModalBildPreviewWrap" style="display:none">
+                <img id="ovModalBildPreviewImg" style="max-width:100%;max-height:100px;border-radius:4px;border:1px solid #334;display:block">
+                <button type="button" class="btn s" onclick="ovRensaBild()" style="margin-top:4px">✕ Ta bort bild</button>
+              </div>
+              <input id="ovModalBild" type="hidden">
+            </div>
           </label>
           <label style="display:block">Knapptext
             <input id="ovModalKnapp" type="text" placeholder="Ta befälet!" value="Ta befälet!" style="margin-top:4px">
@@ -1950,6 +1964,82 @@ function setAiSida(sida) {
   else refreshAiRegler();
 }
 
+async function ovLaddaBilderLista() {
+  const sel = $('ovModalBildVälj');
+  if (!sel) return;
+  const current = $('ovModalBild')?.value || '';
+  try {
+    const res  = await fetch(SERVER + '/api/bilder');
+    const data = await res.json();
+    while (sel.options.length > 1) sel.remove(1);
+    for (const f of (data.bilder || [])) {
+      const opt = document.createElement('option');
+      opt.value = SERVER + '/bilder/' + f;
+      opt.textContent = f;
+      if (opt.value === current) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    if (!current) sel.value = '';
+  } catch(e) {}
+}
+
+function ovVäljBild(url) {
+  if ($('ovModalBild')) $('ovModalBild').value = url || '';
+  ovUppdateraBildPreview(url);
+}
+
+function ovUppdateraBildPreview(url) {
+  const wrap = $('ovModalBildPreviewWrap');
+  const img  = $('ovModalBildPreviewImg');
+  if (!wrap || !img) return;
+  if (url) {
+    img.src = url;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+    img.src = '';
+  }
+}
+
+function ovRensaBild() {
+  if ($('ovModalBild'))    $('ovModalBild').value = '';
+  if ($('ovModalBildVälj')) $('ovModalBildVälj').value = '';
+  ovUppdateraBildPreview('');
+}
+
+async function ovLaddaUppBild(input) {
+  const fil = input.files?.[0];
+  if (!fil || !editorPassword) return;
+  input.value = '';
+  const status = $('ovModalBildStatus');
+  if (status) status.textContent = 'Laddar upp…';
+  const reader = new FileReader();
+  reader.onload = async function() {
+    try {
+      const res  = await fetch(SERVER + '/api/spara-bild', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: editorPassword, filnamn: fil.name, data: reader.result })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (status) status.textContent = '✓ Uppladdad!';
+        setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+        const url = SERVER + '/bilder/' + fil.name;
+        if ($('ovModalBild')) $('ovModalBild').value = url;
+        ovUppdateraBildPreview(url);
+        await ovLaddaBilderLista();
+        if ($('ovModalBildVälj')) $('ovModalBildVälj').value = url;
+      } else {
+        if (status) status.textContent = 'Fel: ' + (data.error || 'okänt');
+      }
+    } catch(e) {
+      if (status) status.textContent = 'Kunde inte nå servern';
+    }
+  };
+  reader.readAsDataURL(fil);
+}
+
 function ovFasVillkorChange() {
   const aktiv    = $('ovFasAktiv')?.checked;
   const inst     = $('ovFasInst');
@@ -2148,6 +2238,8 @@ function fillAiForm() {
   if ($('ovModalText'))  $('ovModalText').value  = m.text  || '';
   if ($('ovModalBild'))  $('ovModalBild').value  = m.bild  || '';
   if ($('ovModalKnapp')) $('ovModalKnapp').value = m.knapp || 'Ta befälet!';
+  ovUppdateraBildPreview(m.bild || '');
+  ovLaddaBilderLista();
   ovFasVillkorChange();
 
   if ($('alltidAiEnheter')) $('alltidAiEnheter').value = (SC.alltidAiEnheter || []).join('\n');
