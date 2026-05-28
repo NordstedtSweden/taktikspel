@@ -3043,9 +3043,9 @@
     "observatörsFas": {
       "aktiv": true,
       "autoRundByte": true,
-      "rundFördröjning": 8,
+      "rundFördröjning": 3,
       "slutVillkor": "runda",
-      "slutRunda": 6,
+      "slutRunda": 4,
       "slutEnhet": "",
       "slutHex": "",
       "modal": {
