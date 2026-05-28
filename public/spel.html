@@ -8040,6 +8040,10 @@ if (u.hex === u.orderTarget) continue;
     if (typeof sendMoveFX === 'function') {
       sendMoveFX(segments);
     }
+  } else {
+    if (typeof window._moveBatchDone === 'function') {
+      const cb = window._moveBatchDone; window._moveBatchDone = null; cb();
+    }
   }
 }
 
@@ -8348,6 +8352,9 @@ if (stepChanged || liveChanged) {
       }
       }
 
+    if (typeof window._moveBatchDone === 'function') {
+      const cb = window._moveBatchDone; window._moveBatchDone = null; cb();
+    }
   }
 }
 
@@ -8646,9 +8653,8 @@ async function soloObsFasAutoLoop() {
   if (soloObsFasKör) return;
   soloObsFasKör = true;
   while (soloObsFas && !soloSpelSlut) {
-    await new Promise(r => setTimeout(r, 800));
-    if (!soloObsFas || soloSpelSlut) break;
     await soloKöreObsFasRunda();
+    if (soloObsFas && !soloSpelSlut) await new Promise(r => setTimeout(r, 1500));
   }
   soloObsFasKör = false;
 }
@@ -8676,7 +8682,14 @@ async function soloKöreObsFasRunda() {
   executeAiTurn('red',  PLACED, round, aiRulesRed);
   executeAiTurn('blue', PLACED, round, aiRulesBlue);
 
-  if (typeof nextRound === 'function') nextRound();
+  await new Promise(resolve => {
+    window._moveBatchDone = resolve;
+    const fallback = setTimeout(() => {
+      if (window._moveBatchDone === resolve) { window._moveBatchDone = null; resolve(); }
+    }, (window.ROUND_MOVE_DURATION_MS || 10000) * 2 + 3000);
+    if (typeof nextRound === 'function') nextRound();
+    else { clearTimeout(fallback); window._moveBatchDone = null; resolve(); }
+  });
   if (typeof drawAll   === 'function') drawAll();
   if (typeof updateLOS === 'function') updateLOS();
 
