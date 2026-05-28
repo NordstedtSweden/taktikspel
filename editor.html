@@ -1,0 +1,2611 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tactics Editor v1.17.3 — Karta • Units • Scenario</title>
+<style>
+:root{--bg:#0b1020;--panel:#0f1832;--line:#243052;--ink:#e8eefc;--muted:#9fb1d4;--accent:#6cb2ff;--bad:#ff6b6b;--ok:#54d18c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.topbar{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:#0b1326;position:sticky;top:0;z-index:5}
+.tab{padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:var(--ink);cursor:pointer}
+.tab.active{background:var(--accent);color:#071020;border-color:transparent;font-weight:700}
+.view{display:none}.view.active{display:block}
+h3,h4{margin:10px 0 8px}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px}
+.s{font-size:12px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc}
+textarea{min-height:68px}
+button.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:#142045;color:#e8eefc;cursor:pointer}
+.btn.pri{background:var(--accent);color:#071020;border:0;font-weight:700}
+.btn.bad{background:var(--bad);color:#071020;border:0}
+.btn.ok{background:var(--ok);color:#06151a;border:0}
+.list{max-height:70vh;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#0e1730;padding:6px}
+.uitem{border:1px solid var(--line);border-radius:8px;background:#0a0f24;padding:8px;margin-bottom:8px;cursor:pointer}
+.uitem.active{outline:2px solid var(--accent)}
+.badge{display:inline-block;padding:2px 6px;border-radius:6px;background:#0b1326;border:1px solid var(--line);font-size:11px;color:#9fb1d4;margin-right:6px}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th,.table td{border:1px solid var(--line);padding:6px;text-align:left;background:#0b1326}
+.table th{background:#0e1730;position:sticky;top:0;z-index:2}
+.twrap{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.preview{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:start}
+.iconbox{width:160px;height:160px;background:#0a0f24;border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.iconbox img{max-width:100%;max-height:100%}
+.kbd{display:inline-block;padding:0 6px;border:1px solid var(--line);border-radius:6px;background:#0b1324;font-size:12px}
+.hide{display:none}
+.tip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:360px;background:#0f1832;border:1px solid #243052;color:#e8eefc;padding:8px 10px;border-radius:8px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+[data-tip]{position:relative}
+.canvasWrap{position:relative;border:1px dashed var(--line);border-radius:12px;overflow:auto;background:#0a0f24}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.w80{width:80px} .w120{width:120px}
+</style>
+</head>
+<body>
+  <!-- INLOGGNING -->
+<div id="loginPanel" style="
+  position:fixed;inset:0;z-index:9999;
+  background:#0b1020;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;
+  font-family:system-ui,sans-serif;color:#e8eefc;">
+  
+  <h2 style="margin:0">Taktikspel — Editor</h2>
+  
+  <div style="display:flex;flex-direction:column;gap:8px;width:280px">
+    <label style="font-size:14px;color:#9fb1d4">Lösenord</label>
+    <input id="loginLösen" type="password" placeholder="Ange lösenord"
+      style="padding:10px;border-radius:8px;border:1px solid #243052;
+      background:#0e1730;color:#e8eefc;font-size:16px">
+  </div>
+
+  <button id="loginBtn"
+    style="padding:12px 32px;border-radius:10px;border:0;
+    background:#6cb2ff;color:#071020;font-weight:700;
+    font-size:16px;cursor:pointer;width:280px">
+    Logga in
+  </button>
+
+  <div id="loginStatus" style="font-size:13px;color:#ff6b6b"></div>
+</div>
+<div class="topbar">
+  <div class="tab active" data-view="map">Karta</div>
+  <div class="tab" data-view="units">Units</div>
+  <div class="tab" data-view="scenario">Scenario</div>
+  <div class="tab" data-view="ai">AI-regler</div>
+</div>
+
+<!-- =============== MAP EDITOR =============== -->
+<div class="view active" id="view-map">
+  <div class="p">
+    <h3>Karteditor</h3>
+    <div class="toolbar">
+      <label>Hex-storlek <input id="hexSize" type="number" value="50" class="w80"></label>
+      <label>Rader <input id="gridRows" type="number" value="12" class="w80"></label>
+<label>Kolumner <input id="gridCols" type="number" value="16" class="w80"></label>
+      <label>Orientering
+        <select id="hexOrient" class="w120">
+          <option value="flat">Flat-top</option>
+          <option value="point">Point-top</option>
+        </select>
+      </label>
+      <label>Koordinatstil
+        <select id="coordStyle" class="w120" title="Bokstav först">
+          <option value="rowLetters">Rad-bokstav (A1, A2 …)</option>
+          <option value="colLetters">Kolumn-bokstav (A1, B1 …)</option>
+        </select>
+      </label>
+      <label>Grid X <input id="gridOffX" type="number" value="80" class="w80"></label>
+      <label>Grid Y <input id="gridOffY" type="number" value="80" class="w80"></label>
+      <label>Grid rot (°) <input id="gridAngle" type="number" value="0" class="w80" title="Rotera hexnätet"></label>
+      <label>Snap <input id="snap" type="checkbox" checked></label>
+      <label>Visa koordinater <input id="showCoords" type="checkbox" checked></label>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="addBoard">+ Lägg till karta (lokal fil)</button>
+      <button class="btn" id="addBoardServer">+ Hämta kartbild från server</button>
+      <input id="boardFile" type="file" accept="image/*" class="hide">
+      <label>Map filnamn <input id="mapFileName" type="text" placeholder="map.json" class="w120"></label>
+      <button class="btn" id="exportMap">Exportera</button>
+      <button class="btn" id="importMap">Importera</button>
+      <input id="mapJsonFile" type="file" accept="application/json" class="hide">
+    </div>
+
+    <div class="row">
+      <div style="flex:1;min-width:340px">
+        <div class="canvasWrap" id="mapWrap" style="height:70vh">
+          <canvas id="mapCanvas" width="2400" height="1600"></canvas>
+        </div>
+        <div class="s" style="margin-top:6px">Pan: <span class="kbd">Ctrl/Alt/Shift</span> + dra • Zoom: <span class="kbd">Ctrl/Alt</span> + hjul • Måla terräng: vänsterklick • <b>Sudd</b> aktiv för att radera.</div>
+      </div>
+
+      <div style="width:340px">
+        <h4>Terrängpensel</h4>
+        <div class="row">
+          <select id="terrainBrush" style="flex:1"></select>
+          <button class="btn" id="eraser">Sudd</button>
+        </div>
+
+        <h4 style="margin-top:12px">Multi-board</h4>
+        <div id="boardList" class="list" style="max-height:180px"></div>
+        <div class="grid2" style="margin-top:6px">
+          <label>Namn<input id="bName" type="text"></label>
+          <label>Rot (°)<input id="bRot" type="number" value="0"></label>
+        </div>
+        <div class="grid3">
+          <label>X<input id="bX" type="number" value="0"></label>
+          <label>Y<input id="bY" type="number" value="0"></label>
+          <div class="row">
+            <button class="btn" id="nL">◀</button>
+            <button class="btn" id="nU">▲</button>
+            <button class="btn" id="nD">▼</button>
+            <button class="btn" id="nR">▶</button>
+          </div>
+        </div>
+        <button class="btn ok" id="applyBoard">Uppdatera vald karta</button>
+        <div class="s">Tips: Välj en karta i listan för att redigera dess X/Y/Rot/Namn.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== UNITS =============== -->
+<div class="view" id="view-units">
+  <div class="p" style="display:grid;grid-template-columns:320px 1fr 420px;gap:12px">
+    <div>
+      <h3>Units</h3>
+      <div class="grid3">
+        <button class="btn pri" id="uNew">Ny</button>
+        <button class="btn" id="uDup">Duplicera</button>
+        <button class="btn bad" id="uDel">Ta bort</button>
+      </div>
+      <div class="grid3" style="margin-top:6px">
+        <button class="btn" id="uImport">Importera</button>
+        <div class="row"><label class="s">Units filnamn</label><input id="unitsFileName" type="text" placeholder="units.json"></div>
+        <button class="btn ok" id="uExport">Exportera</button>
+      </div>
+      <input id="uFile" type="file" accept="application/json" class="hide"/>
+      <div class="list" id="uList" style="margin-top:8px"></div>
+    </div>
+
+    <div>
+      <h3>Enhet • Grunddata</h3>
+      <div class="grid3">
+        <label>Id<input id="uId" type="text" placeholder="US_Rifle_Squad_44"></label>
+        <label>Namn<input id="uName" type="text" placeholder="Rifle Squad"></label>
+        <label>Fraktion<input id="uFaction" type="text" placeholder="US, GE"></label>
+      </div>
+      <div class="grid3">
+        <label>Typ
+          <select id="uType">
+            <option>infantry</option><option>vehicle</option><option>gun</option><option>boat</option><option>other</option>
+            <option value="larmminor">larmminor</option>
+            <option value="minor">minor</option>
+            <option value="dronare">dronare</option>
+            <option value="indirektEld">indirekt eld</option>
+          </select>
+        </label>
+        <label>Storlek<input id="uSize" type="text" placeholder="squad/team/section/vehicle"></label>
+        <label>Taggar<input id="uTags" type="text" placeholder="ETO_44, assault"></label>
+      </div>
+
+      <h4 style="margin-top:10px">Ikoner</h4>
+      <div class="grid3">
+        <label>Full (front)<input id="uIconFull" type="text" placeholder="assets/units/us_squad.png"></label>
+        <label>Reduced<input id="uIconReduced" type="text" placeholder="assets/units/us_squad_reduced.png"></label>
+        <div class="grid2">
+          <button class="btn" id="pickFull">Välj bild Full…</button>
+          <button class="btn" id="pickRed">Välj bild Red…</button>
+          <button class="btn" id="pickFullServer">Från server (Full)</button>
+          <button class="btn" id="pickRedServer">Från server (Red)</button>
+          <input id="fileFull" type="file" accept="image/*" class="hide">
+          <input id="fileRed" type="file" accept="image/*" class="hide">
+        </div>
+      </div>
+
+      <div id="statsSection">
+      <h4 style="margin-top:10px">Stats – Full</h4>
+      <div class="grid3">
+        <label>Rörelse (hex/runda)<input id="uMoveF" type="number" value="5"></label>
+        <label>Räckvidd (hex)<input id="uRangeF" type="number" value="6"></label>
+        <label>FP Normal<input id="uFpNormF" type="number" value="5"></label>
+      </div>
+      <div class="grid2">
+        <label>FP OpFire<input id="uFpOFF" type="number" value="3"></label>
+        <label>Vägbonus (road)<input id="uRoad" type="number" value="1"></label>
+      </div>
+
+      <h4 style="margin-top:10px">Stats – Reduced</h4>
+      <div class="grid3">
+        <label>Rörelse (hex/runda)<input id="uMoveR" type="number" value="4"></label>
+        <label>Räckvidd (hex)<input id="uRangeR" type="number" value="6"></label>
+        <label>FP Normal<input id="uFpNormR" type="number" value="4"></label>
+      </div>
+      <div class="grid1" style="max-width:33%">
+        <label>FP OpFire<input id="uFpOFR" type="number" value="2"></label>
+      </div>
+
+      <!-- Dolda fält — sparas/laddas men används ej i beräkningar ännu -->
+      <div style="display:none">
+        <input id="uMorNF" type="number" value="7">
+        <input id="uMorYF" type="number" value="6">
+        <input id="uMorRF" type="number" value="5">
+        <input id="uLosH"  type="number" value="1">
+        <input id="uMorNR" type="number" value="6">
+        <input id="uMorYR" type="number" value="5">
+        <input id="uMorRR" type="number" value="4">
+      </div>
+
+      </div><!-- /statsSection -->
+
+      <div id="type-infantry" class="p" style="margin:12px 0">
+        <h4>Infantry – Anti-tank</h4>
+        <div class="grid3">
+          <label>AT aktiverad
+            <select id="infATon"><option value="no">no</option><option value="yes">yes</option></select>
+          </label>
+          <label>AT FP Normal<input id="infATfpN" type="number" value="0"></label>
+          <label>AT FP OpFire<input id="infATfpO" type="number" value="0"></label>
+        </div>
+        <div class="grid3">
+          <label>AT Range (hex)<input id="infATrange" type="number" value="0"></label>
+          <label>AT Shots/turn<input id="infATshots" type="number" value="1"></label>
+          <label>AT Noteringar<input id="infATnotes" type="text" placeholder="ex. Panzerfaust engångs"></label>
+        </div>
+      </div>
+
+      <div id="type-larmminor" class="p" style="margin:12px 0;display:none">
+        <h4>Larmminor</h4>
+        <div class="grid2">
+          <label>Triggerradie
+            <select id="alarmRadius">
+              <option value="0">0 – bara hexen</option>
+              <option value="1">1 – hexen + angränsande</option>
+            </select>
+          </label>
+          <div class="s" style="padding-top:20px">Osynlig för motståndaren. Larmar ägaren i loggen när en fiendeenhet passerar.</div>
+        </div>
+      </div>
+
+      <div id="type-minor" class="p" style="margin:12px 0;display:none">
+        <h4>Minor</h4>
+        <div class="grid2">
+          <label>Triggerradie
+            <select id="mineRadius">
+              <option value="0">0 – bara hexen</option>
+              <option value="1">1 – hexen + angränsande</option>
+            </select>
+          </label>
+          <label>Effekt vid träff
+            <select id="mineEffect">
+              <option value="suppressed">Suppressed</option>
+              <option value="reduced">Reduced</option>
+              <option value="eliminated">Eliminated</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="type-dronare" class="p" style="margin:12px 0;display:none">
+        <h4>Drönare</h4>
+        <div class="grid3">
+          <label>Rörelse per runda (hex)<input id="droneMove" type="number" value="6" min="1"></label>
+          <label>LOS-radie (hex)<input id="droneLos" type="number" value="3" min="1"></label>
+          <label>Kan bekämpas
+            <select id="droneVulnerable">
+              <option value="yes">Ja</option>
+              <option value="no">Nej</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="type-indirektEld" class="p" style="margin:12px 0;display:none">
+        <h4>Indirekt eld</h4>
+        <div class="grid2">
+          <label>Spridning max (hex)<input id="artSpread" type="number" value="1" min="0" max="3"></label>
+          <label>Effektradius (hex)<input id="artRadius" type="number" value="1" min="0" max="2"></label>
+          <label>Effekt centrum
+            <select id="artEffectCenter">
+              <option value="eliminated">Eliminated</option>
+              <option value="reduced">Reduced</option>
+              <option value="suppressed">Suppressed</option>
+            </select>
+          </label>
+          <label>Effekt periferi
+            <select id="artEffectEdge">
+              <option value="suppressed">Suppressed</option>
+              <option value="reduced">Reduced</option>
+              <option value="eliminated">Eliminated</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <h4 style="margin-top:10px">Transport</h4>
+      <div class="grid3">
+        <label>Roll
+          <select id="uTrole">
+            <option value="none">none</option>
+            <option value="transport">transport</option>
+            <option value="passenger">passenger</option>
+            <option value="both">both</option>
+          </select>
+        </label>
+        <label>Kapacitet (#)<input id="uTcap" type="number" value="0"></label>
+        <label>Tillåtna typer<input id="uTallow" type="text" placeholder="infantry,gun"></label>
+      </div>
+      <div style="display:none">
+        <select id="uTowCan"><option value="no">no</option><option value="yes">yes</option></select>
+        <input id="uTowTypes" type="text">
+      </div>
+
+      <div class="grid3" style="margin-top:10px">
+        <button class="btn pri" id="uSave">Spara/uppdatera enhet</button>
+        <button class="btn bad" id="uClear">Rensa lista</button>
+        <button class="btn" id="applyTypeDefaults">Anv. default för Typ</button>
+      </div>
+    </div>
+
+    <div>
+      <h3>Rörelse & Terräng</h3>
+      <div class="s">Bocka i tillåtna terrängtyper, ev. MP-överskrivning per terräng för just denna enhet.</div>
+      <div class="twrap">
+        <table class="table" id="terrainMatrix">
+          <thead><tr><th>Terräng</th><th>Tillåten</th><th>MP (enhet)</th><th>Default (klass)</th><th>LOS</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h4 style="margin-top:12px">Preview</h4>
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <label style="display:flex;align-items:center;gap:6px">
+          <span class="s">Visa:</span>
+          <select id="prevMode" class="w120">
+            <option value="full">Full</option>
+            <option value="reduced">Reduced</option>
+          </select>
+        </label>
+      </div>
+      <div class="preview">
+        <div class="iconbox" id="prevIcon"><div class="s">ingen bild</div></div>
+        <div id="prevText" class="s"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== SCENARIO EDITOR =============== -->
+<div class="view" id="view-scenario">
+  <div class="p" style="display:grid;grid-template-columns:360px 1fr;gap:12px">
+    <div>
+      <h3>Scenario</h3>
+      <div class="grid3">
+        <button class="btn pri" id="scNew">Nytt</button>
+        <button class="btn" id="scImport">Importera (lokalt)</button>
+        <button class="btn" id="scHamtaServer">Hämta från server…</button>
+        <div class="row"><label class="s">Scenario filnamn</label><input id="scFileName" type="text" placeholder="scenario.json"></div>
+        <button class="btn pri" id="scPublicera">Publicera på server</button>
+        <button class="btn pri" id="scExportPaket">Exportera (lokalt)</button>
+        <!-- Dolda knappar med dubbel funktion -->
+        <span style="display:none">
+          <button id="scExport">Exportera</button>
+          <button id="laddaUppKarta">Ladda upp kartbild</button>
+          <button id="laddaUppIkon">Ladda upp enhetsikon</button>
+        </span>
+<input type="file" id="kartaFil" accept="image/*" style="display:none">
+<input type="file" id="ikonFil" accept="image/png" multiple style="display:none">
+      </div>
+      <input id="scFile" type="file" accept="application/json" class="hide"/>
+
+      <h4 style="margin-top:10px">Grunddata</h4>
+      <label>Titel<input id="scTitle" type="text" placeholder="Objective Foy"></label>
+      <label>Beskrivning<textarea id="scDesc" placeholder="Kort narrativ/uppgift."></textarea></label>
+      <div class="grid3">
+        <label>Rundor<input id="scRounds" type="number" value="6"></label>
+        <label>Initiativ<input id="scInit" type="text" placeholder="Blue/Red"></label>
+        <label>Setup-fas (min)<input id="scSetupMin" type="number" value="0"></label>
+      </div>
+      <label>Segervillkor<textarea id="scVC" placeholder="Ex: Ta och håll E9 tre rundor; minimera förluster."></textarea></label>
+
+      <h4>Kartor</h4>
+      <div class="s">Hämta in från Karteditorn (inkl. grid-offset/rot och koordinatstil)</div>
+      <div id="boardList" class="list" style="max-height:180px"></div>
+      <button class="btn" id="scBindBoards">Uppdatera från Karteditor</button>
+
+      <div style="display:none">
+        <input id="scBlueZones" type="text">
+        <input id="scRedZones" type="text">
+      </div>
+    </div>
+
+    <div>
+      <h3>Order of Battle (lätt val)</h3>
+      <div class="p">
+        <div class="grid3">
+          <label>Välj enhet
+            <input id="unitPicker" list="unitList" placeholder="börja skriva…">
+            <datalist id="unitList"></datalist>
+          </label>
+          <label>Antal<input id="unitCount" type="number" value="1"></label>
+          <label>Startstatus
+            <select id="unitStartState"><option value="full">full</option><option value="reduced">reduced</option></select>
+          </label>
+        </div>
+        <div class="grid4">
+          <label style="display:none">Startzon/område<input id="unitStartZone" type="text" placeholder="t.ex. A1-A4, C3"></label>
+          <label>Startrunda<input id="unitStartRound" type="number" value="0"></label>
+          <label>Fördefinierad starthex<input id="unitStartHex" type="text" placeholder="t.ex. C5 (valfritt)"></label>
+          <label>Side
+            <select id="unitSide"><option value="blue">Blue</option><option value="red">Red</option></select>
+          </label>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn pri" id="addUnitToScenario">+ Lägg till i scenario</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="p">
+          <h4>Blue enheter</h4>
+          <div id="bluePool" class="list" style="min-height:160px"></div>
+        </div>
+        <div class="p">
+          <h4>Red enheter</h4>
+          <div id="redPool" class="list" style="min-height:160px"></div>
+        </div>
+      </div>
+
+      <h4 style="margin-top:12px">Resurser per sida</h4>
+      <div class="p" style="margin:0 0 8px">
+        <div class="grid3">
+          <label>Välj resurs
+            <input id="resPicker" list="resList" placeholder="börja skriva…">
+            <datalist id="resList"></datalist>
+          </label>
+          <label>Antal<input id="resCount" type="number" value="1" min="1"></label>
+          <label>Side
+            <select id="resSide"><option value="blue">Blue</option><option value="red">Red</option></select>
+          </label>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn pri" id="addResToScenario">+ Lägg till resurs</button>
+        </div>
+      </div>
+      <div class="grid2" style="margin-bottom:4px">
+        <div>
+          <div style="font-weight:700;color:var(--accent);margin-bottom:4px">Blue resurser</div>
+          <div id="blueResPool" class="list" style="min-height:60px"></div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#ff6b6b;margin-bottom:4px">Red resurser</div>
+          <div id="redResPool" class="list" style="min-height:60px"></div>
+        </div>
+      </div>
+
+      <h4 style="margin-top:12px">Uppdrag per sida</h4>
+      <div class="grid2">
+        <label>
+          <span style="font-weight:700;color:var(--accent)">Blue order</span>
+          <textarea id="scBlueOrder" placeholder="Skriv Blue-lagets uppdrag och order här…" rows="4"></textarea>
+        </label>
+        <label>
+          <span style="font-weight:700;color:#ff6b6b">Red order</span>
+          <textarea id="scRedOrder" placeholder="Skriv Red-lagets uppdrag och order här…" rows="4"></textarea>
+        </label>
+      </div>
+
+      <div class="grid3" style="margin-top:10px">
+        <button class="btn" id="scGenCard">Generera scenariokort (PNG)</button>
+        <a id="scCardDL" class="btn ok" download="scenario_card.png" style="display:none">Ladda ner kort</a>
+        <div></div>
+      </div>
+      <canvas id="scCard" width="1000" height="1400" class="hide"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- =============== AI-REGLER =============== -->
+<div class="view" id="view-ai">
+  <div class="p" style="display:grid;grid-template-columns:300px 3fr 2fr;gap:12px">
+
+    <!-- Vänster: segervillkor + svårighet -->
+    <div>
+      <h3>Solo-inställningar</h3>
+
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:15px">
+        <input type="checkbox" id="soloKompatibel" style="width:18px;height:18px">
+        <span>Scenariot är solo-kompatibelt</span>
+      </label>
+      <div class="s" style="margin-bottom:14px">Endast markerade scenarios visas i solo-läget.</div>
+
+      <h4>Segervillkor (Blue vinner om…)</h4>
+      <label>Typ
+        <select id="wcType">
+          <option value="take_hex">Ta en hex</option>
+          <option value="hold_hex">Håll en hex i N rundor</option>
+          <option value="eliminate_unit">Eliminera specifik enhet</option>
+          <option value="eliminate_all">Eliminera alla röda enheter</option>
+          <option value="survive">Överlev N rundor</option>
+        </select>
+      </label>
+      <div id="wcHexFält" style="margin-top:6px">
+        <label>Mål-hex (t.ex. B5)<input id="wcTarget" type="text" placeholder="B5" data-hexval="1"></label>
+      </div>
+      <div id="wcEnhetFält" style="margin-top:6px;display:none">
+        <label>Enhet-ID<input id="wcUnit" type="text" placeholder="RED_Inf_EA"></label>
+      </div>
+      <div id="wcRundorFält" style="margin-top:6px;display:none">
+        <label>Antal rundor<input id="wcRounds" type="number" value="3" min="1"></label>
+      </div>
+
+      <hr>
+      <h4>Svårighetsgrad</h4>
+      <label>
+        <select id="soloSvårighet">
+          <option value="lätt">Lätt — AI missar 35% av reglerna</option>
+          <option value="normal" selected>Normal — AI missar 15%</option>
+          <option value="svår">Svår — AI följer alltid reglerna</option>
+        </select>
+      </label>
+      <div class="s" style="margin-top:6px">Svårighetsgraden styr hur ofta AI:n följer sina egna regler.</div>
+
+      <hr>
+      <h4>Observatörsfas</h4>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <input type="checkbox" id="ovFasAktiv" style="width:16px;height:16px" onchange="ovFasVillkorChange()">
+        <span>Aktivera observatörsfas</span>
+      </label>
+      <div class="s" style="margin-bottom:10px">AI styr båda sidor. Spelet överlämnas till spelaren när villkoret uppfylls.</div>
+      <div id="ovFasInst" style="display:none">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input type="checkbox" id="ovAutoRund" style="width:16px;height:16px" checked>
+          <span>Automatisk rundframryckning</span>
+        </label>
+        <label style="margin-bottom:8px;display:block">Fördröjning (rundor innan kontroll börjar)
+          <input id="ovRundFördröjning" type="number" value="2" min="0" style="margin-top:4px">
+        </label>
+        <label style="margin-bottom:8px;display:block">Överlämningsvillkor
+          <select id="ovSlutVillkor" style="margin-top:4px" onchange="ovFasVillkorChange()">
+            <option value="runda">Specifik runda</option>
+            <option value="hex">Enhet når hex</option>
+            <option value="kombinerat">Kombinerat (runda OCH hex)</option>
+          </select>
+        </label>
+        <div id="ovRundaFält" style="margin-bottom:8px">
+          <label>Överlämning vid runda
+            <input id="ovSlutRunda" type="number" value="3" min="1" style="margin-top:4px">
+          </label>
+        </div>
+        <div id="ovHexFält" style="display:none;margin-bottom:8px">
+          <label>Enhet-ID (når hex)
+            <input id="ovSlutEnhet" type="text" placeholder="t.ex. BLU_Inf_EA" style="margin-top:4px">
+          </label>
+          <label style="margin-top:6px;display:block">Mål-hex
+            <input id="ovSlutHex" type="text" placeholder="t.ex. D5" data-hexval="1" style="margin-top:4px">
+          </label>
+        </div>
+        <div class="p" style="padding:10px;margin-top:2px">
+          <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#54d18c;text-transform:uppercase;margin-bottom:8px">Överlämningsmodal</div>
+          <label style="margin-bottom:6px;display:block">Rubrik
+            <input id="ovModalTitel" type="text" placeholder="t.ex. Anfallet börjar!" style="margin-top:4px">
+          </label>
+          <label style="margin-bottom:6px;display:block">Brödtext
+            <textarea id="ovModalText" placeholder="Beskriv situationen..." style="margin-top:4px;min-height:60px"></textarea>
+          </label>
+          <label style="margin-bottom:6px;display:block">Bild (valfri)
+            <div style="margin-top:4px;display:flex;flex-direction:column;gap:5px">
+              <select id="ovModalBildVälj" onchange="ovVäljBild(this.value)" style="width:100%">
+                <option value="">— Välj befintlig bild från servern —</option>
+              </select>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button type="button" class="btn s" onclick="document.getElementById('ovModalBildFil').click()">⬆ Ladda upp bild</button>
+                <input type="file" id="ovModalBildFil" accept="image/*" style="display:none" onchange="ovLaddaUppBild(this)">
+                <span id="ovModalBildStatus" class="s" style="color:#9fb1d4"></span>
+              </div>
+              <div id="ovModalBildPreviewWrap" style="display:none">
+                <img id="ovModalBildPreviewImg" style="max-width:100%;max-height:100px;border-radius:4px;border:1px solid #334;display:block">
+                <button type="button" class="btn s" onclick="ovRensaBild()" style="margin-top:4px">✕ Ta bort bild</button>
+              </div>
+              <input id="ovModalBild" type="hidden">
+            </div>
+          </label>
+          <label style="display:block">Knapptext
+            <input id="ovModalKnapp" type="text" placeholder="Ta befälet!" value="Ta befälet!" style="margin-top:4px">
+          </label>
+        </div>
+      </div>
+
+      <hr>
+      <h4>Alltid AI-styrda enheter</h4>
+      <div class="s" style="margin-bottom:6px">Enheter som alltid styrs av AI — oavsett fas. Spelaren kan inte ge dem order. Ange ett ID per rad.</div>
+      <textarea id="alltidAiEnheter" placeholder="BLU_Inf_EA&#10;BLU_Armor_01" style="min-height:72px;margin-top:2px;font-family:monospace;font-size:12px"></textarea>
+    </div>
+
+    <!-- Höger: per-enhet AI-regler -->
+    <div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+        <h3 style="margin-bottom:4px">AI-regler per enhet</h3>
+        <div style="display:flex;gap:6px">
+          <button id="aiSidaBlåBtn" class="btn" onclick="setAiSida('blue')" style="padding:5px 12px;font-size:12px">Blue</button>
+          <button id="aiSidaRödBtn" class="btn pri" onclick="setAiSida('red')" style="padding:5px 12px;font-size:12px">Red</button>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label class="s" id="aiEnhetSelLabel">Välj Red-enhet</label>
+        <select id="aiEnhetSel" onchange="aiEnhetBytt()"
+          style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;
+                 background:#0e1730;color:#e8eefc;margin-top:4px;font-size:14px"></select>
+      </div>
+
+      <!-- Vy-växlare -->
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="aiVyEnkelBtn" class="btn pri" style="flex:1" onclick="setAiVy('enkel')">Enkel vy</button>
+        <button id="aiVyAvanceradBtn" class="btn" style="flex:1" onclick="setAiVy('avancerad')">Avancerad vy</button>
+      </div>
+
+      <!-- ===== ENKEL VY ===== -->
+      <div id="aiEnkelDiv" style="margin-top:10px">
+        <div class="s" style="margin-bottom:8px">Omfall kollas alltid först — de kan bryta faslogiken när som helst under scenariot.</div>
+
+        <!-- FASER -->
+        <div class="p" style="padding:10px">
+          <div id="fasInledSektion" style="margin-bottom:14px">
+            <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#6cb2ff;text-transform:uppercase;margin-bottom:6px">Inledningsvis</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:6px">
+              <select id="fasInledAction" style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— ingen order —</option>
+                <option value="take">Anfalla / rycka fram mot →</option>
+                <option value="defend">Försvara position</option>
+                <option value="fallback">Dra tillbaka</option>
+                <option value="scout">Spana mot →</option>
+                <option value="hold">Avvakta</option>
+              </select>
+              <input id="fasInledTarget" type="text" placeholder="Mål-hex" data-hexval="1"
+                style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">
+              <span class="s">t.o.m. runda</span>
+              <input id="fasInledTill" type="number" min="1" placeholder="(frivillig)"
+                style="width:100px;padding:5px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              <span class="s" style="color:#6cb2ff">— sedan nästa fas</span>
+            </div>
+          </div>
+
+          <div id="fasDärSektion" style="margin-bottom:14px">
+            <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#9fb1d4;text-transform:uppercase;margin-bottom:6px">Därefter</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:6px">
+              <select id="fasDärAction" style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— ingen order —</option>
+                <option value="take">Anfalla / rycka fram mot →</option>
+                <option value="defend">Försvara position</option>
+                <option value="fallback">Dra tillbaka</option>
+                <option value="scout">Spana mot →</option>
+                <option value="hold">Avvakta</option>
+              </select>
+              <input id="fasDärTarget" type="text" placeholder="Mål-hex" data-hexval="1"
+                style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+          </div>
+
+          <div id="fasSlutSektion">
+            <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#7a9fc0;text-transform:uppercase;margin-bottom:6px">Slutligen</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:6px">
+              <select id="fasSlutAction" style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— ingen order —</option>
+                <option value="take">Anfalla / rycka fram mot →</option>
+                <option value="defend">Försvara position</option>
+                <option value="fallback">Dra tillbaka</option>
+                <option value="scout">Spana mot →</option>
+                <option value="hold">Avvakta</option>
+              </select>
+              <input id="fasSlutTarget" type="text" placeholder="Mål-hex" data-hexval="1"
+                style="padding:7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+          </div>
+        </div>
+
+        <!-- OMFALL -->
+        <div class="p" style="padding:10px;margin-top:6px">
+          <div style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#f0c040;text-transform:uppercase;margin-bottom:8px">Omfall (kollas alltid först)</div>
+          <div class="s" style="margin-bottom:10px">Undantag som bryter faslogiken — ex. om fienden gör något oväntat.</div>
+
+          <!-- Omfall 0, 1, 2 -->
+          <div id="omfallRad0" style="margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+            <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 1</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px;margin-bottom:5px">
+              <select id="omfall0Cond" onchange="uppdateraOmfallValLabel(0)"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— inaktivt —</option>
+                <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="enemy_past_line">Fiende passerar linje (rad/kol)</option>
+                <option value="hex_occupied">Fiende vid hex X</option>
+                <option value="round_gte">Från och med runda X</option>
+                <option value="self_reduced">Enheten reduceras</option>
+                <option value="unit_eliminated">Enhet X eliminerad</option>
+              </select>
+              <div style="display:flex;gap:3px;align-items:center">
+                <button id="omfall0DirBtn" onclick="toggleOmfallDir(0)" title="Klicka för att byta riktning" style="display:none;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#f0c040;font-size:14px;cursor:pointer;line-height:1">→</button>
+                <input id="omfall0Val" type="text" placeholder="Värde" disabled
+                  style="flex:1;min-width:0;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px">
+              <select id="omfall0Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">→ ingen order</option>
+                <option value="take">→ Anfalla mot</option>
+                <option value="defend">→ Försvara position</option>
+                <option value="fallback">→ Dra tillbaka</option>
+                <option value="scout">→ Spana mot</option>
+                <option value="hold">→ Avvakta</option>
+              </select>
+              <input id="omfall0Target" type="text" placeholder="Mål-hex" data-hexval="1"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+          </div>
+
+          <div id="omfallRad1" style="margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+            <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 2</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px;margin-bottom:5px">
+              <select id="omfall1Cond" onchange="uppdateraOmfallValLabel(1)"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— inaktivt —</option>
+                <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="enemy_past_line">Fiende passerar linje (rad/kol)</option>
+                <option value="hex_occupied">Fiende vid hex X</option>
+                <option value="round_gte">Från och med runda X</option>
+                <option value="self_reduced">Enheten reduceras</option>
+                <option value="unit_eliminated">Enhet X eliminerad</option>
+              </select>
+              <div style="display:flex;gap:3px;align-items:center">
+                <button id="omfall1DirBtn" onclick="toggleOmfallDir(1)" title="Klicka för att byta riktning" style="display:none;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#f0c040;font-size:14px;cursor:pointer;line-height:1">→</button>
+                <input id="omfall1Val" type="text" placeholder="Värde" disabled
+                  style="flex:1;min-width:0;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px">
+              <select id="omfall1Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">→ ingen order</option>
+                <option value="take">→ Anfalla mot</option>
+                <option value="defend">→ Försvara position</option>
+                <option value="fallback">→ Dra tillbaka</option>
+                <option value="scout">→ Spana mot</option>
+                <option value="hold">→ Avvakta</option>
+              </select>
+              <input id="omfall1Target" type="text" placeholder="Mål-hex" data-hexval="1"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+          </div>
+
+          <div id="omfallRad2" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+            <div class="s" style="margin-bottom:5px;color:#f0c040">Omfall 3</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px;margin-bottom:5px">
+              <select id="omfall2Cond" onchange="uppdateraOmfallValLabel(2)"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">— inaktivt —</option>
+                <option value="enemy_within">Fiende inom X hexar</option>
+                <option value="enemy_past_line">Fiende passerar linje (rad/kol)</option>
+                <option value="hex_occupied">Fiende vid hex X</option>
+                <option value="round_gte">Från och med runda X</option>
+                <option value="self_reduced">Enheten reduceras</option>
+                <option value="unit_eliminated">Enhet X eliminerad</option>
+              </select>
+              <div style="display:flex;gap:3px;align-items:center">
+                <button id="omfall2DirBtn" onclick="toggleOmfallDir(2)" title="Klicka för att byta riktning" style="display:none;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#f0c040;font-size:14px;cursor:pointer;line-height:1">→</button>
+                <input id="omfall2Val" type="text" placeholder="Värde" disabled
+                  style="flex:1;min-width:0;padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px">
+              <select id="omfall2Action" style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+                <option value="">→ ingen order</option>
+                <option value="take">→ Anfalla mot</option>
+                <option value="defend">→ Försvara position</option>
+                <option value="fallback">→ Dra tillbaka</option>
+                <option value="scout">→ Spana mot</option>
+                <option value="hold">→ Avvakta</option>
+              </select>
+              <input id="omfall2Target" type="text" placeholder="Mål-hex" data-hexval="1"
+                style="padding:6px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn pri" style="width:100%;margin-top:8px" onclick="sparaFaser()">Spara mall för denna enhet</button>
+        <div id="fasarSparadMsg" class="s" style="text-align:center;color:#54d18c;margin-top:4px;display:none">✓ Sparad</div>
+      </div>
+
+      <!-- ===== AVANCERAD VY ===== -->
+      <div id="aiAvanceradDiv" style="display:none;margin-top:10px">
+        <div class="s" style="margin-bottom:6px">Regler körs uppifrån — den första som matchar körs.</div>
+        <div id="aiRegelLista" class="list" style="margin-top:8px;min-height:80px">
+          <div class="s">— Välj en enhet ovan —</div>
+        </div>
+        <div class="p" style="margin-top:10px">
+          <h4>Lägg till regel</h4>
+          <div class="grid2" style="margin-bottom:6px">
+            <div>
+              <div class="s">Condition</div>
+              <select id="aiCondSel" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
+                <option value="always">always — alltid sant</option>
+                <option value="enemy_within">enemy_within — fiende inom N hex</option>
+                <option value="enemy_not_within">enemy_not_within — ingen fiende inom N hex</option>
+                <option value="round_gte">round_gte — runda ≥ N</option>
+                <option value="round_lte">round_lte — runda ≤ N</option>
+                <option value="hex_occupied">hex_occupied — fiende på hex (ange hex i Värde)</option>
+                <option value="unit_eliminated">unit_eliminated — enhet eliminerad (ange ID i Värde)</option>
+                <option value="self_reduced">self_reduced — denna enhet är reducerad</option>
+              </select>
+            </div>
+            <div>
+              <div class="s">Värde</div>
+              <input id="aiCondVal" type="text" placeholder="t.ex. 3 eller B5" style="margin-top:4px">
+            </div>
+          </div>
+          <div class="grid2" style="margin-bottom:8px">
+            <div>
+              <div class="s">Action</div>
+              <select id="aiActSel" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0e1730;color:#e8eefc;margin-top:4px">
+                <option value="defend">defend — försvara nuv. hex</option>
+                <option value="take">take — rör sig mot Target</option>
+                <option value="fallback">fallback — dra sig undan</option>
+                <option value="scout">scout — spana mot Target</option>
+                <option value="hold">hold — stå still, ingen order</option>
+              </select>
+            </div>
+            <div>
+              <div class="s">Target (hex)</div>
+              <input id="aiActTarget" type="text" placeholder="t.ex. B5" style="margin-top:4px" data-hexval="1">
+            </div>
+          </div>
+          <button class="btn pri" id="aiLäggTillBtn">+ Lägg till regel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== KARTA ===== -->
+    <div>
+      <h3>Karta</h3>
+      <div class="s" style="margin-bottom:8px">Klicka i ett <span style="color:#f0c040">mål-fält</span> nedan, klicka sedan på en hex för att fylla i.</div>
+      <div id="aiAktivFältInfo" style="font-size:11px;color:#f0c040;margin-bottom:6px;min-height:16px">— välj ett fält först —</div>
+      <div id="aiMapWrap" style="overflow:auto;border:1px solid var(--line);border-radius:8px;background:#0a0f24">
+        <canvas id="aiMapCanvas" style="display:block;cursor:crosshair"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tip" class="tip"></div>
+
+<script>
+/* Helper */
+const $ = (id) => document.getElementById(id);
+
+/* ================= TERRÄNG (inbyggd) ================= */
+const TERRA={ palette:{
+  open:{label:'Open',color:'#5B7FA3'}, field:{label:'Field',color:'#9fa85a'},
+  orchard:{label:'Orchard',color:'#4b8a4b'}, woods:{label:'Woods',color:'#2e7d32'},
+  wood_building:{label:'Wood Bldg',color:'#8b5e3c'}, stone_building:{label:'Stone Bldg',color:'#6b4a3a'},
+  road:{label:'Road',color:'#b5b5b5'}, trail:{label:'Trail',color:'#9c9c9c'},
+  river:{label:'River/Water',color:'#4aa7ff'}, marsh:{label:'Marsh',color:'#3f7f7f'},
+  hedge:{label:'Hedge/Wall',color:'#3a5a3a'}, bocage:{label:'Bocage',color:'#2f4f2f'},
+  hill:{label:'Hill',color:'#b08b45'}, rough:{label:'Rough',color:'#6e6e6e'},
+  crater:{label:'Crater',color:'#666088'}, smoke:{label:'Smoke',color:'#aaaaaa'}
+}, effects:{
+  open:{mp:{inf:1,veh:1,gun:2,boat:1},los:{blocks:false,conceal:0}},
+  field:{mp:{inf:1,veh:2,gun:3,boat:1},los:{blocks:false,conceal:1}},
+  orchard:{mp:{inf:1,veh:2,gun:3,boat:1},los:{blocks:false,conceal:1}},
+  woods:{mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  wood_building:{mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  stone_building:{mp:{inf:2,veh:'N/A',gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  road:{mp:{inf:'2/3',veh:'1/2',gun:1,boat:'N/A'},los:{blocks:false,conceal:0}},
+  trail:{mp:{inf:1,veh:2,gun:2,boat:'N/A'},los:{blocks:false,conceal:0}},
+  river:{mp:{inf:'N/A',veh:'N/A',gun:'N/A',boat:1},los:{blocks:false,conceal:0}},
+  marsh:{mp:{inf:3,veh:'N/A',gun:'N/A',boat:1},los:{blocks:false,conceal:1}},
+  hedge:{mp:{inf:2,veh:3,gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:1}},
+  bocage:{mp:{inf:2,veh:4,gun:'N/A',boat:'N/A'},los:{blocks:true,conceal:2}},
+  hill:{mp:{inf:2,veh:2,gun:3,boat:'N/A'},los:{blocks:false,conceal:0}},
+  rough:{mp:{inf:2,veh:3,gun:3,boat:'N/A'},los:{blocks:false,conceal:0}},
+  crater:{mp:{inf:2,veh:3,gun:3,boat:'N/A'},los:{blocks:false,conceal:1}},
+  smoke:{mp:{inf:1,veh:1,gun:1,boat:1},los:{blocks:true,conceal:3}}
+}};
+
+/* ================= TABS & TOOLTIP ================= */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('view-'+t.dataset.view).classList.add('active');
+    if(t.dataset.view==='units'){ ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); }
+    if(t.dataset.view==='scenario'){ refreshBoardList(); refreshUnitPicker(); refreshPools(); refreshResPicker(); refreshResPools(); }
+    if(t.dataset.view==='ai'){ readScenarioForm(); fillAiForm(); renderAiKarta(); }
+  });
+});
+const tip=document.getElementById('tip');
+
+/* ============== MAP EDITOR ============== */
+const mapCv=$('mapCanvas'), mctx=mapCv.getContext('2d');
+let M={hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, showCoords:true, snap:true, boards:[], terrain:{}, gridOffX:80, gridOffY:80, rows:12, cols:16};
+let cam={z:1, vx:0, vy:0, pan:false, lastX:0, lastY:0};
+let activeBoardIndex=-1;
+
+/* UI binds */
+$('snap').onchange=e=>{M.snap=e.target.checked;};
+$('showCoords').onchange=e=>{M.showCoords=e.target.checked; drawMap();};
+$('hexSize').oninput=()=>{ M.hexSize=Math.max(20, +$('hexSize').value||50); drawMap(); }
+$('gridRows').oninput=()=>{ M.rows=Math.max(1, +$('gridRows').value||12); drawMap(); };
+$('gridCols').oninput=()=>{ M.cols=Math.max(1, +$('gridCols').value||16); drawMap(); };
+$('hexOrient').onchange=()=>{ M.orient=$('hexOrient').value; drawMap(); }
+$('coordStyle').onchange=()=>{ M.coordStyle=$('coordStyle').value; drawMap(); }
+$('gridOffX').oninput=()=>{ M.gridOffX=+$('gridOffX').value||0; drawMap(); }
+$('gridOffY').oninput=()=>{ M.gridOffY=+$('gridOffY').value||0; drawMap(); }
+$('gridAngle').oninput=()=>{ M.gridAngle=(+$('gridAngle').value||0)%360; drawMap(); }
+
+/* Terrängpensel */
+const brushSel=$('terrainBrush');
+function populateBrush(){
+  brushSel.innerHTML='';
+  for(const [tid,meta] of Object.entries(TERRA.palette)){
+    const opt=document.createElement('option'); opt.value=tid; opt.textContent=meta.label; brushSel.appendChild(opt);
+  }
+}
+populateBrush();
+
+/* Boards */
+$('addBoard').onclick=()=>$('boardFile').click();
+$('boardFile').onchange = async (ev) => {
+  const f=ev.target.files?.[0]; if(!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = async () => {
+    M.boards.push({name:f.name, src:url, x:0, y:0, rot:0, img});
+    activeBoardIndex = M.boards.length-1;
+    drawMap(); refreshBoardList(); loadBoardEditor();
+    
+    if (editorPassword) {
+      const reader = new FileReader();
+      reader.onload = async function() {
+        try {
+          const res = await fetch('https://taktikspel.onrender.com/api/spara-karta', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            alert('Kartbild uppladdad till servern: ' + f.name);
+          }
+        } catch(e) {
+          console.warn('Kunde inte ladda upp kartbild:', e);
+        }
+      };
+      reader.readAsDataURL(f);
+    }
+  };
+  img.src = url;
+};
+function refreshBoardList(){
+  const list=document.querySelectorAll('#view-map #boardList')[0]; if(!list) return;
+  list.innerHTML='';
+  M.boards.forEach((b,i)=>{
+    const d=document.createElement('div'); d.className='uitem'+(i===activeBoardIndex?' active':'');
+    d.innerHTML=`<b>${b.name}</b><div class="s">x:${b.x} y:${b.y} rot:${b.rot}</div>`;
+    d.onclick=()=>{ activeBoardIndex=i; loadBoardEditor(); refreshBoardList(); };
+    list.appendChild(d);
+  });
+}
+function loadBoardEditor(){
+  const b=M.boards[activeBoardIndex]; if(!b){ $('bName').value=''; $('bX').value=0; $('bY').value=0; $('bRot').value=0; return; }
+  $('bName').value=b.name; $('bX').value=b.x; $('bY').value=b.y; $('bRot').value=b.rot;
+}
+$('applyBoard').onclick=()=>{
+  const b=M.boards[activeBoardIndex]; if(!b) return;
+  b.name=$('bName').value||b.name; b.x=+$('bX').value||0; b.y=+$('bY').value||0; b.rot=+$('bRot').value||0;
+  drawMap(); refreshBoardList();
+};
+$('nL').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].x-=5; $('bX').value=M.boards[activeBoardIndex].x; drawMap(); refreshBoardList(); }
+$('nR').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].x+=5; $('bX').value=M.boards[activeBoardIndex].x; drawMap(); refreshBoardList(); }
+$('nU').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].y-=5; $('bY').value=M.boards[activeBoardIndex].y; drawMap(); refreshBoardList(); }
+$('nD').onclick=()=>{ if(activeBoardIndex<0) return; M.boards[activeBoardIndex].y+=5; $('bY').value=M.boards[activeBoardIndex].y; drawMap(); refreshBoardList(); }
+
+/* Grid/hex helpers */
+function hexPoints(cx,cy,r,orient){ const pts=[]; for(let i=0;i<6;i++){ const a = orient==='flat' ? Math.PI/180*(60*i) : Math.PI/180*(60*i+30); pts.push({x:cx+r*Math.cos(a), y:cy+r*Math.sin(a)}); } return pts;}
+function drawHex(cx,cy,r,orient){
+  const pts=hexPoints(cx,cy,r,orient);
+  mctx.beginPath();
+  mctx.moveTo(pts[0].x, pts[0].y);
+  for(let i=1;i<6;i++) mctx.lineTo(pts[i].x, pts[i].y);
+  mctx.closePath();
+}
+function gridLoop(cb){
+  const r=M.hexSize, dx=(M.orient==='flat')? 1.5*r : Math.sqrt(3)*r, dy=(M.orient==='flat')? Math.sqrt(3)*r : 1.5*r;
+  const maxC = M.cols || Math.ceil(mapCv.width/(dx))+2;
+const maxR = M.rows || Math.ceil(mapCv.height/(dy))+2;
+  for(let ri=0; ri<maxR; ri++){
+    for(let ci=0; ci<maxC; ci++){
+      const baseX = ci*dx, baseY = (M.orient==='flat')? ri*dy + ((ci%2)? dy/2:0) : ri*dy;
+      const cx = baseX + M.gridOffX, cy = (M.orient==='flat')? baseY + M.gridOffY : baseY + M.gridOffY + ((ci%2)? dy/2:0);
+      cb(ri,ci,cx,cy,r);
+    }
+  }
+}
+function letter(idx){ let s=''; idx=idx|0; do{ s=String.fromCharCode(65+(idx%26))+s; idx=Math.floor(idx/26)-1; }while(idx>=0); return s; }
+function hexKey(ri,ci){ return (M.coordStyle==='rowLetters') ? letter(ri)+(ci+1) : letter(ci)+(ri+1); }
+
+/* Rotation helpers */
+function rotAround(x,y,cx,cy,deg){
+  const a=deg*Math.PI/180, s=Math.sin(a), c=Math.cos(a);
+  const dx=x-cx, dy=y-cy;
+  return {x: cx + dx*c - dy*s, y: cy + dx*s + dy*c};
+}
+function invRotAround(x,y,cx,cy,deg){ return rotAround(x,y,cx,cy,-deg); }
+
+/* Kamera/ritning */
+function drawMap(){
+  mctx.setTransform(1,0,0,1,0,0);
+  mctx.clearRect(0,0,mapCv.width,mapCv.height);
+  mctx.setTransform(cam.z,0,0,cam.z,-cam.vx*cam.z,-cam.vy*cam.z);
+
+  // Bakgrundskartor
+  M.boards.forEach(b=>{
+    if(!b.img) return;
+    mctx.save();
+    mctx.translate(b.x, b.y);
+    if(b.rot){ mctx.translate(b.img.width/2,b.img.height/2); mctx.rotate(b.rot*Math.PI/180); mctx.translate(-b.img.width/2,-b.img.height/2); }
+    mctx.drawImage(b.img,0,0);
+    mctx.restore();
+  });
+
+  // Rotera grid
+  mctx.save();
+  if(M.gridAngle){ mctx.translate(M.gridOffX, M.gridOffY); mctx.rotate(M.gridAngle*Math.PI/180); mctx.translate(-M.gridOffX, -M.gridOffY); }
+
+  // Terrängmask
+  gridLoop((ri,ci,cx,cy,r)=>{
+    const key=hexKey(ri,ci); const t=M.terrain[key];
+    if(t){
+      mctx.save(); drawHex(cx,cy,r,M.orient);
+      mctx.fillStyle = TERRA.palette[t]?.color || 'rgba(255,255,255,0.08)'; mctx.globalAlpha = 0.35; mctx.fill(); mctx.restore();
+    }
+  });
+
+  // Grid + etiketter
+  mctx.strokeStyle='rgba(255,255,255,.18)'; mctx.lineWidth=1;
+  gridLoop((ri,ci,cx,cy,r)=>{
+    drawHex(cx,cy,r,M.orient); mctx.stroke();
+    if(M.showCoords){ const label=hexKey(ri,ci); mctx.fillStyle='#cfe0ff'; mctx.font='10px Segoe UI'; mctx.fillText(label, cx- r*0.3, cy+4); }
+  });
+
+  mctx.restore();
+}
+
+/* Pan/zoom + paint */
+mapCv.addEventListener('mousedown',e=>{
+  if(e.button===0 && (e.ctrlKey||e.altKey||e.shiftKey||e.metaKey)){ cam.pan=true; cam.lastX=e.clientX; cam.lastY=e.clientY; return; }
+  if(e.button===0){
+    const ws=screenToWorld(e.offsetX,e.offsetY);
+    const p=invRotAround(ws.x, ws.y, M.gridOffX, M.gridOffY, M.gridAngle);
+    paintAt(p.x,p.y, $('eraser').classList.contains('active'));
+  }
+});
+window.addEventListener('mousemove',e=>{
+  if(cam.pan){ const dx=e.clientX-cam.lastX, dy=e.clientY-cam.lastY; cam.vx -= dx/cam.z; cam.vy -= dy/cam.z; cam.lastX=e.clientX; cam.lastY=e.clientY; drawMap(); }
+});
+window.addEventListener('mouseup',()=> cam.pan=false);
+mapCv.addEventListener('wheel',e=>{
+  if(!(e.ctrlKey||e.altKey||e.metaKey)) return; e.preventDefault();
+  const rect=mapCv.getBoundingClientRect(); const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const wx=cam.vx+mx/cam.z, wy=cam.vy+my/cam.z;
+  cam.z=Math.min(6,Math.max(.25, cam.z*(e.deltaY<0?1.12:0.9))); cam.vx=wx-mx/cam.z; cam.vy=wy-my/cam.z; drawMap();
+},{passive:false});
+
+function worldToScreen(x,y){ return {x:(x-cam.vx)*cam.z, y:(y-cam.vy)*cam.z}; }
+function screenToWorld(x,y){ return {x:x/cam.z+cam.vx, y:y/cam.z+cam.vy}; }
+
+function nearestHexCenter(x,y){
+  let best={d:1e9,cx:x,cy:y,ri:0,ci:0};
+  gridLoop((ri,ci,cx,cy)=>{ const d=(cx-x)*(cx-x)+(cy-y)*(cy-y); if(d<best.d) best={d,cx,cy,ri,ci}; });
+  return best;
+}
+function paintAt(x,y,erase=false){
+  const n=nearestHexCenter(x,y); const key=hexKey(n.ri,n.ci);
+  if(erase){ delete M.terrain[key]; } else { const t=brushSel.value; if(t) M.terrain[key]=t; }
+  drawMap();
+}
+$('eraser').onclick=(e)=>{ e.target.classList.toggle('active'); };
+
+/* Export/Import Map */
+$('exportMap').onclick=()=>{
+  const data={hexSize:M.hexSize, orient:M.orient, coordStyle:M.coordStyle, gridAngle:M.gridAngle, gridOffX:M.gridOffX, gridOffY:M.gridOffY,
+    rows:M.rows, cols:M.cols,
+    terrain:M.terrain, boards:M.boards.map(b=>({name:b.name, x:b.x, y:b.y, rot:b.rot}))};
+  const fn = ($('mapFileName').value||'map.json').trim() || 'map.json';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download=fn; a.click(); URL.revokeObjectURL(a.href);
+};
+$('importMap').onclick=()=>$('mapJsonFile').click();
+$('mapJsonFile').onchange=(ev)=>{
+  const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{
+    const d=JSON.parse(r.result);
+    M.hexSize=d.hexSize||50; M.orient=d.orient||'flat'; M.coordStyle=d.coordStyle||'rowLetters';
+    M.gridAngle=d.gridAngle||0; M.gridOffX=d.gridOffX??80; M.gridOffY=d.gridOffY??80; M.terrain=d.terrain||{};
+    $('hexSize').value=M.hexSize; $('hexOrient').value=M.orient; $('coordStyle').value=M.coordStyle; $('gridOffX').value=M.gridOffX; $('gridOffY').value=M.gridOffY; $('gridAngle').value=M.gridAngle;
+    if(Array.isArray(d.boards)){ M.boards=d.boards.map(b=>({name:b.name, src:null, x:b.x||0, y:b.y||0, rot:b.rot||0, img:null})); activeBoardIndex = M.boards.length?0:-1; }
+    refreshBoardList(); loadBoardEditor(); drawMap(); alert('Karta inläst (bilder laddas om manuellt).');
+  }catch(e){ alert('Fel i map.json: '+e.message); } };
+  r.readAsText(f);
+};
+
+/* ================= UNITS ================= */
+let UNITS={schema:'taktik.units.v3', units:[]};
+let activeUnitIndex=-1;
+
+function typeKey(t){ return (t==='vehicle')?'veh' : (t==='gun')?'gun' : (t==='boat')?'boat' : 'inf'; }
+function defaultAllowedForType(t){ const out=[]; for(const [tid,e] of Object.entries(TERRA.effects)){ const mp=e.mp?.[typeKey(t)]; if(mp!=='N/A') out.push(tid); } return out; }
+function autoId(name,faction){ const n=(name||'unit').replace(/\s+/g,'_').replace(/[^A-Za-z0-9_]/g,''); const f=(faction||'').replace(/\s+/g,'').toUpperCase(); let base=(f?f+'_':'')+n; let id=base, i=1; while(UNITS.units.some(u=>u.id===id)) id=base+'_'+(++i); return id; }
+
+function ensureTerrainTable(){ const table = $('terrainMatrix'); if(!table){ console.error('Terrain table saknas.'); return null; } let tb = table.querySelector('tbody'); if(!tb){ tb=document.createElement('tbody'); table.appendChild(tb); } return tb; }
+function showTypePanels(){
+  const t=$('uType').value;
+  const specials=['larmminor','minor','dronare','indirektEld'];
+  const arSpecial = specials.includes(t);
+  $('statsSection').style.display   = arSpecial ? 'none' : 'block';
+  $('type-infantry').style.display  = (t==='infantry')   ? 'block' : 'none';
+  $('type-larmminor').style.display = (t==='larmminor')  ? 'block' : 'none';
+  $('type-minor').style.display     = (t==='minor')      ? 'block' : 'none';
+  $('type-dronare').style.display   = (t==='dronare')    ? 'block' : 'none';
+  $('type-indirektEld').style.display=(t==='indirektEld')? 'block' : 'none';
+}
+function buildTerrainMatrix(){
+  const tb=ensureTerrainTable(); if(!tb) return; tb.innerHTML='';
+  const utype=$('uType').value || 'infantry';
+  for(const [tid,meta] of Object.entries(TERRA.palette)){
+    const eff=TERRA.effects[tid]||{}; const defMP=eff.mp?.[typeKey(utype)];
+    const tr=document.createElement('tr'); tr.dataset.tid=tid;
+    const c0=document.createElement('td'); c0.innerHTML=`<b>${meta.label}</b><div class="s">${tid}</div>`;
+    const c1=document.createElement('td'); c1.style.textAlign='center'; const cb=document.createElement('input'); cb.type='checkbox'; c1.appendChild(cb);
+    const c2=document.createElement('td'); const inp=document.createElement('input'); inp.type='text'; inp.placeholder='(default)'; c2.appendChild(inp);
+    const c3=document.createElement('td'); c3.textContent=(defMP!=null)?String(defMP):'—';
+    const c4=document.createElement('td'); c4.textContent = `${eff.los?.blocks?'blocks':'ok'} / conceal ${eff.los?.conceal??0}`;
+    [cb,inp].forEach(el=>el.addEventListener('input',saveTerrainMatrix));
+    tr.append(c0,c1,c2,c3,c4); tb.appendChild(tr);
+  }
+  applyTypeDefaults(); saveTerrainMatrix();
+}
+function saveTerrainMatrix(){
+  const allowed=[]; const mpOverrides={};
+  document.querySelectorAll('#terrainMatrix tbody tr').forEach(tr=>{
+    const tid=tr.dataset.tid; const cb=tr.querySelector('input[type=checkbox]'); const iv=tr.querySelector('input[type=text]').value.trim();
+    if(cb?.checked) allowed.push(tid); if(iv!=='') mpOverrides[tid]=isNaN(Number(iv))? iv : Number(iv);
+  });
+  document.body.dataset.allowedTerrain=JSON.stringify(allowed);
+  document.body.dataset.mpOverrides=JSON.stringify(mpOverrides);
+}
+function formToUnit(readMatrix=true){
+  let allowed=[], mpOverrides={}; if(readMatrix){ try{ allowed=JSON.parse(document.body.dataset.allowedTerrain||'[]'); }catch{} try{ mpOverrides=JSON.parse(document.body.dataset.mpOverrides||'{}'); }catch{} }
+  const t=$('uType').value;
+  const obj={
+    id: $('uId').value || autoId($('uName').value,$('uFaction').value),
+    name: $('uName').value || $('uId').value,
+    faction: $('uFaction').value||'',
+    type: t,
+    size: $('uSize').value||'',
+    tags: ($('uTags').value||'').split(',').map(s=>s.trim()).filter(Boolean),
+    display:{ icon_front:$('uIconFull').value||'', icon_reduced:$('uIconReduced').value||'' },
+    stats:{
+      full:{ move:+($('uMoveF').value||0), range_hex:+($('uRangeF').value||0), fp_normal:+($('uFpNormF').value||0), fp_opfire:+($('uFpOFF').value||0),
+             morale:{normal:+($('uMorNF').value||0), yellow:+($('uMorYF').value||0), red:+($('uMorRF').value||0)} },
+      reduced:{ move:+($('uMoveR').value||0), range_hex:+($('uRangeR').value||0), fp_normal:+($('uFpNormR').value||0), fp_opfire:+($('uFpOFR').value||0),
+             morale:{normal:+($('uMorNR').value||0), yellow:+($('uMorYR').value||0), red:+($('uMorRR').value||0)} },
+      los_height:+($('uLosH').value||0), road_bonus:+($('uRoad').value||0)
+    },
+    movement:{ allowedTerrain:allowed, mpOverrides:mpOverrides },
+    transport:{
+      role: $('uTrole').value||'none',
+      capacity: +($('uTcap').value||0),
+      allowedTypes: ($('uTallow').value||'').split(',').map(s=>s.trim()).filter(Boolean),
+      tow:{ can: $('uTowCan').value==='yes', types: ($('uTowTypes').value||'').split(',').map(s=>s.trim()).filter(Boolean) }
+    },
+    typeExt:{}
+  };
+  if(t==='infantry'){
+    obj.typeExt.infantryAT={
+      enabled: $('infATon').value==='yes',
+      fp_normal:+($('infATfpN').value||0),
+      fp_opfire:+($('infATfpO').value||0),
+      range_hex:+($('infATrange').value||0),
+      shots_per_turn:+($('infATshots').value||1),
+      notes:$('infATnotes').value||''
+    };
+  }
+  if(t==='larmminor'){
+    obj.typeExt.larmminor={ triggerRadie:+($('alarmRadius').value||0) };
+  }
+  if(t==='minor'){
+    obj.typeExt.minor={ triggerRadie:+($('mineRadius').value||0), effekt:$('mineEffect').value||'suppressed' };
+  }
+  if(t==='dronare'){
+    obj.typeExt.dronare={ rörelsePRunda:+($('droneMove').value||6), losRadie:+($('droneLos').value||3), kanBekämpas:$('droneVulnerable').value==='yes' };
+  }
+  if(t==='indirektEld'){
+    obj.typeExt.indirektEld={ spridning:+($('artSpread').value||1), effektRadie:+($('artRadius').value||1), effektCentrum:$('artEffectCenter').value||'eliminated', effektPeriferi:$('artEffectEdge').value||'suppressed' };
+  }
+  return obj;
+}
+function loadUnitToForm(){
+  const u=UNITS.units[activeUnitIndex]; if(!u){ clearForm(); return; }
+  $('uId').value=u.id||''; $('uName').value=u.name||''; $('uFaction').value=u.faction||'';
+  $('uType').value=u.type||'infantry'; showTypePanels();
+  $('uSize').value=u.size||''; $('uTags').value=(u.tags||[]).join(', ');
+  $('uIconFull').value=u.display?.icon_front||''; $('uIconReduced').value=u.display?.icon_reduced||'';
+  $('uMoveF').value=u.stats?.full?.move??5; $('uRangeF').value=u.stats?.full?.range_hex??6; $('uFpNormF').value=u.stats?.full?.fp_normal??5; $('uFpOFF').value=u.stats?.full?.fp_opfire??3;
+  $('uMorNF').value=u.stats?.full?.morale?.normal??7; $('uMorYF').value=u.stats?.full?.morale?.yellow??6; $('uMorRF').value=u.stats?.full?.morale?.red??5;
+  $('uMoveR').value=u.stats?.reduced?.move??4; $('uRangeR').value=u.stats?.reduced?.range_hex??6; $('uFpNormR').value=u.stats?.reduced?.fp_normal??4; $('uFpOFR').value=u.stats?.reduced?.fp_opfire??2;
+  $('uMorNR').value=u.stats?.reduced?.morale?.normal??6; $('uMorYR').value=u.stats?.reduced?.morale?.yellow??5; $('uMorRR').value=u.stats?.reduced?.morale?.red??4;
+  $('uLosH').value=u.stats?.los_height??1; $('uRoad').value=u.stats?.road_bonus??0;
+
+  showTypePanels();
+  if(u.type==='infantry'){
+    const at=u.typeExt?.infantryAT||{enabled:false,fp_normal:0,fp_opfire:0,range_hex:0,shots_per_turn:1,notes:''};
+    $('infATon').value=at.enabled?'yes':'no'; $('infATfpN').value=at.fp_normal||0; $('infATfpO').value=at.fp_opfire||0; $('infATrange').value=at.range_hex||0; $('infATshots').value=at.shots_per_turn||1; $('infATnotes').value=at.notes||'';
+  }
+  if(u.type==='larmminor'){
+    const lm=u.typeExt?.larmminor||{}; $('alarmRadius').value=lm.triggerRadie??0;
+  }
+  if(u.type==='minor'){
+    const mn=u.typeExt?.minor||{}; $('mineRadius').value=mn.triggerRadie??0; $('mineEffect').value=mn.effekt||'suppressed';
+  }
+  if(u.type==='dronare'){
+    const dr=u.typeExt?.dronare||{}; $('droneMove').value=dr.rörelsePRunda??6; $('droneLos').value=dr.losRadie??3; $('droneVulnerable').value=dr.kanBekämpas?'yes':'no';
+  }
+  if(u.type==='indirektEld'){
+    const ie=u.typeExt?.indirektEld||{}; $('artSpread').value=ie.spridning??1; $('artRadius').value=ie.effektRadie??1; $('artEffectCenter').value=ie.effektCentrum||'eliminated'; $('artEffectEdge').value=ie.effektPeriferi||'suppressed';
+  }
+
+  buildTerrainMatrix();
+  const allowed=new Set(u.movement?.allowedTerrain||[]); const mpOv=u.movement?.mpOverrides||{};
+  document.querySelectorAll('#terrainMatrix tbody tr').forEach(tr=>{
+    const tid=tr.dataset.tid; tr.querySelector('input[type=checkbox]').checked = allowed.has(tid);
+    const iv=mpOv[tid]; tr.querySelector('input[type=text]').value=(iv!=null)?String(iv):'';
+  });
+  saveTerrainMatrix();
+  updatePreview();
+}
+function clearForm(){
+  document.querySelectorAll('#view-units input[type=text],#view-units input[type=number]').forEach(el=>el.value='');
+  $('uType').value='infantry'; showTypePanels();
+  $('uTrole').value='none'; $('uTowCan').value='no';
+  $('infATon').value='no'; $('infATshots').value=1;
+  $('uMoveF').value=5; $('uRangeF').value=6; $('uFpNormF').value=5; $('uFpOFF').value=3; $('uMorNF').value=7; $('uMorYF').value=6; $('uMorRF').value=5;
+  $('uMoveR').value=4; $('uRangeR').value=6; $('uFpNormR').value=4; $('uFpOFR').value=2; $('uMorNR').value=6; $('uMorYR').value=5; $('uMorRR').value=4;
+  $('uLosH').value=1; $('uRoad').value=1; $('prevMode').value='full';
+  buildTerrainMatrix(); applyTypeDefaults(); updatePreview();
+}
+
+/* Preview */
+$('prevMode').addEventListener('change',updatePreview);
+function updatePreview(){
+  const u=formToUnit();
+  const box=$('prevIcon'), txt=$('prevText'); box.innerHTML='';
+  const showReduced = ($('prevMode').value==='reduced');
+  const icon = showReduced ? (u.display.icon_reduced||u.display.icon_front) : (u.display.icon_front||u.display.icon_reduced);
+  if(icon && icon.trim()){
+  const img=new Image();
+  img.onload=()=>box.appendChild(img);
+  img.onerror=()=>{
+    if(!img.src.startsWith('https://')) {
+      img.src='https://taktikspel.onrender.com/'+icon;
+    } else {
+      box.innerHTML='<div class="s">bild ej hittad</div>';
+    }
+  };
+  img.src=icon;
+}
+  else{ box.innerHTML='<div class="s">ingen bild</div>'; }
+  const S = showReduced? u.stats.reduced : u.stats.full;
+  const mor=`${S.morale.normal}/${S.morale.yellow}/${S.morale.red}`;
+  let extra='';
+  if(u.type==='infantry' && u.typeExt?.infantryAT?.enabled){
+    const at=u.typeExt.infantryAT; extra+=` • AT FP:${at.fp_normal}(OP ${at.fp_opfire}) R:${at.range_hex} Sh:${at.shots_per_turn}`;
+  }
+  txt.innerHTML = `<b>${u.name||u.id}</b> <span class="s">[${u.faction||'-'} • ${u.type} • ${showReduced?'reduced':'full'}]</span><br>
+  FP:${S.fp_normal} (OP ${S.fp_opfire}) • R:${S.range_hex} • M:${S.move} • Mor:${mor} • LOS H:${u.stats.los_height} • Road:+${u.stats.road_bonus}${extra}`;
+}
+
+/* Defaults */
+function applyTypeDefaults(){
+  const utype=$('uType').value||'infantry';
+  const allowed=new Set(defaultAllowedForType(utype));
+  document.querySelectorAll('#terrainMatrix tbody tr').forEach(tr=>{
+    const tid=tr.dataset.tid; const cb=tr.querySelector('input[type=checkbox]'); if(cb) cb.checked = allowed.has(tid);
+    const inp=tr.querySelector('input[type=text]'); if(inp) inp.value='';
+  });
+  saveTerrainMatrix(); updatePreview();
+}
+
+/* Unit list */
+function refreshUnitList(){
+  const list=$('uList'); list.innerHTML='';
+  UNITS.units.forEach((u,i)=>{
+    const d=document.createElement('div'); d.className='uitem'+(i===activeUnitIndex?' active':'');
+    d.innerHTML=`<div><b>${u.name||u.id}</b></div>
+      <div class="s"><span class="badge">${u.faction||'-'}</span><span class="badge">${u.type||'-'}</span><span class="badge">size:${u.size||'-'}</span></div>
+      <div class="s">${u.id||''}</div>`;
+    d.onclick=()=>{ activeUnitIndex=i; loadUnitToForm(); refreshUnitList(); };
+    list.appendChild(d);
+  });
+}
+$('uNew').addEventListener('click',()=>{
+  const nu={ id:autoId('New_Unit',''), name:'New Unit', faction:'', type:'infantry', size:'squad', tags:[],
+    display:{icon_front:'',icon_reduced:''},
+    stats:{ full:{move:5,range_hex:6,fp_normal:5,fp_opfire:3,morale:{normal:7,yellow:6,red:5}},
+            reduced:{move:4,range_hex:6,fp_normal:4,fp_opfire:2,morale:{normal:6,yellow:5,red:4}},
+            los_height:1, road_bonus:1 },
+    movement:{ allowedTerrain:[], mpOverrides:{} },
+    transport:{ role:'none', capacity:0, allowedTypes:[], tow:{can:false, types:[]} },
+    typeExt:{ infantryAT:{enabled:false,fp_normal:0,fp_opfire:0,range_hex:0,shots_per_turn:1,notes:''} }
+  };
+  UNITS.units.push(nu); activeUnitIndex=UNITS.units.length-1; loadUnitToForm(); refreshUnitList(); applyTypeDefaults();
+});
+$('uDup').addEventListener('click',()=>{ if(activeUnitIndex<0) return; const copy=JSON.parse(JSON.stringify(UNITS.units[activeUnitIndex])); copy.id=autoId(copy.name,copy.faction); UNITS.units.splice(activeUnitIndex+1,0,copy); activeUnitIndex+=1; loadUnitToForm(); refreshUnitList(); });
+$('uDel').addEventListener('click',()=>{ if(activeUnitIndex<0) return; if(!confirm('Ta bort enheten?')) return; UNITS.units.splice(activeUnitIndex,1); activeUnitIndex=-1; clearForm(); refreshUnitList(); });
+$('uSave').addEventListener('click',()=>{ const u=formToUnit(true); if(activeUnitIndex<0){ UNITS.units.push(u); activeUnitIndex=UNITS.units.length-1; } else { UNITS.units[activeUnitIndex]=u; } refreshUnitList(); alert('Enhet sparad.'); });
+$('uClear').addEventListener('click',()=>{ if(!confirm('Rensa hela listan?')) return; UNITS={schema:'taktik.units.v3',units:[]}; activeUnitIndex=-1; clearForm(); refreshUnitList(); });
+$('uType').addEventListener('change',()=>{ showTypePanels(); buildTerrainMatrix(); applyTypeDefaults(); updatePreview(); });
+
+$('fileFull').addEventListener('change', async ev => {
+  const f = ev.target.files?.[0]; if (!f) return;
+  ev.target.value = '';
+  if (editorPassword) {
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const res = await fetch('https://taktikspel.onrender.com/api/spara-ikon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
+      });
+      const data = await res.json();
+    if (data.ok) {
+  $('uIconFull').value = 'assets/units/' + f.name;
+  const previewImg = URL.createObjectURL(f);
+  const box = $('prevIcon');
+  box.innerHTML = '';
+  const img = new Image();
+  img.onload = () => box.appendChild(img);
+  img.src = previewImg;
+  alert('Ikon uppladdad: ' + f.name);
+}
+    };
+    reader.readAsDataURL(f);
+  } else {
+    $('uIconFull').value = 'assets/units/' + f.name;
+    updatePreview();
+  }
+});
+
+$('fileRed').addEventListener('change', async ev => {
+  const f = ev.target.files?.[0]; if (!f) return;
+  ev.target.value = '';
+  if (editorPassword) {
+    const reader = new FileReader();
+    reader.onload = async function() {
+      const res = await fetch('https://taktikspel.onrender.com/api/spara-ikon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: editorPassword, filnamn: f.name, data: reader.result })
+      });
+      const data = await res.json();
+   if (data.ok) {
+  $('uIconReduced').value = 'assets/units/' + f.name;
+  const previewImg = URL.createObjectURL(f);
+  const box = $('prevIcon');
+  box.innerHTML = '';
+  const img = new Image();
+  img.onload = () => box.appendChild(img);
+  img.src = previewImg;
+  alert('Ikon uppladdad: ' + f.name);
+}
+    };
+    reader.readAsDataURL(f);
+  } else {
+    $('uIconReduced').value = 'assets/units/' + f.name;
+    updatePreview();
+  }
+});
+
+$('uImport').addEventListener('click',()=>$('uFile').click());
+$('uFile').addEventListener('change',ev=>{
+  const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{
+    const data=JSON.parse(r.result); if(!data.units) throw new Error('units[] saknas');
+    data.units.forEach(u=>{
+      u.stats=u.stats||{}; u.stats.full=u.stats.full||{move:5,range_hex:6,fp_normal:5,fp_opfire:3,morale:{normal:7,yellow:6,red:5}};
+      u.stats.reduced=u.stats.reduced||{move:4,range_hex:6,fp_normal:4,fp_opfire:2,morale:{normal:6,yellow:5,red:4}};
+      u.stats.los_height = (u.stats.los_height!=null)?u.stats.los_height:1; u.stats.road_bonus = (u.stats.road_bonus!=null)?u.stats.road_bonus:1;
+      u.display=u.display||{icon_front:'',icon_reduced:''};
+      u.movement=u.movement||{allowedTerrain:[],mpOverrides:{}};
+      u.transport=u.transport||{role:'none',capacity:0,allowedTypes:[],tow:{can:false,types:[]}};
+      u.typeExt=u.typeExt||{}; if(u.type==='infantry' && !u.typeExt.infantryAT){ u.typeExt.infantryAT={enabled:false,fp_normal:0,fp_opfire:0,range_hex:0,shots_per_turn:1,notes:''}; }
+    });
+    UNITS={schema:'taktik.units.v3', units:data.units}; activeUnitIndex = UNITS.units.length?0:-1;
+    loadUnitToForm(); refreshUnitList(); alert('Units importerade.');
+  }catch(e){ alert('Fel i units.json: '+e.message); } };
+  r.readAsText(f);
+});
+$('uExport').addEventListener('click',()=>{
+  const fn = ($('unitsFileName').value||'units.json').trim()||'units.json';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(UNITS,null,2)],{type:'application/json'}));
+  a.download=fn; a.click(); URL.revokeObjectURL(a.href);
+});
+
+/* ================= SCENARIO ================= */
+let SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:50, orient:'flat', coordStyle:'rowLetters', gridAngle:0, gridOffX:80, gridOffY:80, terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}};
+function refreshPools(){
+  const mk=(arr,side)=>{
+    const box=$(side+'Pool'); box.innerHTML='';
+    arr.forEach((p,i)=>{
+      const d=document.createElement('div'); d.className='uitem';
+      d.innerHTML=`<b>${p.id}</b> <span class="badge">x${p.count}</span> <span class="badge">${p.state}</span>
+      <div class="s">zon:${p.startZone||'-'} • runda:${p.startRound}${p.startHex?' • starthex:'+p.startHex:''}</div>`;
+      d.onclick=()=>{ if(confirm('Ta bort?')){ arr.splice(i,1); refreshPools(); } };
+      box.appendChild(d);
+    });
+  };
+  mk(SC.orbat.blue,'blue'); mk(SC.orbat.red,'red');
+}
+function boardSnapshot(){
+  SC.boards = M.boards.map((b,i)=>({name:b.name,x:b.x,y:b.y,rot:b.rot, index:i}));
+  SC.map = {hexSize:M.hexSize, orient:M.orient, coordStyle:M.coordStyle, gridAngle:M.gridAngle, gridOffX:M.gridOffX, gridOffY:M.gridOffY, terrain:M.terrain};
+}
+$('scBindBoards').onclick=()=>{ boardSnapshot(); refreshBoardList(); alert('Scenariots kartor uppdaterade från Karteditor.'); };
+function refreshBoardList(){
+  const list = document.querySelectorAll('#view-scenario #boardList')[0]; if(!list) return; list.innerHTML='';
+  if(!SC.boards || !SC.boards.length){ list.innerHTML='<div class="s">— Inga kartor kopplade ännu —</div>'; return; }
+  SC.boards.forEach((b,i)=>{ const d=document.createElement('div'); d.className='uitem'; d.innerHTML=`<b>${b.name}</b><div class="s">x:${b.x} y:${b.y} rot:${b.rot}</div>`; list.appendChild(d); });
+}
+
+/* Unit picker */
+function refreshUnitPicker(){
+  const dl=$('unitList'); dl.innerHTML='';
+  UNITS.units.forEach(u=>{
+    const opt=document.createElement('option'); opt.value=u.id; opt.label=`${u.name||u.id} [${u.type}]`; dl.appendChild(opt);
+  });
+}
+const specialTyper = ['larmminor','minor','dronare','indirektEld'];
+
+function refreshResPicker(){
+  const dl=$('resList'); dl.innerHTML='';
+  UNITS.units.filter(u=>specialTyper.includes(u.type)).forEach(u=>{
+    const opt=document.createElement('option'); opt.value=u.id; opt.label=`${u.name||u.id} [${u.type}]`; dl.appendChild(opt);
+  });
+}
+
+function refreshResPools(){
+  const mk=(arr,side)=>{
+    const box=$(side+'ResPool'); box.innerHTML='';
+    if(!arr||!arr.length){ box.innerHTML='<div class="s">— Inga resurser —</div>'; return; }
+    arr.forEach((p,i)=>{
+      const def=UNITS.units.find(u=>u.id===p.id);
+      const d=document.createElement('div'); d.className='uitem';
+      d.innerHTML=`<b>${p.id}</b> <span class="badge">x${p.count}</span> <span class="badge">${def?.type||'?'}</span>`;
+      d.onclick=()=>{ if(confirm('Ta bort?')){ arr.splice(i,1); refreshResPools(); } };
+      box.appendChild(d);
+    });
+  };
+  if(!SC.resurser) SC.resurser={blue:[],red:[]};
+  mk(SC.resurser.blue,'blue'); mk(SC.resurser.red,'red');
+}
+
+$('addResToScenario').onclick=()=>{
+  const id=$('resPicker').value.trim(); if(!id){ alert('Välj en resurs'); return; }
+  const def=UNITS.units.find(u=>u.id===id);
+  if(!def||!specialTyper.includes(def.type)){ alert('Enheten finns inte eller är inte en specialresurs'); return; }
+  const side=$('resSide').value; const count=+($('resCount').value||1);
+  if(!SC.resurser) SC.resurser={blue:[],red:[]};
+  SC.resurser[side].push({id,count});
+  $('resPicker').value=''; refreshResPools();
+};
+
+$('addUnitToScenario').onclick=()=>{
+  const id = $('unitPicker').value.trim(); if(!id){ alert('Välj enhet (id)'); return; }
+  const side=$('unitSide').value; const count=+($('unitCount').value||1);
+  const state=$('unitStartState').value; const startZone=$('unitStartZone').value.trim(); const startRound=+($('unitStartRound').value||0);
+  const startHex=$('unitStartHex').value.trim().toUpperCase();
+  const item={id,count,state,startZone,startRound,...(startHex?{startHex}:{})};
+  if(side==='blue'){ SC.orbat.blue.push(item); } else { SC.orbat.red.push(item); }
+  $('unitPicker').value=''; $('unitStartHex').value=''; refreshPools();
+};
+
+function fillScenarioForm(){
+  $('scTitle').value=SC.title||''; $('scDesc').value=SC.desc||'';
+  $('scRounds').value=SC.rounds||6; $('scInit').value=SC.initiative||'Blue'; $('scSetupMin').value=SC.setupMin||0;
+  $('scVC').value=SC.vc||''; $('scBlueZones').value=SC.setup?.blue||''; $('scRedZones').value=SC.setup?.red||'';
+  $('scBlueOrder').value=SC.order?.blue||''; $('scRedOrder').value=SC.order?.red||'';
+  refreshBoardList(); refreshUnitPicker(); refreshPools(); refreshResPicker(); refreshResPools();
+  if (typeof fillAiForm === 'function') fillAiForm();
+}
+function readScenarioForm(){
+  SC.title=$('scTitle').value||''; SC.desc=$('scDesc').value||'';
+  SC.rounds=+($('scRounds').value||6); SC.initiative=$('scInit').value||'Blue'; SC.setupMin=+($('scSetupMin').value||0);
+  SC.vc=$('scVC').value||''; SC.setup.blue=$('scBlueZones').value||''; SC.setup.red=$('scRedZones').value||'';
+  if (!SC.order) SC.order={blue:'',red:''};
+  SC.order.blue=$('scBlueOrder').value||''; SC.order.red=$('scRedOrder').value||'';
+  if (!SC.resurser) SC.resurser={blue:[],red:[]};
+  if (typeof readAiForm === 'function') readAiForm();
+}
+$('scNew').onclick=()=>{ SC={title:'',desc:'',rounds:6,initiative:'Blue',setupMin:0, vc:'', order:{blue:'',red:''}, boards:[], map:{hexSize:M.hexSize,orient:M.orient,coordStyle:M.coordStyle,gridAngle:M.gridAngle,gridOffX:M.gridOffX,gridOffY:M.gridOffY,terrain:{}}, setup:{blue:'',red:''}, orbat:{blue:[],red:[]}, resurser:{blue:[],red:[]}, aiRules:{}, aiMallar:{}, aiRulesBlue:{}, aiMallarBlue:{}, alltidAiEnheter:[], observatörsFas:{aktiv:false,autoRundByte:true,rundFördröjning:2,slutVillkor:'runda',slutRunda:3,slutEnhet:'',slutHex:'',modal:{titel:'',text:'',bild:'',knapp:'Ta befälet!'}}, soloWinCondition:{type:'take_hex',target:'',rounds:null}, soloSvårighet:'normal', soloKompatibel:false}; fillScenarioForm(); alert('Nytt scenario.'); };
+$('scImport').onclick=()=>$('scFile').click();
+$('scFile').onchange=(ev)=>{
+  const f=ev.target.files?.[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ SC=JSON.parse(r.result); fillScenarioForm(); alert('Scenario importerat.'); }catch(e){ alert('Fel i scenario.json: '+e.message); } };
+  r.readAsText(f);
+};
+$('scExport').onclick=()=>{
+  readScenarioForm(); boardSnapshot();
+  const fn = ($('scFileName').value||'scenario.json').trim()||'scenario.json';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(SC,null,2)],{type:'application/json'}));
+  a.download=fn; a.click(); URL.revokeObjectURL(a.href);
+};
+$('scExportPaket').onclick=()=>{
+  readScenarioForm(); boardSnapshot();
+  
+  const paket = {
+    version: '1.0',
+   map: {
+      hexSize: M.hexSize,
+      orient: M.orient,
+      coordStyle: M.coordStyle,
+      gridAngle: M.gridAngle,
+      gridOffX: M.gridOffX,
+      gridOffY: M.gridOffY,
+      rows: M.rows,
+      cols: M.cols,
+      terrain: M.terrain,
+      boards: M.boards.map(b=>({name:b.name, x:b.x, y:b.y, rot:b.rot}))
+    },
+    units: UNITS,
+    scenario: SC
+  };
+
+  const titel = (SC.title||'spelpaket').replace(/\s+/g,'_').toLowerCase();
+  const fn = titel + '.json';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(paket,null,2)],{type:'application/json'}));
+  a.download = fn;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  alert('Spelpaket exporterat: ' + fn);
+};
+/* Scenariokort (PNG) – med kartbild */
+$('scGenCard').onclick=()=>{
+  readScenarioForm(); boardSnapshot();
+  const c=$('scCard'), ctx=c.getContext('2d'); c.width=1000; c.height=1400;
+  // Bakgrund
+  ctx.fillStyle='#f6f8ff'; ctx.fillRect(0,0,c.width,c.height);
+  ctx.fillStyle='#0d1b34'; ctx.fillRect(0,0,c.width,84);
+  ctx.fillStyle='#fff'; ctx.font='bold 30px Segoe UI'; ctx.fillText(SC.title||'Scenario',24,52);
+
+  // Textblock vänster
+  let y=120;
+  ctx.fillStyle='#0d1b34'; ctx.font='bold 20px Segoe UI'; ctx.fillText('Beskrivning',24,y);
+  y+=10; ctx.font='16px Segoe UI'; y = drawPara(ctx, SC.desc||'-', 24, y+18, 560, 22);
+
+  y+=18; ctx.font='bold 20px Segoe UI'; ctx.fillText('Rundor / Initiativ / Setup',24,y);
+  y+=8; ctx.font='16px Segoe UI'; ctx.fillText(`Rundor: ${SC.rounds}  •  Init: ${SC.initiative}  •  Setup (min): ${SC.setupMin}`,24,y+22);
+  y+=44; ctx.font='bold 20px Segoe UI'; ctx.fillText('Segervillkor',24,y);
+  y+=10; ctx.font='16px Segoe UI'; y = drawPara(ctx, SC.vc||'-', 24, y+18, 560, 22);
+
+  // Orbat kolumner
+  y+=14; ctx.font='bold 20px Segoe UI'; ctx.fillText('Blue',24,y); ctx.fillText('Red',300,y);
+  const orbatTop=y+10; ctx.font='16px Segoe UI';
+  const blueLines=(SC.orbat.blue||[]).map(p=>`×${p.count} ${p.id} • ${p.state} • r:${p.startRound} • ${p.startZone||'-'}`);
+  const redLines=(SC.orbat.red||[]).map(p=>`×${p.count} ${p.id} • ${p.state} • r:${p.startRound} • ${p.startZone||'-'}`);
+  let yB = drawPara(ctx, blueLines.join('\n')||'-', 24, orbatTop+18, 260, 20);
+  let yR = drawPara(ctx, redLines.join('\n')||'-', 300, orbatTop+18, 260, 20);
+  const bottomLeft = Math.max(yB,yR)+10;
+
+  // Kartbild till höger (snapshot av live-kartan i editor)
+  const mapShot = mapCv;
+  const imgW = 380, imgH = 380;
+  ctx.fillStyle='#0d1b34'; ctx.font='bold 20px Segoe UI'; ctx.fillText('Karta (översikt)', 600, 120);
+  ctx.strokeStyle='#0d1b34'; ctx.strokeRect(600, 135, imgW+8, imgH+8);
+  ctx.drawImage(mapShot, 600+4, 135+4, imgW, imgH);
+
+  // Setup-zoner box
+  ctx.font='bold 18px Segoe UI'; ctx.fillText('Setup-zoner', 600, 550);
+  ctx.font='16px Segoe UI';
+  drawPara(ctx, `Blue: ${SC.setup.blue||'-'}`, 600, 574, 380, 20);
+  drawPara(ctx, `Red: ${SC.setup.red||'-'}`, 600, 598, 380, 20);
+
+  // Terränglegend
+  ctx.font='bold 16px Segoe UI'; ctx.fillText('Terränglegend', 24, 1080);
+  let lx=24, ly=1104, count=0;
+  for(const [tid,p] of Object.entries(TERRA.palette)){
+    ctx.fillStyle=p.color; ctx.fillRect(lx,ly,22,14);
+    ctx.fillStyle='#0d1b34'; ctx.font='14px Segoe UI'; ctx.fillText(p.label, lx+28, ly+12);
+    lx+=160; count++; if(count%3===0){ lx=24; ly+=22; }
+    if(ly>1340) break;
+  }
+
+  const a=$('scCardDL'); a.style.display='inline-block'; a.href=c.toDataURL('image/png'); a.download='scenario_card.png';
+  alert('Scenariokort genererat. Klicka "Ladda ner kort".');
+};
+function drawPara(ctx, text, x, y, maxW, lh){
+  const lines=(text||'').toString().split('\n'); let yy=y;
+  lines.forEach(ln=>{ wrap(ctx,ln,maxW).forEach(ch=>{ ctx.fillText(ch,x,yy); yy+=lh; }); });
+  return yy;
+}
+function wrap(ctx, text, maxW){
+  const words=(text||'').split(' '), out=[]; let line='';
+  words.forEach(w=>{ const t=line? line+' '+w : w; if(ctx.measureText(t).width>maxW){ if(line) out.push(line); line=w; } else line=t; });
+  if(line) out.push(line); return out;
+}
+
+/* ===== Välj ikon från server ===== */
+let serverIkonTarget = 'full';
+
+async function visaServerIkonModal() {
+  const modal = $('serverIkonModal');
+  const grid  = $('serverIkonGrid');
+  modal.style.display = 'flex';
+  grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Hämtar ikoner från servern…</div>';
+  try {
+    const res  = await fetch(SERVER + '/api/ikoner');
+    const data = await res.json();
+    if (!data.ikoner || !data.ikoner.length) {
+      grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Inga ikoner hittades på servern.</div>';
+      return;
+    }
+    grid.innerHTML = '';
+    data.ikoner.forEach(filnamn => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style.cssText = 'padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;height:auto';
+      const img = document.createElement('img');
+      img.src = SERVER + '/assets/units/' + filnamn;
+      img.style.cssText = 'width:64px;height:64px;object-fit:contain;image-rendering:pixelated';
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:10px;word-break:break-all;color:#9fb1d4;max-width:80px;text-align:center';
+      lbl.textContent = filnamn;
+      btn.appendChild(img);
+      btn.appendChild(lbl);
+      btn.onclick = () => {
+        const sökväg = 'assets/units/' + filnamn;
+        if (serverIkonTarget === 'full') {
+          $('uIconFull').value = sökväg;
+        } else {
+          $('uIconReduced').value = sökväg;
+        }
+        updatePreview();
+        modal.style.display = 'none';
+      };
+      grid.appendChild(btn);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="color:#ff6b6b;grid-column:1/-1">Kunde inte nå servern: ' + e.message + '</div>';
+  }
+}
+
+/* ===== Hämta kartbild från server ===== */
+async function visaServerKartaModal() {
+  const modal = $('serverKartaModal');
+  const grid  = $('serverKartaGrid');
+  modal.style.display = 'flex';
+  grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Hämtar kartbilder från servern…</div>';
+  try {
+    const res  = await fetch(SERVER + '/api/kartor');
+    const data = await res.json();
+    if (!data.kartor || !data.kartor.length) {
+      grid.innerHTML = '<div style="color:#9fb1d4;grid-column:1/-1">Inga kartbilder hittades på servern.</div>';
+      return;
+    }
+    grid.innerHTML = '';
+    data.kartor.forEach(filnamn => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style.cssText = 'padding:6px;display:flex;flex-direction:column;align-items:center;gap:6px;height:auto';
+      const img = document.createElement('img');
+      img.src = SERVER + '/kartor/' + filnamn;
+      img.style.cssText = 'width:100%;height:100px;object-fit:cover;border-radius:6px;background:#0a0f24';
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'font-size:11px;color:#9fb1d4;word-break:break-all;text-align:center';
+      lbl.textContent = filnamn;
+      btn.appendChild(img);
+      btn.appendChild(lbl);
+      btn.onclick = () => {
+        const url = SERVER + '/kartor/' + filnamn;
+        const bild = new Image();
+        bild.onload = () => {
+          M.boards.push({ name: filnamn, src: url, x: 0, y: 0, rot: 0, img: bild });
+          activeBoardIndex = M.boards.length - 1;
+          drawMap(); refreshBoardList(); loadBoardEditor();
+        };
+        bild.src = url;
+        modal.style.display = 'none';
+      };
+      grid.appendChild(btn);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="color:#ff6b6b;grid-column:1/-1">Kunde inte nå servern: ' + e.message + '</div>';
+  }
+}
+
+/* ===== Init ===== */
+function safeInit(){
+  $('gridRows').value = M.rows || 12;
+  $('gridCols').value = M.cols || 16;
+  drawMap(); showTypePanels(); ensureTerrainTable(); buildTerrainMatrix(); applyTypeDefaults(); refreshUnitList(); updatePreview();
+  fillScenarioForm(); refreshUnitPicker(); refreshPools();
+  $('pickFull').addEventListener('click', () => $('fileFull').click());
+  $('pickRed').addEventListener('click', () => $('fileRed').click());
+  $('pickFullServer').addEventListener('click', () => { serverIkonTarget = 'full'; visaServerIkonModal(); });
+  $('pickRedServer').addEventListener('click', () => { serverIkonTarget = 'reduced'; visaServerIkonModal(); });
+  $('serverIkonStangBtn').onclick = () => { $('serverIkonModal').style.display = 'none'; };
+  $('addBoardServer').onclick = visaServerKartaModal;
+  $('serverKartaStangBtn').onclick = () => { $('serverKartaModal').style.display = 'none'; };
+  console.log('v1.17.3 init klar');
+}
+document.addEventListener('DOMContentLoaded', safeInit);
+/* ===== LOGIN ===== */
+let editorPassword = '';
+
+document.getElementById('loginBtn').onclick = async function() {
+  const pw = document.getElementById('loginLösen').value;
+  if (!pw) return;
+  
+  const res = await fetch('https://taktikspel.onrender.com/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pw })
+  });
+  const data = await res.json();
+  
+  if (data.ok) {
+    editorPassword = pw;
+    document.getElementById('loginPanel').style.display = 'none';
+  } else {
+    document.getElementById('loginStatus').textContent = 'Fel lösenord!';
+  }
+};
+
+document.getElementById('loginLösen').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+/* ===== SERVER PUBLICERING ===== */
+const SERVER = 'https://taktikspel.onrender.com';
+
+// Publicera spelpaket
+document.getElementById('scPublicera').onclick = async function() {
+  if (!editorPassword) { alert('Logga in först!'); return; }
+  readScenarioForm(); boardSnapshot();
+  
+  const paket = {
+    version: '1.0',
+    map: {
+      hexSize: M.hexSize, orient: M.orient, coordStyle: M.coordStyle,
+      gridAngle: M.gridAngle, gridOffX: M.gridOffX, gridOffY: M.gridOffY,
+      rows: M.rows, cols: M.cols, terrain: M.terrain,
+      boards: M.boards.map(b=>({name:b.name, x:b.x, y:b.y, rot:b.rot}))
+    },
+    units: UNITS,
+    scenario: SC
+  };
+
+  const titel = (SC.title||'spelpaket').replace(/\s+/g,'_').toLowerCase();
+  const filnamn = titel + '.json';
+
+  try {
+    const res = await fetch(SERVER + '/api/spara-paket', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: editorPassword, filnamn, data: paket })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert('Spelpaket publicerat: ' + filnamn);
+    } else {
+      alert('Fel: ' + data.error);
+    }
+  } catch(e) {
+    alert('Kunde inte nå servern: ' + e.message);
+  }
+};
+
+// Ladda upp kartbild
+document.getElementById('laddaUppKarta').onclick = () => document.getElementById('kartaFil').click();
+document.getElementById('kartaFil').onchange = async function() {
+  const fil = this.files?.[0];
+  if (!fil || !editorPassword) return;
+  
+  const reader = new FileReader();
+  reader.onload = async function() {
+    try {
+      const res = await fetch(SERVER + '/api/spara-karta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: editorPassword,
+          filnamn: fil.name,
+          data: reader.result
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert('Kartbild uppladdad: ' + fil.name);
+      } else {
+        alert('Fel: ' + data.error);
+      }
+    } catch(e) {
+      alert('Kunde inte nå servern: ' + e.message);
+    }
+  };
+  reader.readAsDataURL(fil);
+};
+
+// Ladda upp enhetsikoner
+document.getElementById('laddaUppIkon').onclick = () => document.getElementById('ikonFil').click();
+document.getElementById('ikonFil').onchange = async function() {
+  if (!editorPassword) return;
+  const filer = Array.from(this.files);
+  let ok = 0;
+  
+  for (const fil of filer) {
+    const reader = new FileReader();
+    await new Promise(resolve => {
+      reader.onload = async function() {
+        try {
+          const res = await fetch(SERVER + '/api/spara-ikon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              password: editorPassword,
+              filnamn: fil.name,
+              data: reader.result
+            })
+          });
+          const data = await res.json();
+          if (data.ok) ok++;
+        } catch(e) {}
+        resolve();
+      };
+      reader.readAsDataURL(fil);
+    });
+  }
+  alert(ok + ' av ' + filer.length + ' ikoner uppladdade!');
+};
+
+// Hämta scenario från server
+const SERVER_URL = 'https://taktikspel.onrender.com';
+
+$('scHamtaServer').onclick = async () => {
+  const modal = document.getElementById('serverScenarioModal');
+  const lista = document.getElementById('serverScenarioLista');
+  modal.style.display = 'flex';
+  lista.innerHTML = '<div style="color:#9fb1d4">Hämtar scenarios från servern…</div>';
+  try {
+    const res  = await fetch(SERVER_URL + '/api/paket');
+    const data = await res.json();
+    if (!data.paket || !data.paket.length) {
+      lista.innerHTML = '<div style="color:#9fb1d4">Inga scenarios på servern.</div>';
+      return;
+    }
+    lista.innerHTML = '';
+    data.paket.forEach(filnamn => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style = 'width:100%;margin-bottom:8px;text-align:left';
+      btn.textContent = filnamn.replace('.json', '');
+      btn.onclick = async () => {
+        modal.style.display = 'none';
+        const paketRes = await fetch(SERVER_URL + '/paket/' + filnamn);
+        const paket    = await paketRes.json();
+        // Ladda in alla delar av paketet i editorn
+        if (paket.map) {
+          M = paket.map;
+          if (!M.snap) M.snap = true;
+          if (M.showCoords === undefined) M.showCoords = true;
+          if (Array.isArray(M.boards)) {
+            M.boards.forEach(b => {
+              if (b.name && !b.img) {
+                const bild = new Image();
+                bild.onload = () => {
+                  b.img = bild;
+                  drawMap();
+                  if (document.getElementById('view-ai').classList.contains('active')) renderAiKarta();
+                };
+                bild.src = SERVER_URL + '/kartor/' + b.name;
+              }
+            });
+          }
+        }
+        if (paket.scenario) { SC = paket.scenario; if (!SC.order) SC.order = {blue:'',red:''}; }
+        if (paket.units)    { UNITS = paket.units; }
+        $('scFileName').value = filnamn;
+        fillScenarioForm();
+        if (typeof refreshUnitPicker === 'function') refreshUnitPicker();
+        if (typeof refreshPools      === 'function') refreshPools();
+        if (typeof drawAll           === 'function') drawAll();
+        alert('Scenario "' + filnamn.replace('.json','') + '" hämtat från servern.');
+      };
+      lista.appendChild(btn);
+    });
+  } catch(e) {
+    lista.innerHTML = '<div style="color:#ff6b6b">Kunde inte nå servern: ' + e.message + '</div>';
+  }
+};
+const _stangScenarioBtn = document.getElementById('serverScenarioStangBtn');
+if (_stangScenarioBtn) _stangScenarioBtn.onclick = () => {
+  document.getElementById('serverScenarioModal').style.display = 'none';
+};
+
+/* ================= AI-REGLER ================= */
+
+let aiSida = 'red';
+
+function setAiSida(sida) {
+  aiSida = sida;
+  const blåBtn = $('aiSidaBlåBtn');
+  const rödBtn = $('aiSidaRödBtn');
+  if (blåBtn) blåBtn.className = sida === 'blue' ? 'btn pri' : 'btn';
+  if (rödBtn) rödBtn.className = sida === 'red'  ? 'btn pri' : 'btn';
+  const lbl = $('aiEnhetSelLabel');
+  if (lbl) lbl.textContent = sida === 'blue' ? 'Välj Blue-enhet' : 'Välj Red-enhet';
+  refreshAiEnhetsPicker();
+  const isEnkel = document.getElementById('aiEnkelDiv')?.style.display !== 'none';
+  if (isEnkel) fillEnkelvy($('aiEnhetSel')?.value || '');
+  else refreshAiRegler();
+}
+
+async function ovLaddaBilderLista() {
+  const sel = $('ovModalBildVälj');
+  if (!sel) return;
+  const current = $('ovModalBild')?.value || '';
+  try {
+    const res  = await fetch(SERVER + '/api/bilder');
+    const data = await res.json();
+    while (sel.options.length > 1) sel.remove(1);
+    for (const f of (data.bilder || [])) {
+      const opt = document.createElement('option');
+      opt.value = SERVER + '/bilder/' + f;
+      opt.textContent = f;
+      if (opt.value === current) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    if (!current) sel.value = '';
+  } catch(e) {}
+}
+
+function ovVäljBild(url) {
+  if ($('ovModalBild')) $('ovModalBild').value = url || '';
+  ovUppdateraBildPreview(url);
+}
+
+function ovUppdateraBildPreview(url) {
+  const wrap = $('ovModalBildPreviewWrap');
+  const img  = $('ovModalBildPreviewImg');
+  if (!wrap || !img) return;
+  if (url) {
+    img.src = url;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+    img.src = '';
+  }
+}
+
+function ovRensaBild() {
+  if ($('ovModalBild'))    $('ovModalBild').value = '';
+  if ($('ovModalBildVälj')) $('ovModalBildVälj').value = '';
+  ovUppdateraBildPreview('');
+}
+
+async function ovLaddaUppBild(input) {
+  const fil = input.files?.[0];
+  if (!fil || !editorPassword) return;
+  input.value = '';
+  const status = $('ovModalBildStatus');
+  if (status) status.textContent = 'Laddar upp…';
+  const reader = new FileReader();
+  reader.onload = async function() {
+    try {
+      const res  = await fetch(SERVER + '/api/spara-bild', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: editorPassword, filnamn: fil.name, data: reader.result })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (status) status.textContent = '✓ Uppladdad!';
+        setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+        const url = SERVER + '/bilder/' + fil.name;
+        if ($('ovModalBild')) $('ovModalBild').value = url;
+        ovUppdateraBildPreview(url);
+        await ovLaddaBilderLista();
+        if ($('ovModalBildVälj')) $('ovModalBildVälj').value = url;
+      } else {
+        if (status) status.textContent = 'Fel: ' + (data.error || 'okänt');
+      }
+    } catch(e) {
+      if (status) status.textContent = 'Kunde inte nå servern';
+    }
+  };
+  reader.readAsDataURL(fil);
+}
+
+function ovFasVillkorChange() {
+  const aktiv    = $('ovFasAktiv')?.checked;
+  const inst     = $('ovFasInst');
+  if (inst) inst.style.display = aktiv ? 'block' : 'none';
+  const villkor  = $('ovSlutVillkor')?.value || 'runda';
+  const rundaFält = $('ovRundaFält');
+  const hexFält   = $('ovHexFält');
+  if (rundaFält) rundaFält.style.display = (villkor === 'runda' || villkor === 'kombinerat') ? 'block' : 'none';
+  if (hexFält)   hexFält.style.display   = (villkor === 'hex'   || villkor === 'kombinerat') ? 'block' : 'none';
+}
+
+function refreshAiEnhetsPicker() {
+  const sel = $('aiEnhetSel');
+  if (!sel) { console.warn('[AI] aiEnhetSel hittades inte i DOM'); return; }
+  sel.innerHTML = '<option value="">— välj enhet —</option>';
+  const specialTyper = ['larmminor','minor','dronare','indirektEld'];
+  const sideOrbat = (aiSida === 'blue' ? SC.orbat?.blue : SC.orbat?.red) || [];
+
+  const sidLabel = aiSida === 'blue' ? 'Blue' : 'Red';
+  if (sideOrbat.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = `I detta scenario (${sidLabel})`;
+    sideOrbat.forEach(rad => {
+      const opt = document.createElement('option');
+      opt.value = rad.id;
+      opt.textContent = rad.id + (rad.count > 1 ? ' ×'+rad.count : '');
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+
+  // Visa alla övriga enheter från biblioteket (inte special, inte redan i orbat)
+  const orbatIds = new Set(sideOrbat.map(r => r.id));
+  const övriga = (UNITS.units || []).filter(u =>
+    !specialTyper.includes(u.type) && !orbatIds.has(u.id)
+  );
+  if (övriga.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = sideOrbat.length > 0 ? 'Övriga enheter (bibliotek)' : 'Alla enheter (bibliotek)';
+    övriga.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.id;
+      opt.textContent = (u.name || u.id) + (u.faction ? ' ['+u.faction+']' : '');
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+
+  if (sideOrbat.length === 0 && övriga.length === 0) {
+    const opt = document.createElement('option');
+    opt.disabled = true;
+    opt.textContent = '— Inga enheter laddade ännu —';
+    sel.appendChild(opt);
+  }
+}
+
+function refreshAiRegler() {
+  const enhetId = $('aiEnhetSel').value;
+  const lista   = $('aiRegelLista');
+  const sidLabel = aiSida === 'blue' ? 'Blue' : 'Red';
+  if (!enhetId) {
+    lista.innerHTML = `<div class="s">— Välj en ${sidLabel}-enhet ovan —</div>`;
+    return;
+  }
+  if (!SC.aiRules)     SC.aiRules = {};
+  if (!SC.aiRulesBlue) SC.aiRulesBlue = {};
+  const rulesStore = aiSida === 'blue' ? SC.aiRulesBlue : SC.aiRules;
+  const regler = rulesStore[enhetId] || [];
+  if (!regler.length) {
+    lista.innerHTML = '<div class="s">— Inga regler än. Lägg till nedan. —</div>';
+    return;
+  }
+  lista.innerHTML = '';
+  regler.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'uitem';
+    div.innerHTML =
+      `<div style="display:flex;align-items:center;gap:6px">
+        <span style="flex:1;font-size:13px">
+          <b>${i+1}.</b> ${aiCondText(r)} &rarr; ${aiActText(r)}
+        </span>
+        <button class="btn" onclick="aiFlyttaUpp('${enhetId}',${i},'${aiSida}')" ${i===0?'disabled':''}>↑</button>
+        <button class="btn" onclick="aiFlyttaNer('${enhetId}',${i},'${aiSida}')" ${i===regler.length-1?'disabled':''}>↓</button>
+        <button class="btn bad" onclick="aiTaBort('${enhetId}',${i},'${aiSida}')">✕</button>
+      </div>`;
+    lista.appendChild(div);
+  });
+}
+
+function aiCondText(r) {
+  switch(r.condition) {
+    case 'enemy_within':     return `OM fiende inom ${r.value||'?'} hex`;
+    case 'enemy_not_within': return `OM ingen fiende inom ${r.value||'?'} hex`;
+    case 'enemy_past_line':  { const v=String(r.value||'?'); const arrows=['→','↓','←','↑']; const arrow=arrows.includes(v.charAt(0))?v.charAt(0):'→'; const linval=arrows.includes(v.charAt(0))?v.slice(1):v; return `OM fiende passerar linje ${arrow} ${linval}`; }
+    case 'round_gte':        return `OM runda ≥ ${r.value||'?'}`;
+    case 'round_lte':        return `OM runda ≤ ${r.value||'?'}`;
+    case 'hex_occupied':     return `OM fiende på hex ${r.value||'?'}`;
+    case 'unit_eliminated':  return `OM ${r.value||'?'} är eliminerad`;
+    case 'self_reduced':     return 'OM enheten reduceras';
+    case 'always':           return 'ALLTID';
+    default: return r.condition;
+  }
+}
+
+function aiActText(r) {
+  switch(r.action) {
+    case 'defend':   return `FÖRSVARA ${r.target||'nuv. hex'}`;
+    case 'take':     return `ANFALLA ${r.target||'?'}`;
+    case 'fallback': return 'DRA SIG UNDAN';
+    case 'scout':    return `SPANA mot ${r.target||'?'}`;
+    case 'hold':     return 'STÅ STILL';
+    default: return r.action;
+  }
+}
+
+function _aiRulesStore(sida) {
+  sida = sida || aiSida;
+  if (sida === 'blue') { if (!SC.aiRulesBlue) SC.aiRulesBlue = {}; return SC.aiRulesBlue; }
+  if (!SC.aiRules) SC.aiRules = {}; return SC.aiRules;
+}
+function aiFlyttaUpp(enhetId, i, sida) {
+  const store = _aiRulesStore(sida);
+  const regler = store[enhetId];
+  if (!regler || i <= 0) return;
+  [regler[i-1], regler[i]] = [regler[i], regler[i-1]];
+  refreshAiRegler();
+}
+function aiFlyttaNer(enhetId, i, sida) {
+  const store = _aiRulesStore(sida);
+  const regler = store[enhetId];
+  if (!regler || i >= regler.length-1) return;
+  [regler[i], regler[i+1]] = [regler[i+1], regler[i]];
+  refreshAiRegler();
+}
+function aiTaBort(enhetId, i, sida) {
+  const store = _aiRulesStore(sida);
+  if (store[enhetId]) store[enhetId].splice(i, 1);
+  refreshAiRegler();
+}
+
+$('aiLäggTillBtn').onclick = () => {
+  const enhetId = $('aiEnhetSel').value;
+  if (!enhetId) { alert('Välj en enhet först.'); return; }
+  const condition = $('aiCondSel').value;
+  const value     = $('aiCondVal').value.trim();
+  const action    = $('aiActSel').value;
+  const target    = $('aiActTarget').value.trim();
+  if (!condition || !action) { alert('Välj condition och action.'); return; }
+  const store = _aiRulesStore();
+  if (!store[enhetId]) store[enhetId] = [];
+  const regel = { condition, action };
+  if (value)  regel.value  = isNaN(Number(value))  ? value  : Number(value);
+  if (target) regel.target = target;
+  store[enhetId].push(regel);
+  $('aiCondVal').value = '';
+  $('aiActTarget').value = '';
+  refreshAiRegler();
+};
+
+// Visa/dölj fält beroende på segervillkors-typ
+$('wcType').onchange = () => {
+  const t = $('wcType').value;
+  $('wcHexFält').style.display   = (t==='take_hex'||t==='hold_hex') ? 'block' : 'none';
+  $('wcEnhetFält').style.display = (t==='eliminate_unit') ? 'block' : 'none';
+  $('wcRundorFält').style.display= (t==='hold_hex'||t==='survive') ? 'block' : 'none';
+};
+
+function fillAiForm() {
+  if (!SC.aiRules)          SC.aiRules = {};
+  if (!SC.aiRulesBlue)      SC.aiRulesBlue = {};
+  if (!SC.aiMallar)         SC.aiMallar = {};
+  if (!SC.aiMallarBlue)     SC.aiMallarBlue = {};
+  if (!SC.soloWinCondition) SC.soloWinCondition = { type:'take_hex', target:'', rounds:null };
+  if (!SC.observatörsFas)   SC.observatörsFas = { aktiv:false, autoRundByte:true, rundFördröjning:2, slutVillkor:'runda', slutRunda:3, slutEnhet:'', slutHex:'', modal:{titel:'',text:'',bild:'',knapp:'Ta befälet!'} };
+  if (!SC.alltidAiEnheter)  SC.alltidAiEnheter = [];
+
+  const wc = SC.soloWinCondition;
+  $('soloKompatibel').checked  = !!SC.soloKompatibel;
+  $('wcType').value            = wc.type   || 'take_hex';
+  $('wcTarget').value          = wc.target || '';
+  $('wcUnit').value            = wc.target || '';
+  $('wcRounds').value          = wc.rounds || 3;
+  $('soloSvårighet').value     = SC.soloSvårighet || 'normal';
+  if (typeof $('wcType').onchange === 'function') $('wcType').onchange();
+
+  const ov = SC.observatörsFas;
+  if ($('ovFasAktiv'))        $('ovFasAktiv').checked        = !!ov.aktiv;
+  if ($('ovAutoRund'))        $('ovAutoRund').checked        = ov.autoRundByte !== false;
+  if ($('ovRundFördröjning')) $('ovRundFördröjning').value   = ov.rundFördröjning ?? 2;
+  if ($('ovSlutVillkor'))     $('ovSlutVillkor').value       = ov.slutVillkor || 'runda';
+  if ($('ovSlutRunda'))       $('ovSlutRunda').value         = ov.slutRunda || 3;
+  if ($('ovSlutEnhet'))       $('ovSlutEnhet').value         = ov.slutEnhet || '';
+  if ($('ovSlutHex'))         $('ovSlutHex').value           = ov.slutHex  || '';
+  const m = ov.modal || {};
+  if ($('ovModalTitel')) $('ovModalTitel').value = m.titel || '';
+  if ($('ovModalText'))  $('ovModalText').value  = m.text  || '';
+  if ($('ovModalBild'))  $('ovModalBild').value  = m.bild  || '';
+  if ($('ovModalKnapp')) $('ovModalKnapp').value = m.knapp || 'Ta befälet!';
+  ovUppdateraBildPreview(m.bild || '');
+  ovLaddaBilderLista();
+  ovFasVillkorChange();
+
+  if ($('alltidAiEnheter')) $('alltidAiEnheter').value = (SC.alltidAiEnheter || []).join('\n');
+
+  refreshAiEnhetsPicker();
+  refreshAiRegler();
+}
+
+function readAiForm() {
+  const type   = $('wcType').value;
+  const target = (type==='eliminate_unit') ? $('wcUnit').value.trim() : $('wcTarget').value.trim();
+  const rounds = (type==='hold_hex'||type==='survive') ? +($('wcRounds').value||3) : null;
+  SC.soloKompatibel   = $('soloKompatibel').checked;
+  SC.soloWinCondition = { type, target, rounds };
+  SC.soloSvårighet    = $('soloSvårighet').value;
+
+  SC.observatörsFas = {
+    aktiv:           !!($('ovFasAktiv')?.checked),
+    autoRundByte:    !!($('ovAutoRund')?.checked),
+    rundFördröjning: +($('ovRundFördröjning')?.value ?? 2),
+    slutVillkor:     $('ovSlutVillkor')?.value || 'runda',
+    slutRunda:       +($('ovSlutRunda')?.value || 3),
+    slutEnhet:       $('ovSlutEnhet')?.value.trim() || '',
+    slutHex:         $('ovSlutHex')?.value.trim()   || '',
+    modal: {
+      titel: $('ovModalTitel')?.value.trim() || '',
+      text:  $('ovModalText')?.value.trim()  || '',
+      bild:  $('ovModalBild')?.value.trim()  || '',
+      knapp: $('ovModalKnapp')?.value.trim() || 'Ta befälet!'
+    }
+  };
+
+  SC.alltidAiEnheter = ($('alltidAiEnheter')?.value || '')
+    .split('\n').map(s => s.trim()).filter(Boolean);
+}
+
+/* ===== ENKEL VY — TAKTISKA MALLAR ===== */
+
+function setAiVy(vy) {
+  const enkel     = document.getElementById('aiEnkelDiv');
+  const avancerad = document.getElementById('aiAvanceradDiv');
+  const btnEnkel  = document.getElementById('aiVyEnkelBtn');
+  const btnAv     = document.getElementById('aiVyAvanceradBtn');
+  if (vy === 'enkel') {
+    enkel.style.display     = 'block';
+    avancerad.style.display = 'none';
+    btnEnkel.className = 'btn pri';
+    btnAv.className    = 'btn';
+  } else {
+    enkel.style.display     = 'none';
+    avancerad.style.display = 'block';
+    btnEnkel.className = 'btn';
+    btnAv.className    = 'btn pri';
+    refreshAiRegler();
+  }
+}
+
+function aiEnhetBytt() {
+  const enhetId = $('aiEnhetSel').value;
+  const isEnkel = document.getElementById('aiEnkelDiv').style.display !== 'none';
+  if (isEnkel) fillEnkelvy(enhetId);
+  else         refreshAiRegler();
+}
+
+function clearFasForm() {
+  ['fasInledAction','fasDärAction','fasSlutAction'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  ['fasInledTarget','fasDärTarget','fasSlutTarget'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  const till=$('fasInledTill'); if(till) till.value='';
+  for (let i=0; i<3; i++) {
+    $('omfall'+i+'Cond').value   = '';
+    $('omfall'+i+'Val').value    = '';
+    $('omfall'+i+'Action').value = '';
+    $('omfall'+i+'Target').value = '';
+    uppdateraOmfallValLabel(i);
+  }
+}
+
+function fillEnkelvy(enhetId) {
+  clearFasForm();
+  if (!enhetId) return;
+  const mall = _aiMallarStore()[enhetId];
+  if (!mall) return;
+  const faser  = mall.faser  || [];
+  const omfall = mall.omfall || [];
+  if (faser[0]) { const a=$('fasInledAction'); if(a) a.value=faser[0].action||''; const t=$('fasInledTarget'); if(t) t.value=faser[0].target||''; const ti=$('fasInledTill'); if(ti) ti.value=faser[0].till||''; }
+  if (faser[1]) { const a=$('fasDärAction');   if(a) a.value=faser[1].action||''; const t=$('fasDärTarget');   if(t) t.value=faser[1].target||''; }
+  if (faser[2]) { const a=$('fasSlutAction');  if(a) a.value=faser[2].action||''; const t=$('fasSlutTarget');  if(t) t.value=faser[2].target||''; }
+  for (let i=0; i<3; i++) {
+    const o = omfall[i] || {};
+    $('omfall'+i+'Cond').value   = o.cond   || '';
+    $('omfall'+i+'Action').value = o.action || '';
+    $('omfall'+i+'Target').value = o.target || '';
+    uppdateraOmfallValLabel(i);
+    // Separera riktningsprefixet från värdet för enemy_past_line
+    let rawVal = o.val || '';
+    if (o.cond === 'enemy_past_line') {
+      const dirBtn = document.getElementById('omfall'+i+'DirBtn');
+      const arrows = ['→','↓','←','↑'];
+      if (dirBtn && arrows.includes(rawVal.charAt(0))) {
+        dirBtn.textContent = rawVal.charAt(0);
+        rawVal = rawVal.slice(1);
+      } else if (dirBtn) {
+        dirBtn.textContent = '→';
+        if (rawVal.startsWith('>')) rawVal = rawVal.slice(1);
+      }
+    }
+    $('omfall'+i+'Val').value = rawVal;
+  }
+}
+
+function uppdateraOmfallValLabel(i) {
+  const cond   = $('omfall'+i+'Cond').value;
+  const valEl  = $('omfall'+i+'Val');
+  const dirBtn = document.getElementById('omfall'+i+'DirBtn');
+  if (!valEl) return;
+  const needsVal = ['enemy_within','enemy_past_line','hex_occupied','round_gte','unit_eliminated'];
+  const isPastLine = cond === 'enemy_past_line';
+  valEl.disabled   = !needsVal.includes(cond);
+  valEl.placeholder = { 'enemy_within':'Antal hex','enemy_past_line':'D eller 9','hex_occupied':'Hex-id','round_gte':'Runda nr','unit_eliminated':'Enhets-id' }[cond] || 'Värde';
+  if (valEl.disabled) valEl.value = '';
+  if (dirBtn) dirBtn.style.display = isPastLine ? 'inline-block' : 'none';
+}
+
+function toggleOmfallDir(i) {
+  const btn = document.getElementById('omfall'+i+'DirBtn');
+  if (!btn) return;
+  const seq = ['→','↓','←','↑'];
+  const cur = btn.textContent.trim();
+  btn.textContent = seq[(seq.indexOf(cur) + 1) % seq.length];
+}
+
+function generateRulesFromMall(mall) {
+  const rules = [];
+  (mall.omfall || []).forEach(o => {
+    if (!o.cond) return;
+    const action = o.action || 'hold'; // tom action = ingen order = stanna
+    const regel = { condition: o.cond, action };
+    const needsVal = ['enemy_within','enemy_past_line','hex_occupied','round_gte','unit_eliminated'];
+    if (o.val && needsVal.includes(o.cond)) regel.value = isNaN(Number(o.val)) ? o.val : Number(o.val);
+    if (o.target) regel.target = o.target;
+    rules.push(regel);
+  });
+  const faser = mall.faser || [];
+  for (let i=0; i<faser.length; i++) {
+    const fas = faser[i];
+    if (!fas.action) continue;
+    const hasNext = faser.slice(i+1).some(f => f.action);
+    const regel = { action: fas.action };
+    if (fas.target) regel.target = fas.target;
+    if (hasNext && fas.till) {
+      regel.condition = 'round_lte';
+      regel.value     = Number(fas.till);
+    } else {
+      regel.condition = 'always';
+    }
+    rules.push(regel);
+    if (regel.condition === 'always') break;
+  }
+  return rules;
+}
+
+function _aiMallarStore(sida) {
+  sida = sida || aiSida;
+  if (sida === 'blue') { if (!SC.aiMallarBlue) SC.aiMallarBlue = {}; return SC.aiMallarBlue; }
+  if (!SC.aiMallar) SC.aiMallar = {}; return SC.aiMallar;
+}
+
+function sparaFaser() {
+  const enhetId = $('aiEnhetSel').value;
+  const sidLabel = aiSida === 'blue' ? 'Blue' : 'Red';
+  if (!enhetId) { alert(`Välj en ${sidLabel}-enhet först.`); return; }
+  const mallarStore = _aiMallarStore();
+  const rulesStore  = _aiRulesStore();
+  const mall = {
+    faser: [
+      { action:$('fasInledAction').value, target:$('fasInledTarget').value.trim(), till:$('fasInledTill').value ? Number($('fasInledTill').value) : null },
+      { action:$('fasDärAction').value,   target:$('fasDärTarget').value.trim() },
+      { action:$('fasSlutAction').value,  target:$('fasSlutTarget').value.trim() }
+    ],
+    omfall: [0,1,2].map(i => {
+      const cond   = $('omfall'+i+'Cond').value;
+      const rawVal = $('omfall'+i+'Val').value.trim();
+      const dirBtn = document.getElementById('omfall'+i+'DirBtn');
+      const dir    = (cond === 'enemy_past_line' && dirBtn) ? dirBtn.textContent.trim() : '';
+      return { cond, val: dir + rawVal, action:$('omfall'+i+'Action').value, target:$('omfall'+i+'Target').value.trim() };
+    })
+  };
+  mallarStore[enhetId] = mall;
+  rulesStore[enhetId]  = generateRulesFromMall(mall);
+  const msg = $('fasarSparadMsg');
+  if (msg) { msg.style.display='block'; setTimeout(()=>{ msg.style.display='none'; }, 2000); }
+  refreshAiRegler();
+}
+
+function regenereraAllaRegler() {
+  if (SC.aiMallar)     { if (!SC.aiRules)     SC.aiRules     = {}; Object.entries(SC.aiMallar).forEach(([id, mall]) => { SC.aiRules[id]     = generateRulesFromMall(mall); }); }
+  if (SC.aiMallarBlue) { if (!SC.aiRulesBlue) SC.aiRulesBlue = {}; Object.entries(SC.aiMallarBlue).forEach(([id, mall]) => { SC.aiRulesBlue[id] = generateRulesFromMall(mall); }); }
+}
+
+/* ============== AI MINI-MAP ============== */
+let aiAktivtFält = null;
+
+function hexKeyAi(ri, ci) {
+  const cs = SC.map ? (SC.map.coordStyle || 'rowLetters') : (M.coordStyle || 'rowLetters');
+  return cs === 'rowLetters' ? letter(ri) + (ci + 1) : letter(ci) + (ri + 1);
+}
+
+function renderAiKarta() {
+  const canvas = document.getElementById('aiMapCanvas');
+  if (!canvas) return;
+  requestAnimationFrame(() => _doRenderAiKarta(canvas));
+}
+
+function _doRenderAiKarta(canvas) {
+  const map = SC.map || M;
+  const orient = map.orient || 'flat';
+  const r = map.hexSize || 50;
+  const rows = map.rows || M.rows || 12;
+  const cols = map.cols || M.cols || 16;
+  const offX = map.gridOffX || 80;
+  const offY = map.gridOffY || 80;
+
+  const dx = orient === 'flat' ? 1.5 * r : Math.sqrt(3) * r;
+  const dy = orient === 'flat' ? Math.sqrt(3) * r : 1.5 * r;
+
+  const totalW = cols * dx + r + offX;
+  const totalH = rows * dy + dy + offY;
+
+  const wrap = document.getElementById('aiMapWrap');
+  const colW = (wrap ? wrap.offsetWidth : 400) || 400;
+  const scale = colW / totalW;
+
+  canvas.width  = Math.round(totalW * scale);
+  canvas.height = Math.round(totalH * scale);
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.clearRect(0, 0, totalW, totalH);
+
+  // Draw all board images (mirrors drawMap logic)
+  (M.boards || []).forEach(b => {
+    if (!b.img) return;
+    ctx.save();
+    ctx.translate(b.x || 0, b.y || 0);
+    if (b.rot) {
+      ctx.translate(b.img.width / 2, b.img.height / 2);
+      ctx.rotate(b.rot * Math.PI / 180);
+      ctx.translate(-b.img.width / 2, -b.img.height / 2);
+    }
+    try { ctx.drawImage(b.img, 0, 0); } catch(e) {}
+    ctx.restore();
+  });
+
+  // Draw hexes
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 0.8;
+  ctx.font = Math.max(6, r * scale * 0.28) + 'px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let ri = 0; ri < rows; ri++) {
+    for (let ci = 0; ci < cols; ci++) {
+      const baseX = ci * dx;
+      const baseY = orient === 'flat' ? ri * dy + (ci % 2 ? dy / 2 : 0) : ri * dy;
+      const cx = baseX + offX;
+      const cy = orient === 'flat' ? baseY + offY : baseY + offY + (ci % 2 ? dy / 2 : 0);
+
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (orient === 'flat' ? 0 : 30) * Math.PI / 180 + i * Math.PI / 3;
+        const px = cx + r * Math.cos(a);
+        const py = cy + r * Math.sin(a);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      const key = hexKeyAi(ri, ci);
+      ctx.fillStyle = 'rgba(207,224,255,0.55)';
+      ctx.fillText(key, cx, cy);
+    }
+  }
+}
+
+// Focus tracking: when user clicks a [data-hexval] input inside the AI view, mark it active
+document.getElementById('view-ai').addEventListener('focusin', e => {
+  const t = e.target;
+  if (t && t.dataset && t.dataset.hexval) {
+    aiAktivtFält = t;
+    const lbl = t.placeholder || t.id || '?';
+    const info = document.getElementById('aiAktivFältInfo');
+    if (info) info.textContent = 'Aktivt fält: ' + lbl;
+  }
+});
+
+// Click on mini-map: fill active field with clicked hex ID
+document.getElementById('aiMapCanvas').addEventListener('click', e => {
+  if (!aiAktivtFält) return;
+
+  const canvas = e.currentTarget;
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const py = (e.clientY - rect.top)  * (canvas.height / rect.height);
+
+  const map = SC.map || M;
+  const orient = map.orient || 'flat';
+  const r = map.hexSize || 50;
+  const rows = map.rows || M.rows || 12;
+  const cols = map.cols || M.cols || 16;
+  const offX = map.gridOffX || 80;
+  const offY = map.gridOffY || 80;
+  const dx = orient === 'flat' ? 1.5 * r : Math.sqrt(3) * r;
+  const dy = orient === 'flat' ? Math.sqrt(3) * r : 1.5 * r;
+
+  const totalW = cols * dx + r + offX;
+  const sx = px * totalW / canvas.width;
+  const sy = py * (rows * dy + dy + offY) / canvas.height;
+
+  let best = { d: 1e9, ri: 0, ci: 0 };
+  for (let ri = 0; ri < rows; ri++) {
+    for (let ci = 0; ci < cols; ci++) {
+      const baseX = ci * dx;
+      const baseY = orient === 'flat' ? ri * dy + (ci % 2 ? dy / 2 : 0) : ri * dy;
+      const cx = baseX + offX;
+      const cy = orient === 'flat' ? baseY + offY : baseY + offY + (ci % 2 ? dy / 2 : 0);
+      const d = (cx - sx) * (cx - sx) + (cy - sy) * (cy - sy);
+      if (d < best.d) best = { d, ri, ci };
+    }
+  }
+
+  const hexId = hexKeyAi(best.ri, best.ci);
+  aiAktivtFält.value = hexId;
+  aiAktivtFält.focus();
+
+  const info = document.getElementById('aiAktivFältInfo');
+  if (info) info.textContent = 'Vald hex: ' + hexId + ' → ' + (aiAktivtFält.placeholder || aiAktivtFält.id);
+});
+
+</script>
+
+<!-- Modal: välj ikon från server -->
+<div id="serverIkonModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:640px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;">
+    <h3 style="margin:0 0 16px;color:#e8eefc">Välj ikon från servern</h3>
+    <div id="serverIkonGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;overflow:auto;flex:1;margin-bottom:16px;padding:4px"></div>
+    <button class="btn" id="serverIkonStangBtn" style="align-self:flex-end">Stäng</button>
+  </div>
+</div>
+
+<!-- Modal: hämta kartbild från server -->
+<div id="serverKartaModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:680px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;">
+    <h3 style="margin:0 0 16px;color:#e8eefc">Välj kartbild från servern</h3>
+    <div id="serverKartaGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;overflow:auto;flex:1;margin-bottom:16px;padding:4px"></div>
+    <button class="btn" id="serverKartaStangBtn" style="align-self:flex-end">Stäng</button>
+  </div>
+</div>
+
+<!-- Modal: hämta scenario från server -->
+<div id="serverScenarioModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#0f1832;border:1px solid #243052;border-radius:12px;padding:24px;width:400px;max-width:90vw;">
+    <h3 style="margin:0 0 16px;color:#e8eefc">Hämta scenario från server</h3>
+    <div id="serverScenarioLista" style="margin-bottom:16px;max-height:320px;overflow:auto"></div>
+    <button class="btn" id="serverScenarioStangBtn" style="float:right">Stäng</button>
+  </div>
+</div>
+
+</body>
+</html>

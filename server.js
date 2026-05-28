@@ -168,6 +168,42 @@ app.post('/api/spara-karta', async (req, res) => {
   }
 });
 
+// Lista överlämningsbilder
+app.get('/api/bilder', async (req, res) => {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/public/bilder`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!response.ok) return res.json({ bilder: [] });
+    const filer = await response.json();
+    const bilder = filer
+      .filter(f => /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(f.name))
+      .map(f => f.name);
+    res.json({ bilder });
+  } catch(e) {
+    res.json({ bilder: [] });
+  }
+});
+
+// Spara överlämningsbild
+app.post('/api/spara-bild', async (req, res) => {
+  const { password, filnamn, data } = req.body;
+  if (password !== EDITOR_PASSWORD) {
+    return res.status(401).json({ ok: false, error: 'Ej behörig' });
+  }
+  try {
+    const base64 = data.replace(/^data:image\/\w+;base64,/, '');
+    const ok = await sparaTillGitHub(`public/bilder/${filnamn}`, base64, 'Ny överlämningsbild: ' + filnamn);
+    res.json({ ok });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // Spara enhetsikon
 app.post('/api/spara-ikon', async (req, res) => {
   const { password, filnamn, data } = req.body;
