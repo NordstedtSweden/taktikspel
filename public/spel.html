@@ -2138,6 +2138,7 @@ function placeraResurs(hex) {
   if (def.type === 'indirektEld') {
     // Köa ordern — löses ut vid nästa rundbyte
     VÄNTANDE_ARTILLERI.push({ hex, ext, side, def });
+    INDIREKT_ELD_ANVÄNT[side] = true;
     const post = GM_RESURSER[side].find(r => r.id === defId);
     if (post) post.kvar--;
     pendingResurs = null;
@@ -4591,16 +4592,45 @@ function nextRound () {
   LARM_MARKÖRER = []; // Rensa larmmarkörer från föregående runda
   INDIREKT_ELD_ANVÄNT = { blue: false, red: false }; // återladda indirekt eld
 
-  // Lös ut köat artilleri från föregående runda
+  // Lös ut köat artilleri — fördröjt till 50% av rundtiden
+  // Skada appliceras på enheters ANIMERADE position (via liveHex) — rörlighet ger skydd
   if (VÄNTANDE_ARTILLERI.length > 0) {
     const köat = VÄNTANDE_ARTILLERI.slice();
     VÄNTANDE_ARTILLERI = [];
+    const moveDur = window.ROUND_MOVE_DURATION_MS || 10000;
     köat.forEach((order, i) => {
+      const delay = Math.floor(moveDur * 0.5) + i * 600;
+
+      // Salvo 1 (vid ~50% av rundan) — full skadeeffekt på animerad position
       setTimeout(() => {
         lösUtIndirektEld(order.hex, order.ext, order.side, order.def);
-        // Skicka animationen till Blue/Red direkt efter att den lagts i PENDING
         if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
-      }, i * 800);
+      }, delay);
+
+      // Salvo 2 (vid ~70%) och Salvo 3 (vid ~90%) — visuell animation utan skada
+      [0.7, 0.9].forEach(pct => {
+        const visDelay = Math.floor(moveDur * pct) + i * 600;
+        setTimeout(() => {
+          const spridning   = order.ext?.spridning   ?? 1;
+          const effektRadie = order.ext?.effektRadie ?? 1;
+          let visHex = order.hex;
+          if (spridning > 0) {
+            let cur = order.hex;
+            const steps = Math.floor(Math.random() * (spridning + 1));
+            for (let k = 0; k < steps; k++) {
+              const nb = typeof hexNeighbors === 'function' ? hexNeighbors(cur) : [];
+              if (!nb.length) break;
+              cur = nb[Math.floor(Math.random() * nb.length)];
+            }
+            visHex = cur;
+          }
+          const periHexar = hexarInomRadie(visHex, effektRadie).filter(h => h !== visHex);
+          const animSkala = effektRadie === 0 ? 0.55 : 1.0;
+          if (typeof visaArtilleriAnfall === 'function') visaArtilleriAnfall(visHex, periHexar, animSkala);
+          PENDING_ARTILLERI_ANIM.push({ träffHex: visHex, periHexar, skala: animSkala });
+          if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+        }, visDelay);
+      });
     });
   }
 
@@ -6822,7 +6852,8 @@ cv.addEventListener('click', e => {
     if (hit) {
       const hexId = hexKey(hit.ri, hit.ci);
       const roleNow = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
-      if (roleNow === 'gm') {
+      const isSolo  = typeof soloMode !== 'undefined' && soloMode;
+      if (roleNow === 'gm' || isSolo) {
         placeraResurs(hexId);
       } else {
         skickaResursOrder(hexId);
