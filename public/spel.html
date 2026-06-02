@@ -8064,7 +8064,7 @@ function startMovementPhase(){
     if (!u.orderTarget) continue;
     // Support-order: enheten stannar kvar och understödjer — ingen rörelse
     if ((u.order || '').toLowerCase() === 'support') continue;
-if (u.hex === u.orderTarget) continue;
+
     // Bygg blockerade-set: egna enheters nuvarande hexar + planerade slutdestinationer
     const blockerade = new Set();
     for (const other of PLACED) {
@@ -8076,6 +8076,21 @@ if (u.hex === u.orderTarget) continue;
       if (seg.unit !== u && seg.unit.side === u.side) blockerade.add(seg.toHex);
     }
 
+    // Om målhexen är blockerad av en vänlig enhet → sikta mot närmaste lediga anslutande hex
+    let effectivMål = u.orderTarget;
+    if (blockerade.has(effectivMål)) {
+      const grannar = (typeof hexNeighbors === 'function' ? hexNeighbors(effectivMål) : [])
+        .filter(h => !blockerade.has(h));
+      if (grannar.length) {
+        effectivMål = grannar.reduce((bäst, h) =>
+          hexDist(u.hex, h) < hexDist(u.hex, bäst) ? h : bäst, grannar[0]);
+      } else {
+        continue; // alla anslutande hexar blockerade — kan inte nå mål
+      }
+    }
+
+    if (u.hex === effectivMål) continue; // redan på effektivt mål
+
     // === NY ALL-DIRECTIONS-LOOP ===
     let cur = u.hex;
     let moved = false;
@@ -8083,7 +8098,7 @@ if (u.hex === u.orderTarget) continue;
     // Generera steg tills pips tar slut eller mål nås (säkerhetsvakt 100 steg)
     // nextHexStepAllDirs hoppar automatiskt över blockerade hexar → enheten går runt
     for (let guard=0; guard<100; guard++){
-      const nx = nextHexStepAllDirs(cur, u.orderTarget, u, blockerade);
+      const nx = nextHexStepAllDirs(cur, effectivMål, u, blockerade);
       if (!nx) break;
 
       const cost = computeSegmentCostPips(u, cur, nx);
@@ -8095,7 +8110,7 @@ if (u.hex === u.orderTarget) continue;
       segments.push({ unit:u, fromHex:cur, toHex:nx, cost });
       cur = nx; moved = true;
 
-      if (u.orderTarget && cur === u.orderTarget) break; // nått mål
+      if (cur === effectivMål) break; // nått effektivt mål
     }
 
     if (moved){ u._hexAfterMove = cur; }
