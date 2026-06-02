@@ -7987,23 +7987,28 @@ function screenDist(aLabel, bLabel){
 }
 
 // Välj bästa nästa granne mot target: minsta pixeldistans, vid lika lägst kostnad
-function nextHexStepAllDirs(curHex, targetHex, unit){
-  // Utan target: välj billigaste granne
+// blockerade: optional Set med hexar att hoppa över (egna enheter som blockerar)
+function nextHexStepAllDirs(curHex, targetHex, unit, blockerade){
   const neigh = hexNeighbors(curHex);
   if (!neigh.length) return null;
 
+  const tillgängliga = (blockerade && blockerade.size)
+    ? neigh.filter(h => !blockerade.has(h))
+    : neigh;
+  if (!tillgängliga.length) return null;
+
   if (!targetHex){
     let best = null, bestCost = Infinity;
-    for (const nx of neigh){
+    for (const nx of tillgängliga){
       const c = computeSegmentCostPips(unit, curHex, nx);
       if (c < bestCost){ bestCost = c; best = nx; }
     }
     return best;
   }
 
-  // Med target: greedy mot mål
+  // Med target: greedy mot mål bland obockerade grannar
   let best = null, bestDist = Infinity, bestCost = Infinity;
-  for (const nx of neigh){
+  for (const nx of tillgängliga){
     const d = screenDist(nx, targetHex);
     const c = computeSegmentCostPips(unit, curHex, nx);
     if (d < bestDist - 0.5 || (Math.abs(d - bestDist) <= 0.5 && c < bestCost)){
@@ -8060,37 +8065,26 @@ function startMovementPhase(){
     // Support-order: enheten stannar kvar och understödjer — ingen rörelse
     if ((u.order || '').toLowerCase() === 'support') continue;
 if (u.hex === u.orderTarget) continue;
+    // Bygg blockerade-set: egna enheters nuvarande hexar + planerade slutdestinationer
+    const blockerade = new Set();
+    for (const other of PLACED) {
+      if (other === u || other.side !== u.side || other.eliminated ||
+          String(other.state||'').toLowerCase() === 'eliminated') continue;
+      blockerade.add(other.hex);
+    }
+    for (const seg of segments) {
+      if (seg.unit !== u && seg.unit.side === u.side) blockerade.add(seg.toHex);
+    }
+
     // === NY ALL-DIRECTIONS-LOOP ===
     let cur = u.hex;
     let moved = false;
 
     // Generera steg tills pips tar slut eller mål nås (säkerhetsvakt 100 steg)
+    // nextHexStepAllDirs hoppar automatiskt över blockerade hexar → enheten går runt
     for (let guard=0; guard<100; guard++){
-      const nx = nextHexStepAllDirs(cur, u.orderTarget, u);
+      const nx = nextHexStepAllDirs(cur, u.orderTarget, u, blockerade);
       if (!nx) break;
-
-      // 🔹 STACKING: blockera inflytt till hex med egen enhet
-      const friendlyThereNow = PLACED.some(other =>
-        other !== u &&
-        other.side === u.side &&
-        other.hex === nx &&
-        !other.eliminated &&
-        String(other.state||'').toLowerCase() !== 'eliminated'
-      );
-
-      const friendlyPlannedThere = segments.some(seg =>
-        seg.unit !== u &&
-        seg.unit.side === u.side &&
-        seg.toHex === nx
-      );
-
-      if (friendlyThereNow || friendlyPlannedThere) {
-        // Vi behandlar egen enhet som "vägg" → enheten stannar innan
-        if (typeof logEvent === 'function') {
-          logEvent(`${u.side} ${u.name} kan inte gå till ${nx} – egen enhet blockerar.`);
-        }
-        break; // avsluta rörelsen för denna enhet
-      }
 
       const cost = computeSegmentCostPips(u, cur, nx);
       if (!isFinite(cost) || cost <= 0) break;
