@@ -2277,6 +2277,7 @@ function lösUtIndirektEld(målHex, ext, side, def) {
   registreraHändelse({ typ: 'artilleri', sida: side, namn, målHex, träffHex, periHexar: periHexar.slice(), animSkala, träffade: _artTräffade });
 
   if (typeof updateLOS === 'function') updateLOS();
+  return träffHex;
 }
 
 function kontrolleraMintriggers(besöktaHexar) {
@@ -4600,32 +4601,22 @@ function nextRound () {
     const moveDur = window.ROUND_MOVE_DURATION_MS || 10000;
     köat.forEach((order, i) => {
       const delay = Math.floor(moveDur * 0.5) + i * 600;
+      const artState = { träffHex: null }; // delas mellan salvo 1-3 för samma order
 
       // Salvo 1 (vid ~50% av rundan) — full skadeeffekt på animerad position
       setTimeout(() => {
-        lösUtIndirektEld(order.hex, order.ext, order.side, order.def);
+        artState.träffHex = lösUtIndirektEld(order.hex, order.ext, order.side, order.def) || order.hex;
         if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
       }, delay);
 
-      // Salvo 2 (vid ~70%) och Salvo 3 (vid ~90%) — visuell animation utan skada
+      // Salvo 2 (vid ~70%) och Salvo 3 (vid ~90%) — visuell animation i samma hex som salvo 1
       [0.7, 0.9].forEach(pct => {
         const visDelay = Math.floor(moveDur * pct) + i * 600;
         setTimeout(() => {
-          const spridning   = order.ext?.spridning   ?? 1;
+          const visHex     = artState.träffHex || order.hex;
           const effektRadie = order.ext?.effektRadie ?? 1;
-          let visHex = order.hex;
-          if (spridning > 0) {
-            let cur = order.hex;
-            const steps = Math.floor(Math.random() * (spridning + 1));
-            for (let k = 0; k < steps; k++) {
-              const nb = typeof hexNeighbors === 'function' ? hexNeighbors(cur) : [];
-              if (!nb.length) break;
-              cur = nb[Math.floor(Math.random() * nb.length)];
-            }
-            visHex = cur;
-          }
-          const periHexar = hexarInomRadie(visHex, effektRadie).filter(h => h !== visHex);
-          const animSkala = effektRadie === 0 ? 0.55 : 1.0;
+          const periHexar  = hexarInomRadie(visHex, effektRadie).filter(h => h !== visHex);
+          const animSkala  = effektRadie === 0 ? 0.55 : 1.0;
           if (typeof visaArtilleriAnfall === 'function') visaArtilleriAnfall(visHex, periHexar, animSkala);
           PENDING_ARTILLERI_ANIM.push({ träffHex: visHex, periHexar, skala: animSkala });
           if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
@@ -8072,6 +8063,7 @@ if (u.hex === u.orderTarget) continue;
       sendMoveFX(segments);
     }
   } else {
+    if (typeof resolveCloseCombatAllHexes === 'function') resolveCloseCombatAllHexes();
     if (typeof window._moveBatchDone === 'function') {
       const cb = window._moveBatchDone; window._moveBatchDone = null; cb();
     }
