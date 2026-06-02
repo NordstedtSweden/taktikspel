@@ -4695,6 +4695,13 @@ if (Array.isArray(PLACED)) {
       const target = chooseNearestTarget(u);
       if (!target || target.eliminated) return;
 
+      // Förbiskjutningssäkerhet — blockera eld om vänlig enhet riskerar att drabbas
+      if (typeof blockadFörbiskjutning === 'function' && blockadFörbiskjutning(u, target)) {
+        if (typeof logEvent === 'function')
+          logEvent(`[Säkerhet] ${fmtSide(u)} ${fmtName(u)} avbryter eld mot ${fmtName(target)} — förbiskjutningsrisk`);
+        return;
+      }
+
       // Initiativtyp: "pre" | "duel" | "post"
       const combatState = (typeof computeCombatState === 'function')
         ? computeCombatState(u, target)
@@ -7296,6 +7303,55 @@ function resolveHitWithMorale({ attacker, defender, context }){
   return { result:'suppressed' };
 }*/
 
+// Returnerar alla hexar MELLAN fromLabel och toLabel (ej start/mål själva)
+function hexLinjeCeller(fromLabel, toLabel) {
+  const A = typeof keyToRC === 'function' ? keyToRC(fromLabel) : null;
+  const B = typeof keyToRC === 'function' ? keyToRC(toLabel)   : null;
+  if (!A || !B) return [];
+  const N = Math.max(Math.abs(B.ri - A.ri), Math.abs(B.ci - A.ci));
+  if (N <= 1) return [];
+  const result = [];
+  const seen = new Set([fromLabel, toLabel]);
+  for (let i = 1; i < N; i++) {
+    const t  = i / N;
+    const ri = Math.round(A.ri + (B.ri - A.ri) * t);
+    const ci = Math.round(A.ci + (B.ci - A.ci) * t);
+    const label = typeof rcToKey === 'function' ? rcToKey(ri, ci) : null;
+    if (label && !seen.has(label)) { seen.add(label); result.push(label); }
+  }
+  return result;
+}
+
+// Förbiskjutningssäkerhet — returnerar true om eld blockeras av vänlig enhet
+// Regel 1: vänlig enhet i eldlinjen (mellan skytt och mål)
+// Regel 2: vänlig enhet inom 2 hex från målhexen
+function blockadFörbiskjutning(skytt, mål) {
+  const skyttHex = skytt._losHex || skytt.hex;
+  const målHex   = mål._losHex   || mål.hex;
+  if (!skyttHex || !målHex) return false;
+
+  const vänliga = Array.isArray(PLACED)
+    ? PLACED.filter(u => u.side === skytt.side && !u.eliminated && u !== skytt)
+    : [];
+  if (!vänliga.length) return false;
+
+  // Regel 1: vänlig enhet längs eldlinjen
+  const mellanHexar = hexLinjeCeller(skyttHex, målHex);
+  for (const h of mellanHexar) {
+    if (vänliga.some(u => (u._losHex || u.hex) === h)) return true;
+  }
+
+  // Regel 2: vänlig enhet inom 2 hex från målhexen
+  const säkerhetsZon = typeof hexarInomRadie === 'function'
+    ? hexarInomRadie(målHex, 2)
+    : [målHex];
+  for (const h of säkerhetsZon) {
+    if (vänliga.some(u => (u._losHex || u.hex) === h)) return true;
+  }
+
+  return false;
+}
+
 // Range-mod baserat på distans / range_hex
 function computeRangeMod(attacker, defender){
   const aHex = (attacker._losHex || attacker.hex);
@@ -7305,12 +7361,12 @@ function computeRangeMod(attacker, defender){
   const dist = hexDist(aHex, dHex);
   const maxR = getUnitRangeHex(attacker);
   if (!Number.isFinite(dist) || !Number.isFinite(maxR) || maxR <= 0) return 0;
-  if (dist > maxR) return -999; // utanför räckvidd – borde redan stoppats
+  if (dist > maxR) return -999; // utanför enhetens definierade räckvidd
 
-  const ratio = dist / maxR;
-  if (ratio <= 1/3) return +1;   // nära håll: lite lättare
-  if (ratio <= 2/3) return 0;    // normal distans
-  return -1;                     // långt, men inom praktiskt avstånd
+  if (dist <= 3)  return +1;   // nära håll — lättare att träffa
+  if (dist <= 6)  return  0;   // effektivt avstånd
+  if (dist <= 12) return -1;   // långt håll
+  return -999;                  // extremt avstånd — praktiskt omöjligt
 }
 
 // Understödsbonus: returnerar -1 om defender har en aktiv understödjare med LOS till angriparen
