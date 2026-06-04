@@ -130,8 +130,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/front2.png",
-          "icon_reduced": "assets/units/back.png"
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
         },
         "stats": {
           "full": {
@@ -206,8 +206,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/front2.png",
-          "icon_reduced": "assets/units/back.png"
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
         },
         "stats": {
           "full": {
@@ -282,8 +282,8 @@
         "size": "squad",
         "tags": [],
         "display": {
-          "icon_front": "assets/units/front2.png",
-          "icon_reduced": "assets/units/back.png"
+          "icon_front": "assets/units/inf-blue.png",
+          "icon_reduced": "assets/units/inf-blue-r.png"
         },
         "stats": {
           "full": {
@@ -979,6 +979,24 @@
           }
         ]
       }
-    }
+    },
+    "aiRulesBlue": {},
+    "aiMallarBlue": {},
+    "observatörsFas": {
+      "aktiv": false,
+      "autoRundByte": true,
+      "rundFördröjning": 2,
+      "slutVillkor": "runda",
+      "slutRunda": 3,
+      "slutEnhet": "",
+      "slutHex": "",
+      "modal": {
+        "titel": "",
+        "text": "",
+        "bild": "",
+        "knapp": "Ta befälet!"
+      }
+    },
+    "alltidAiEnheter": []
   }
 }
