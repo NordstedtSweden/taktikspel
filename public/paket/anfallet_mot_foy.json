@@ -1228,8 +1228,8 @@
         "stats": {
           "full": {
             "move": 5,
-            "range_hex": 6,
-            "fp_normal": 5,
+            "range_hex": 10,
+            "fp_normal": 7,
             "fp_opfire": 3,
             "morale": {
               "normal": 7,
@@ -1614,7 +1614,7 @@
           "full": {
             "move": 5,
             "range_hex": 7,
-            "fp_normal": 7,
+            "fp_normal": 8,
             "fp_opfire": 2,
             "morale": {
               "normal": 7,
@@ -1625,7 +1625,7 @@
           "reduced": {
             "move": 1,
             "range_hex": 7,
-            "fp_normal": 5,
+            "fp_normal": 8,
             "fp_opfire": 2,
             "morale": {
               "normal": 6,
