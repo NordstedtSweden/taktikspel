@@ -6352,15 +6352,17 @@ function chooseNearestTarget(shooter){
     if (!e.kanBekämpas && e.isDrone) return false; // obekämpbar drönare
     return true;
   });
+  const shooterRange = typeof getUnitRangeHex === 'function' ? getUnitRangeHex(shooter) : 5;
+  const sHex = shooter._losHex || shooter.hex;
   let best = null, bestD2 = Infinity;
   for(const e of enemies){
     if(hasLOS(shooter.hex, e.hex)){
+      // Målet måste vara inom skyttens räckvidd (från editorn)
+      const eHex = e._losHex || e.hex;
+      if (typeof hexDist === 'function' && hexDist(sHex, eHex) > shooterRange) continue;
       const d2 = dist2BetweenHexes(shooter.hex, e.hex);
       // Drönare kan bara bekämpas på kort räckvidd
       if (e.isDrone) {
-        const hexDist = Math.sqrt(d2 / (typeof hexSize !== 'undefined' ? hexSize*hexSize : 1));
-        const approxHexes = d2 > 0 ? Math.round(Math.sqrt(d2) / (typeof hexToScreen === 'function' ? 1 : 1)) : 0;
-        // Använd hexavstånd via grannar-BFS (enkel räknare)
         if (!isWithinHexRange(shooter.hex, e.hex, DRONE_MAX_RANGE_HEX)) continue;
       }
       if(d2 < bestD2){ bestD2 = d2; best = e; }
@@ -6648,9 +6650,21 @@ function computeVisibleHexes(side){
       }
     }
 
-    if (!inLOS) continue;
+    // 3a-extra) Drönarspaning: IR-kamera ser dolda enheter men inte enheter i byggnader
+    const terrTarget = MAP.terrain?.[vHex] || 'open';
+    const iBuilding  = terrTarget === 'wood_building' || terrTarget === 'stone_building';
+    let droneCanSee  = false;
+    if (!iBuilding) {
+      droneCanSee = egnaDrönare.some(drone => {
+        const dHex = liveHex(drone);
+        return dHex && typeof hexDist === 'function' &&
+               hexDist(dHex, vHex) <= (drone.losRadie ?? 3);
+      });
+    }
 
-    const terr    = MAP.terrain?.[vHex] || 'open';
+    if (!inLOS && !droneCanSee) continue;
+
+    const terr    = terrTarget;
     const losInfo = (typeof terrainLOS === 'function')
       ? terrainLOS(terr)
       : { blocks:false, conceal:0 };
@@ -6669,7 +6683,10 @@ function computeVisibleHexes(side){
     // 3b) Avgör om vi FÅR se enheten just nu
     let canSeeNow = false;
 
-    if (!concealed) {
+    if (droneCanSee) {
+      // IR-kamera: avslöjar dolda enheter oavsett conceal (byggnader redan filtrerade ovan)
+      canSeeNow = true;
+    } else if (!concealed) {
       // Öppen terräng: synlig så fort den är i LOS
       canSeeNow = true;
     } else {
@@ -7173,10 +7190,7 @@ function getUnitFirepower(u, mode){
 // FP → tärningsmod (fp 5 ⇒ 0, fp 7 ⇒ +1, fp 9 ⇒ +2 osv)
 function computeFPMod(attacker, mode){
   const fp = getUnitFirepower(attacker, mode);
-  let mod = Math.round((fp - 5) / 2);
-  if (mod > 3) mod = 3;
-  if (mod < -3) mod = -3;
-  return mod;
+  return fp - 5;
 }
 
 // Läs suppression-status (som tidigare)
@@ -7854,6 +7868,8 @@ function getTerrainCostPips(label){
 }
 function computeSegmentCostPips(unit, fromHex, toHex){
   if (unit?.isDrone) return 3; // drönare flyger — alltid 1 MP (3 pips)
+  const toTerrain = getTerrainTypeByLabel(toHex);
+  if (typeof isTerrainAllowed === 'function' && !isTerrainAllowed(unit, toTerrain)) return Infinity;
   const cf = getTerrainCostPips(fromHex);
   const ct = getTerrainCostPips(toHex);
   return Math.max(cf, ct);
