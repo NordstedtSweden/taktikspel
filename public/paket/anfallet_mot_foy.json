@@ -1153,7 +1153,7 @@
             "move": 5,
             "range_hex": 6,
             "fp_normal": 6,
-            "fp_opfire": 4,
+            "fp_opfire": 5,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -1163,8 +1163,8 @@
           "reduced": {
             "move": 4,
             "range_hex": 6,
-            "fp_normal": 4,
-            "fp_opfire": 2,
+            "fp_normal": 5,
+            "fp_opfire": 4,
             "morale": {
               "normal": 6,
               "yellow": 5,
@@ -1230,7 +1230,7 @@
             "move": 5,
             "range_hex": 5,
             "fp_normal": 6,
-            "fp_opfire": 4,
+            "fp_opfire": 5,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -1240,8 +1240,8 @@
           "reduced": {
             "move": 4,
             "range_hex": 6,
-            "fp_normal": 4,
-            "fp_opfire": 2,
+            "fp_normal": 5,
+            "fp_opfire": 4,
             "morale": {
               "normal": 6,
               "yellow": 5,
@@ -1317,8 +1317,8 @@
           "reduced": {
             "move": 4,
             "range_hex": 6,
-            "fp_normal": 4,
-            "fp_opfire": 2,
+            "fp_normal": 5,
+            "fp_opfire": 4,
             "morale": {
               "normal": 6,
               "yellow": 5,
@@ -1383,8 +1383,8 @@
           "full": {
             "move": 5,
             "range_hex": 6,
-            "fp_normal": 5,
-            "fp_opfire": 3,
+            "fp_normal": 6,
+            "fp_opfire": 4,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -1395,7 +1395,7 @@
             "move": 4,
             "range_hex": 6,
             "fp_normal": 4,
-            "fp_opfire": 2,
+            "fp_opfire": 3,
             "morale": {
               "normal": 6,
               "yellow": 5,
@@ -1460,8 +1460,8 @@
           "full": {
             "move": 5,
             "range_hex": 10,
-            "fp_normal": 7,
-            "fp_opfire": 3,
+            "fp_normal": 8,
+            "fp_opfire": 5,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -1472,7 +1472,7 @@
             "move": 4,
             "range_hex": 6,
             "fp_normal": 4,
-            "fp_opfire": 2,
+            "fp_opfire": 4,
             "morale": {
               "normal": 6,
               "yellow": 5,
@@ -1537,7 +1537,7 @@
           "full": {
             "move": 5,
             "range_hex": 6,
-            "fp_normal": 5,
+            "fp_normal": 6,
             "fp_opfire": 3,
             "morale": {
               "normal": 7,
@@ -1614,8 +1614,8 @@
           "full": {
             "move": 5,
             "range_hex": 7,
-            "fp_normal": 8,
-            "fp_opfire": 2,
+            "fp_normal": 9,
+            "fp_opfire": 3,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -1625,7 +1625,7 @@
           "reduced": {
             "move": 1,
             "range_hex": 7,
-            "fp_normal": 8,
+            "fp_normal": 9,
             "fp_opfire": 2,
             "morale": {
               "normal": 6,
