@@ -2649,10 +2649,40 @@ async function aiGenereraRöd() {
   status.textContent = 'Genererar…';
   resultat.style.display = 'none';
 
-  const enheterText = document.getElementById('aiRödEnheter').textContent;
+  // Röda enheter
+  const röda = (typeof SC !== 'undefined' && Array.isArray(SC?.orbat?.red)) ? SC.orbat.red : [];
+  const rödaText = röda.map(u => `${u.id} (startpos: ${u.hex || '?'})`).join(', ') || 'okänt';
+
+  // Blå enheter (fiendens riktning)
+  const blåa = (typeof SC !== 'undefined' && Array.isArray(SC?.orbat?.blue)) ? SC.orbat.blue : [];
+  const blåText = blåa.map(u => `${u.id} (${u.hex || '?'})`).join(', ') || 'okänt';
+
+  // Terräng — bara icke-öppen mark för att hålla prompten kort
+  const terrängObj = SC?.map?.terrain || {};
+  const terrängText = Object.entries(terrängObj)
+    .filter(([, t]) => t && t !== 'open')
+    .map(([hex, t]) => `${hex}:${t}`)
+    .join(', ') || 'ingen terrängdata';
 
   try {
-    const prompt = `Du är en militär taktiker. Baserat på beskrivningen nedan, föreslå konkreta ordrar för röda enheter i ett taktikspel på svenska. Tillgängliga ordrar är: Take (inta position/hex), Defend (försvara nuvarande hex), Support (understöd, rör sig inte), Scout (spaning, skjuter inte). Ange för varje enhet: Enhet-ID, Order, Mål-hex (om tillämpligt) och en kort motivering.\n\nRöda enheter: ${enheterText}\n\nTaktisk instruktion: ${input}`;
+    const prompt = `Du är en militär taktiker som programmerar röd sida i ett hexbaserat taktikspel. Tillgängliga ordrar: Take (rör sig mot mål-hex), Defend (försvara nuvarande hex, rör sig inte), Support (understöd, rör sig inte), Scout (spaning, skjuter inte).
+
+Karta — icke-öppen terräng (hex:typ): ${terrängText}
+
+Röda enheter (ID och startposition): ${rödaText}
+
+Blå enheter (motståndare, startposition): ${blåText}
+
+Taktisk instruktion för röd: ${input}
+
+Ge konkreta ordrar för VARJE röd enhet. Format per enhet:
+- Enhet-ID: [id]
+  Order: [Take/Defend/Support/Scout]
+  Mål-hex: [hex, endast vid Take]
+  Motivering: [en mening]
+
+Välj mål-hexar som finns på kartan och som passar taktiken. Svar på svenska.`;
+
     const text = await aiAnrop(prompt);
     document.getElementById('aiRödText').value = text;
     resultat.style.display = 'block';
