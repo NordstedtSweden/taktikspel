@@ -2665,31 +2665,57 @@ async function aiGenereraRöd() {
     .join(', ') || 'ingen terrängdata';
 
   try {
-    const prompt = `Du är en militär taktiker som programmerar röd sida i ett hexbaserat taktikspel. Tillgängliga ordrar: Take (rör sig mot mål-hex), Defend (försvara nuvarande hex, rör sig inte), Support (understöd, rör sig inte), Scout (spaning, skjuter inte).
+    const prompt = `Du är en militär taktiker som programmerar röd sida i ett hexbaserat taktikspel.
+Tillgängliga actions: take (rör sig mot mål-hex), defend (försvara nuv. hex), fallback (dra sig undan), scout (spana mot hex), hold (stå still).
 
 Karta — icke-öppen terräng (hex:typ): ${terrängText}
-
 Röda enheter (ID och startposition): ${rödaText}
-
 Blå enheter (motståndare, startposition): ${blåText}
-
 Taktisk instruktion för röd: ${input}
 
-Ge konkreta ordrar för VARJE röd enhet. Format per enhet:
-- Enhet-ID: [id]
-  Order: [Take/Defend/Support/Scout]
-  Mål-hex: [hex, endast vid Take]
-  Motivering: [en mening]
+Svara med:
+1. En kort taktisk motivering (2-4 meningar på svenska)
+2. En JSON-array inpackad i \`\`\`json ... \`\`\` med ordrar för VARJE röd enhet.
 
-Välj mål-hexar som finns på kartan och som passar taktiken. Svar på svenska.`;
+JSON-format:
+[{"id":"ENHET_ID","action":"take|defend|fallback|scout|hold","target":"HEX (endast vid take/scout)","condition":"always"}]
+
+Välj target-hexar som finns i kartan ovan och passar taktiken.`;
 
     const text = await aiAnrop(prompt);
-    document.getElementById('aiRödText').value = text;
+    // Extrahera JSON och visa motivering separat
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)```/);
+    window._aiRödJSON = null;
+    if (jsonMatch) {
+      try { window._aiRödJSON = JSON.parse(jsonMatch[1].trim()); } catch(e) {}
+    }
+    const motivering = text.replace(/```json[\s\S]*?```/g, '').trim();
+    document.getElementById('aiRödText').value = motivering + (window._aiRödJSON ? '\n\n[JSON-ordrar redo att appliceras]' : '\n\n[Kunde inte tolka JSON]');
     resultat.style.display = 'block';
     status.textContent = '';
   } catch(e) {
     status.textContent = 'Fel: ' + e.message;
   }
+}
+
+function aiAppliceraRödOrdrar() {
+  const status = document.getElementById('aiAppliceraStatus');
+  if (!window._aiRödJSON || !Array.isArray(window._aiRödJSON)) {
+    status.textContent = 'Inga ordrar att applicera — generera först.';
+    return;
+  }
+  if (!SC.aiRules) SC.aiRules = {};
+  let antal = 0;
+  for (const o of window._aiRödJSON) {
+    if (!o.id || !o.action) continue;
+    if (!SC.aiRules[o.id]) SC.aiRules[o.id] = [];
+    const regel = { condition: o.condition || 'always', action: o.action };
+    if (o.target) regel.target = o.target.toUpperCase();
+    SC.aiRules[o.id].push(regel);
+    antal++;
+  }
+  if (typeof refreshAiRegler === 'function') refreshAiRegler();
+  status.textContent = `${antal} regler applicerade — se AI-regler-fliken.`;
 }
 
 async function aiGenereraScenario() {
@@ -2779,8 +2805,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <span id="aiRödStatus" class="s"></span>
       </div>
       <div id="aiRödResultat" style="display:none;margin-top:12px">
-        <textarea id="aiRödText" style="min-height:200px;font-size:12px"></textarea>
-        <div class="s" style="margin-top:6px">Granska förslagen och applicera dem manuellt i Scenario-fliken.</div>
+        <textarea id="aiRödText" style="min-height:160px;font-size:12px"></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <button class="btn ok" onclick="aiAppliceraRödOrdrar()">Applicera ordrar i AI-regler</button>
+          <span id="aiAppliceraStatus" class="s"></span>
+        </div>
       </div>
     </div>
 
