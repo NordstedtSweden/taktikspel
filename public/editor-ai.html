@@ -2582,7 +2582,10 @@ document.getElementById('aiMapCanvas').addEventListener('click', e => {
 
 // ===== AI-STÖD (Gemini) =====
 
-const AI_LÖSEN = () => document.getElementById('lösen')?.value || '';
+const AI_LÖSEN = () => {
+  if (typeof editorPassword !== 'undefined' && editorPassword) return editorPassword;
+  return document.getElementById('loginLösen')?.value || '';
+};
 
 async function aiAnrop(prompt) {
   const res = await fetch('/api/ai', {
