@@ -80,8 +80,9 @@ app.post('/api/ai', async (req, res) => {
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     const data = await response.json();
+    if (data.error) return res.status(502).json({ ok: false, error: `Gemini: ${data.error.message}` });
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!text) return res.status(502).json({ ok: false, error: 'Inget svar från Gemini' });
+    if (!text) return res.status(502).json({ ok: false, error: 'Inget svar från Gemini — ' + JSON.stringify(data).slice(0, 200) });
     res.json({ ok: true, text });
   } catch(e) {
     res.status(500).json({ ok: false, error: e.message });
