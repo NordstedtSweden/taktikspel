@@ -2691,13 +2691,9 @@ function aiKopierade(fältId) {
 function aiUppdateraEnheter() {
   const el = document.getElementById('aiRödEnheter');
   if (!el) return;
-  if (typeof scenario === 'undefined' || !scenario?.units?.length) {
-    el.textContent = '— Ladda ett scenario för att se enheter —';
-    return;
-  }
-  const röda = scenario.units.filter(u => u.side === 'red');
-  if (!röda.length) { el.textContent = '— Inga röda enheter i scenariot —'; return; }
-  el.textContent = röda.map(u => `${u.id} (${u.hex})`).join(', ');
+  const röda = (typeof SC !== 'undefined' && Array.isArray(SC?.orbat?.red)) ? SC.orbat.red : [];
+  if (!röda.length) { el.textContent = '— Ladda ett scenario för att se enheter —'; return; }
+  el.textContent = röda.map(u => `${u.id}${u.hex ? ' (hex ' + u.hex + ')' : ''}`).join(', ');
 }
 
 // Kontrollera anslutning när AI-stöd-fliken öppnas
@@ -2746,7 +2742,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <h4 style="margin:0 0 10px;color:#ff6b6b">Röd-programmering</h4>
       <div class="s" style="margin-bottom:8px">Beskriv hur du vill att röd ska agera taktiskt — AI föreslår ordrar och mål för röda enheter.</div>
       <textarea id="aiRödInput" placeholder="Ex: Röd ska försvara byn med en grupp i stensbyggnaden och en i skogen norr om vägen. Reserv rör sig mot hotat avsnitt om blå bryter igenom." style="min-height:90px;margin-bottom:8px"></textarea>
-      <div class="s" style="margin-bottom:8px">Röda enheter i scenariot (hämtas automatiskt från aktuellt scenario):</div>
+      <div class="s" style="margin-bottom:4px;display:flex;align-items:center;gap:8px">Röda enheter i scenariot: <button class="btn" style="padding:2px 8px;font-size:11px" onclick="aiUppdateraEnheter()">Uppdatera</button></div>
       <div id="aiRödEnheter" style="font-size:12px;color:#9fb1d4;margin-bottom:8px;padding:6px;background:#0b1228;border-radius:6px;min-height:28px">— Ladda ett scenario för att se enheter —</div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="btn" style="border-color:#ff6b6b;color:#ff6b6b" onclick="aiGenereraRöd()">Generera röd-programmering</button>
