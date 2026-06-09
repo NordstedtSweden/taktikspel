@@ -13,6 +13,7 @@ const io = new Server(server, {
 
 const EDITOR_PASSWORD = process.env.EDITOR_PASSWORD || 'Gamer1337';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GITHUB_REPO = 'NordstedtSweden/taktikspel';
 const GITHUB_BRANCH = 'main';
 
@@ -64,6 +65,28 @@ app.use(express.static(path.join(__dirname, 'public'), {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   }
 }));
+
+// Gemini AI-stöd
+app.post('/api/ai', async (req, res) => {
+  const { password, prompt } = req.body;
+  if (password !== EDITOR_PASSWORD) return res.status(401).json({ ok: false, error: 'Ej behörig' });
+  if (!GEMINI_API_KEY) return res.status(503).json({ ok: false, error: 'GEMINI_API_KEY saknas på servern' });
+  if (!prompt) return res.status(400).json({ ok: false, error: 'Prompt saknas' });
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) return res.status(502).json({ ok: false, error: 'Inget svar från Gemini' });
+    res.json({ ok: true, text });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 // Kontrollera lösenord
 app.post('/api/login', (req, res) => {
