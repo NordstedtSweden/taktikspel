@@ -304,6 +304,27 @@
   .corner.bl { bottom: 24px; left: 32px; }
   .corner.br { bottom: 24px; right: 32px; text-align: right; }
 
+  /* Handledningslänkar */
+  .help-links {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-top: 32px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 1.4s forwards;
+  }
+  .help-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(74,143,212,0.45);
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
+  .help-link:hover { color: var(--blue-bright); }
+  .help-sep { color: rgba(74,143,212,0.2); font-size: 14px; }
+
   @media (max-width: 700px) {
     body { overflow-y: auto; justify-content: flex-start; padding: 40px 0 60px; }
 
@@ -377,6 +398,12 @@
       <span class="btn-title">SKAPA</span>
       <span class="btn-desc">Öppna scenarioeditorn</span>
     </a>
+  </div>
+
+  <div class="help-links">
+    <a href="handledning-spel.html" class="help-link">Handledning — Spela ett spel</a>
+    <span class="help-sep">·</span>
+    <a href="handledning-editor.html" class="help-link">Handledning — Scenarioeditorn</a>
   </div>
 </div>
 

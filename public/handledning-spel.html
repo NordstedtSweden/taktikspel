@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="sv" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Handledning — Spela ett spel | Digital Tactics Trainer</title>
+<style>
+:root {
+  --bg:#0c1525; --surface:#111d30; --surface2:#162038; --border:#1e3254;
+  --ink:#dde8f8; --muted:#7a97c4; --accent:#5aabff;
+  --blue:#4da6ff; --red:#f06464; --green:#54d18c; --warn:#f2c94c;
+  --step-bg:#0a3060; --ph-bg:#0a1828; --ph-border:#1e3a5f;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#f0f4fa; --surface:#ffffff; --surface2:#e8eef8; --border:#c8d8ef;
+    --ink:#1a2540; --muted:#5a7aaa; --accent:#1a6fd4;
+    --blue:#1a6fd4; --red:#c0392b; --green:#1e8c5a; --warn:#b07d00;
+    --step-bg:#ddeeff; --ph-bg:#e8f0fb; --ph-border:#b0c8e8;
+  }
+}
+:root[data-theme="light"] {
+  --bg:#f0f4fa; --surface:#ffffff; --surface2:#e8eef8; --border:#c8d8ef;
+  --ink:#1a2540; --muted:#5a7aaa; --accent:#1a6fd4;
+  --blue:#1a6fd4; --red:#c0392b; --green:#1e8c5a; --warn:#b07d00;
+  --step-bg:#ddeeff; --ph-bg:#e8f0fb; --ph-border:#b0c8e8;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:16px; scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; line-height:1.7; }
+
+.layout { display:grid; grid-template-columns:240px 1fr; max-width:1100px; margin:0 auto; }
+.topbar { grid-column:1/-1; background:var(--surface); border-bottom:1px solid var(--border); padding:14px 32px; display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:20; }
+.topbar-badge { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+.topbar-title { font-size:15px; font-weight:700; }
+.topbar-sep { color:var(--border); }
+.theme-btn { margin-left:auto; background:none; border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; padding:4px 10px; font-size:13px; }
+.theme-btn:hover { color:var(--ink); border-color:var(--muted); }
+
+.sidebar { position:sticky; top:53px; height:calc(100vh - 53px); overflow-y:auto; border-right:1px solid var(--border); padding:24px 16px; }
+.nav-section { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:20px 0 8px; }
+.nav-section:first-child { margin-top:0; }
+.nav-link { display:block; padding:5px 10px; border-radius:6px; font-size:13px; color:var(--muted); text-decoration:none; transition:color .15s,background .15s; }
+.nav-link:hover { color:var(--ink); background:var(--surface2); }
+.nav-link.active { color:var(--accent); background:var(--step-bg); }
+
+main { padding:40px 48px 80px; min-width:0; }
+.chapter-eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:10px; }
+.chapter-title { font-size:2rem; font-weight:800; line-height:1.2; text-wrap:balance; margin-bottom:16px; }
+.chapter-lead { font-size:1.05rem; color:var(--muted); max-width:60ch; margin-bottom:40px; line-height:1.6; }
+
+.section { margin-bottom:56px; scroll-margin-top:72px; }
+.section-title { font-size:1.1rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.section-num { font-family:'Courier New',monospace; font-size:12px; color:var(--accent); background:var(--step-bg); padding:2px 8px; border-radius:4px; }
+
+/* Role pills */
+.pill { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; border:1px solid transparent; }
+.pill-gm    { background:#0a2a1a; border-color:var(--green); color:var(--green); }
+.pill-blue  { background:var(--step-bg); border-color:var(--blue); color:var(--blue); }
+.pill-solo  { background:#0e1e40; border-color:var(--accent); color:var(--accent); }
+:root[data-theme="light"] .pill-gm   { background:#e6f7ee; }
+:root[data-theme="light"] .pill-blue { background:#ddeeff; }
+:root[data-theme="light"] .pill-solo { background:#e0eeff; }
+
+/* Role-split two-column box */
+.split { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0; }
+.split-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:16px; }
+.split-box.gm   { border-top:3px solid var(--green); }
+.split-box.blue { border-top:3px solid var(--blue); }
+.split-box.solo { border-top:3px solid var(--accent); }
+.split-box h4 { font-size:13px; font-weight:700; margin-bottom:8px; }
+.split-box.gm   h4 { color:var(--green); }
+.split-box.blue h4 { color:var(--blue); }
+.split-box.solo h4 { color:var(--accent); }
+.split-box p, .split-box li { font-size:13px; color:var(--muted); line-height:1.6; }
+.split-box ul { padding-left:16px; }
+.split-box li { margin-bottom:3px; }
+
+/* Steps */
+.steps { display:flex; flex-direction:column; gap:18px; }
+.step { display:grid; grid-template-columns:40px 1fr; gap:14px; align-items:start; }
+.step-num { width:40px; height:40px; border-radius:50%; background:var(--step-bg); border:2px solid var(--accent); color:var(--accent); font-family:'Courier New',monospace; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.step-body h4 { font-size:15px; font-weight:700; margin-bottom:5px; }
+.step-body p { font-size:14px; color:var(--muted); margin-bottom:8px; }
+.step-body p:last-child { margin-bottom:0; }
+
+/* Screenshot */
+.screenshot { background:var(--ph-bg); border:2px dashed var(--ph-border); border-radius:10px; padding:18px 22px; margin:13px 0; display:flex; flex-direction:column; align-items:center; gap:7px; text-align:center; }
+.screenshot-icon { font-size:26px; opacity:.5; }
+.screenshot-label { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ph-border); font-weight:700; }
+.screenshot-desc { font-size:13px; color:var(--muted); max-width:50ch; }
+
+/* Infobox */
+.infobox { border-radius:10px; padding:13px 16px; margin:13px 0; display:flex; gap:11px; align-items:flex-start; }
+.infobox.tip  { background:#0a2a1a; border-left:3px solid var(--green); }
+.infobox.note { background:#0a1e38; border-left:3px solid var(--accent); }
+.infobox.warn { background:#2a1e08; border-left:3px solid var(--warn); }
+.infobox-icon { font-size:15px; flex-shrink:0; margin-top:2px; }
+.infobox-text { font-size:13.5px; color:var(--muted); line-height:1.6; }
+.infobox-text strong { color:var(--ink); }
+:root[data-theme="light"] .infobox.tip  { background:#e6f7ee; }
+:root[data-theme="light"] .infobox.note { background:#e6f0fc; }
+:root[data-theme="light"] .infobox.warn { background:#fdf4e3; }
+
+/* Role cards */
+.role-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0; }
+.role-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:16px; }
+.role-card.gm   { border-top:3px solid var(--green); }
+.role-card.blue { border-top:3px solid var(--blue); }
+.role-card.red  { border-top:3px solid var(--red); }
+.role-card h4 { font-size:14px; font-weight:700; margin-bottom:6px; }
+.role-card.gm   h4 { color:var(--green); }
+.role-card.blue h4 { color:var(--blue); }
+.role-card.red  h4 { color:var(--red); }
+.role-card p { font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* Table */
+.tbl { width:100%; border-collapse:collapse; margin:10px 0; font-size:13.5px; }
+.tbl th { text-align:left; padding:7px 11px; background:var(--surface2); color:var(--muted); font-weight:600; font-size:11px; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--border); }
+.tbl td { padding:9px 11px; border-bottom:1px solid var(--border); vertical-align:top; }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:var(--surface2); }
+.tbl .desc { color:var(--muted); line-height:1.5; }
+.tag { display:inline-block; padding:2px 8px; border-radius:5px; font-size:12px; font-weight:700; }
+.tag-take    { background:#0f2e50; color:var(--blue); }
+.tag-defend  { background:#1a2e10; color:var(--green); }
+.tag-scout   { background:#2a2010; color:var(--warn); }
+.tag-support { background:#251030; color:#c09aff; }
+
+/* Phase strip */
+.phases { display:flex; gap:0; margin:18px 0; overflow-x:auto; }
+.phase { flex:1; min-width:110px; background:var(--surface2); border:1px solid var(--border); padding:11px 13px; position:relative; font-size:13px; }
+.phase:not(:last-child)::after { content:'→'; position:absolute; right:-14px; top:50%; transform:translateY(-50%); color:var(--accent); font-size:18px; z-index:1; }
+.phase:first-child { border-radius:8px 0 0 8px; }
+.phase:last-child  { border-radius:0 8px 8px 0; }
+.phase-num  { font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.phase-name { font-weight:700; color:var(--ink); }
+.phase-desc { font-size:12px; color:var(--muted); margin-top:4px; }
+
+code { font-family:'Courier New',monospace; font-size:.88em; background:var(--surface2); padding:1px 6px; border-radius:4px; color:var(--accent); }
+.divider { border:none; border-top:1px solid var(--border); margin:36px 0; }
+.sc { margin:13px 0; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.sc img { width:100%; display:block; }
+.sub-heading { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:20px 0 10px; }
+.sub-heading { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:20px 0 10px; }
+
+@media print {
+  :root { --bg:#fff; --surface:#fff; --surface2:#f4f6fa; --border:#ccc; --ink:#111; --muted:#555;
+          --accent:#0050aa; --blue:#0050aa; --red:#aa1111; --green:#116622; --warn:#886600;
+          --step-bg:#e8f0fb; --ph-bg:#f4f6fa; --ph-border:#aaa; }
+  .topbar { position:static; } .sidebar,.theme-btn { display:none; }
+  .layout { grid-template-columns:1fr; } main { padding:24px 0; }
+  .phases { flex-wrap:wrap; gap:6px; } .phase { border-radius:6px !important; }
+  .phase:not(:last-child)::after { display:none; }
+  .split { grid-template-columns:1fr; }
+  .section { page-break-inside:avoid; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<header class="topbar">
+  <span class="topbar-badge">Digital Tactics Trainer</span>
+  <span class="topbar-sep">›</span>
+  <span class="topbar-title">Handledning — Spela ett spel</span>
+  <button class="theme-btn" onclick="toggleTheme()">☀ / ☾</button>
+</header>
+
+<nav class="sidebar">
+  <div class="nav-section">Introduktion</div>
+  <a class="nav-link" href="#intro">Vad är DTT?</a>
+  <a class="nav-link" href="#roller">Roller i spelet</a>
+  <div class="nav-section">Starta spelet</div>
+  <a class="nav-link" href="#starta-spelare">Starta som spelare</a>
+  <a class="nav-link" href="#starta-gm">Starta som GM</a>
+  <div class="nav-section">Under spelet</div>
+  <a class="nav-link" href="#gm-vy">Vad GM ser</a>
+  <a class="nav-link" href="#gm-kontroller">GM-kontroller</a>
+  <a class="nav-link" href="#spelare-vy">Vad spelaren ser</a>
+  <a class="nav-link" href="#enheter">Enhetsstatus</a>
+  <a class="nav-link" href="#order">Ge order</a>
+  <a class="nav-link" href="#runda">Köra en runda</a>
+  <a class="nav-link" href="#strid">Strid och effekter</a>
+  <a class="nav-link" href="#vinna">Vinna och förlora</a>
+</nav>
+
+<main>
+
+  <div class="chapter-eyebrow">Handledning · Del 1</div>
+  <h1 class="chapter-title">Spela ett spel</h1>
+  <p class="chapter-lead">Den här handledningen täcker alla roller — spelledare och spelare. Läs avsnitten för din roll och hoppas över det som inte gäller dig.</p>
+
+  <!-- ── 01 Vad är DTT ── -->
+  <section class="section" id="intro">
+    <h2 class="section-title"><span class="section-num">01</span> Vad är Digital Tactics Trainer?</h2>
+    <p style="color:var(--muted);margin-bottom:16px">Digital Tactics Trainer (DTT) är ett webbaserat taktikspel för militär utbildning. Det simulerar infanteristrid på hexkarta och kan spelas ensam (solo) eller med en spelledare och deltagare uppkopplade via webbläsaren.</p>
+    <div class="role-cards">
+      <div class="role-card gm">
+        <h4>GM — Spelledare</h4>
+        <p>Ser hela kartan, laddar scenario, kör rundorna och bestämmer hur spelet slutar. Vanligtvis instruktören.</p>
+      </div>
+      <div class="role-card blue">
+        <h4>Blue — Spelaren</h4>
+        <p>Styr blå enheter på kartan. Ser bara det som egna enheter har siktlinje till — fog of war gäller. Kan inte se hur spelet är upplagt bakom kulisserna.</p>
+      </div>
+      <div class="role-card red">
+        <h4>Red — Motstånd</h4>
+        <p>I solo-läge styrs röd av AI:n. I ett PvP-spel kan en annan deltagare eller GM spela röd.</p>
+      </div>
+    </div>
+    <div class="infobox note">
+      <span class="infobox-icon">ℹ</span>
+      <div class="infobox-text"><strong>Solo-läge:</strong> Du spelar som Blue och AI:n sköter Red automatiskt. Du behöver ingen GM — du laddar scenario och kör rundorna själv.</div>
+    </div>
+  </section>
+
+  <!-- ── 02 Starta som spelare ── -->
+  <section class="section" id="starta-spelare">
+    <h2 class="section-title"><span class="section-num">02</span> Starta som spelare <span class="pill pill-blue">Blue / Red</span></h2>
+    <p style="color:var(--muted);margin-bottom:16px">Som spelare i ett PvP-spel ansluter du dig till ett pågående spel som GM har startat. Du laddar inte scenariot själv — det gör GM.</p>
+
+    <div class="sc"><img src="img/startskarm.png" alt="Startskärmen med SPELA, SOLO och SKAPA"></div>
+
+    <div class="split" style="margin-bottom:20px">
+      <div class="split-box blue">
+        <h4>PvP — anslut till GM:s spel</h4>
+        <ul>
+          <li>Öppna spelet i webbläsaren</li>
+          <li>Välj roll: <strong>Blue</strong> eller <strong>Red</strong></li>
+          <li>Ange spelkoden du fått av GM</li>
+          <li>Klicka <strong>Anslut</strong></li>
+          <li>Vänta — GM laddar scenariot och startar</li>
+        </ul>
+      </div>
+      <div class="split-box solo">
+        <h4>Solo — spela ensam</h4>
+        <ul>
+          <li>Öppna spelet i webbläsaren</li>
+          <li>Välj roll: <strong>Blue</strong></li>
+          <li>Klicka <strong>Solo-läge</strong> (ingen kod behövs)</li>
+          <li>Välj scenario ur listan och ladda det</li>
+          <li>Läs överlämningen och starta</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sc"><img src="img/login.png" alt="Inloggningsskärmen med spelkod, rollväljare och Anslut-knapp"></div>
+
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text">Spelkoden hittar du på GM. Alla i samma spel — GM, Blue och Red — använder <em>exakt samma</em> kod.</div>
+    </div>
+  </section>
+
+  <!-- ── 03 Starta som GM ── -->
+  <section class="section" id="starta-gm">
+    <h2 class="section-title"><span class="section-num">03</span> Starta och leda ett spel <span class="pill pill-gm">GM</span></h2>
+    <p style="color:var(--muted);margin-bottom:16px">Som GM förbereder du spelet och leder det under hela övningen. Det är du som laddar scenariot, skickar ut spelkoden och kör rundorna.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Öppna spelet och välj GM</h4>
+          <p>Navigera till spelets adress i webbläsaren. Välj rollen <strong>GM</strong> i rollmenyn.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Ange en spelkod och anslut</h4>
+          <p>Hitta på en valfri spelkod, t.ex. <code>ÖVNING1</code>. Klicka <strong>Anslut</strong>. Dela sedan koden med deltagarna — de använder samma kod för att ansluta som Blue/Red.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Ladda scenariot</h4>
+          <p>Klicka på <strong>Välj scenario</strong> i GM-panelen och välj ett scenario ur listan. Kartan och enheterna laddas automatiskt och skickas ut till alla anslutna deltagare.</p>
+          <div class="sc"><img src="img/valj-scenario.png" alt="Dialogrutan Välj scenario med lista över tillgängliga scenarion"></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Vänta in deltagarna</h4>
+          <p>Kontrollera att deltagarna har anslutit och ser kartan. Visa överlämningen och ge dem tid att läsa uppdraget innan första rundan körs.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h4>Kör rundorna</h4>
+          <p>Det är GM som klickar <strong>Nästa runda</strong> — inte spelarna. Kör rundan när alla spelare har gett sina order.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="infobox warn">
+      <span class="infobox-icon">⚠</span>
+      <div class="infobox-text"><strong>PvP vs solo:</strong> I ett PvP-spel är det alltid GM som kör rundorna och avgör när spelet är slut. Spelarna kan inte ladda scenario eller starta rundor på egen hand.</div>
+    </div>
+  </section>
+
+  <!-- ── 04 Vad GM ser ── -->
+  <section class="section" id="gm-vy">
+    <h2 class="section-title"><span class="section-num">04</span> Vad GM ser <span class="pill pill-gm">GM</span></h2>
+    <p style="color:var(--muted);margin-bottom:16px">GM ser hela spelplanen utan begränsningar — inga dolda enheter, ingen fog of war.</p>
+
+    <div class="sc"><img src="img/gm-vy.png" alt="GM:s helskärm med enhetslista till vänster, karta i mitten och ready-panel till höger"></div>
+
+    <div class="steps" style="margin-top:18px">
+      <div class="step">
+        <div class="step-num">A</div>
+        <div class="step-body">
+          <h4>Kartan — full sikt</h4>
+          <p>Alla enheter på båda sidor är alltid synliga för GM, oavsett siktlinjer. GM ser också rörelsepilarna som spelarna har satt.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">B</div>
+        <div class="step-body">
+          <h4>Kontrollpanel</h4>
+          <p>GM har tillgång till knappar för att ladda scenario, köra nästa runda, se händelseloggen och manuellt justera spelet vid behov.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">C</div>
+        <div class="step-body">
+          <h4>Händelselogg</h4>
+          <p>En detaljerad logg visar alla stridshändelser — vilka enheter sköt, resultat och effekter. Användbar för debriefing efter övningen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 05 GM-kontroller ── -->
+  <section class="section" id="gm-kontroller">
+    <h2 class="section-title"><span class="section-num">05</span> GM-kontroller <span class="pill pill-gm">GM</span></h2>
+    <p style="color:var(--muted);margin-bottom:16px">I högerpanelen har GM en ready-panel med knappar och kryssrutor för att styra rundflödet och granska spelet.</p>
+
+    <div class="sc"><img src="img/ready-panel.png" alt="Ready-panelen med BLUE READY, RED READY, auto-kryssrutor och Visa replay"></div>
+
+    <div class="sub-heading" style="margin-top:20px">Ready-systemet</div>
+    <p style="color:var(--muted);margin-bottom:14px">Innan varje runda körs måste GM bekräfta att varje sida är redo. Det sker med <strong>BLUE READY</strong>- och <strong>RED READY</strong>-knapparna. Statusen visas i realtid — <span style="color:var(--warn)">BLUE: väntar…</span> tills klar, sedan <span style="color:var(--green)">BLUE: READY</span>.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Kontroll</th><th>Vad den gör</th><th>Typisk användning</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>BLUE READY</strong></td>
+          <td class="desc">Markerar blå sida som redo. GM klickar den när Blue-spelarna har gett alla sina order.</td>
+          <td class="desc">PvP — GM signalerar till systemet att Blue är klar</td>
+        </tr>
+        <tr>
+          <td><strong>RED READY</strong></td>
+          <td class="desc">Markerar röd sida som redo. I solo-läge styrs Red av AI:n och behöver aldrig manuellt readyas.</td>
+          <td class="desc">PvP med mänsklig Red-spelare</td>
+        </tr>
+        <tr>
+          <td><strong>▶ Nästa runda</strong></td>
+          <td class="desc">Kör rundan manuellt oavsett ready-status. Används när GM vill ha full kontroll över takten.</td>
+          <td class="desc">Långsammare genomgångar, demo</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="sub-heading">Auto-funktioner</div>
+    <p style="color:var(--muted);margin-bottom:14px">Kryssrutorna i ready-panelen automatiserar delar av rundflödet och är särskilt användbara i solo-läge eller vid snabba genomgångar.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Kryssruta</th><th>Vad den gör</th><th>När den passar</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Blue auto-ready</strong></td>
+          <td class="desc">Markerar Blue som ready automatiskt varje runda — GM behöver inte klicka BLUE READY manuellt.</td>
+          <td class="desc">Solo-läge, övningar med hög tempo</td>
+        </tr>
+        <tr>
+          <td><strong>Red auto-ready</strong></td>
+          <td class="desc">Markerar Red som ready automatiskt. Eftersom AI:n alltid är klar är detta normalt förkryssat i solo-läge.</td>
+          <td class="desc">Alltid i solo-läge</td>
+        </tr>
+        <tr>
+          <td><strong>Auto kör nästa runda</strong></td>
+          <td class="desc">När båda sidor är ready körs nästa runda automatiskt utan att GM behöver klicka ▶ Nästa runda. Förkryssad som standard.</td>
+          <td class="desc">Solo-läge, snabbt PvP-spel</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text"><strong>Rekommenderat för solo-läge:</strong> Kryssa i alla tre — Blue auto-ready, Red auto-ready och Auto kör nästa runda. Då behöver spelaren bara ge order och spelet rullar automatiskt vidare.</div>
+    </div>
+    <div class="infobox note">
+      <span class="infobox-icon">ℹ</span>
+      <div class="infobox-text"><strong>Pedagogisk paus:</strong> Avkryssa <em>Auto kör nästa runda</em> om du vill pausa mellan rundorna för diskussion eller genomgång av läget innan rundan körs.</div>
+    </div>
+
+    <div class="sub-heading">📽 Replay-funktionen</div>
+    <p style="color:var(--muted);margin-bottom:14px">Replay låter GM spola tillbaka och gå igenom vad som hände händelse för händelse eller runda för runda. Perfekt för debriefing efter övningen.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Öppna replay</h4>
+          <p>Klicka på <strong>📽 Visa replay</strong> i ready-panelen. En kontrollpanel dyker upp längst ned på skärmen.</p>
+          <div class="sc"><img src="img/replay.png" alt="Replay-panelen med navigeringsknappar och händelsebeskrivning längst ned på skärmen"></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Navigera i händelsehistoriken</h4>
+          <p>Använd knapparna i replay-panelen för att stega fram och tillbaka:</p>
+          <table class="tbl" style="margin-top:8px">
+            <thead><tr><th>Knapp</th><th>Funktion</th></tr></thead>
+            <tbody>
+              <tr><td><strong>⏮</strong></td><td class="desc">Hoppa till allra första rundan</td></tr>
+              <tr><td><strong>⏪</strong></td><td class="desc">Föregående runda</td></tr>
+              <tr><td><strong>◀</strong></td><td class="desc">Föregående enskild händelse</td></tr>
+              <tr><td><strong>▶</strong></td><td class="desc">Nästa enskild händelse</td></tr>
+              <tr><td><strong>⏩</strong></td><td class="desc">Nästa runda</td></tr>
+              <tr><td><strong>⏭</strong></td><td class="desc">Hoppa till sista rundan</td></tr>
+              <tr><td><strong>✕</strong></td><td class="desc">Stäng replay och återgå till normalt spelläge</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Läs händelsebeskrivningen</h4>
+          <p>Under knapparna visas en text som beskriver den aktuella händelsen — t.ex. vilken enhet som sköt på vad och med vilket resultat. Kartan uppdateras samtidigt och visar enheternas positioner vid den tidpunkten.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text"><strong>Debriefing-tips:</strong> Starta replay från runda 1 och gå igenom händelserna med deltagarna samlade runt skärmen. Pausa vid avgörande beslut och fråga: "Vad borde ha gjorts annorlunda här?"</div>
+    </div>
+  </section>
+
+  <!-- ── 06 Vad spelaren ser ── -->
+  <section class="section" id="spelare-vy">
+    <h2 class="section-title"><span class="section-num">06</span> Vad spelaren ser <span class="pill pill-blue">Blue / Solo</span></h2>
+    <p style="color:var(--muted);margin-bottom:16px">Spelaren ser <strong>enbart kartan</strong>. Det finns ingen enhetslista i en sidopanel — allt sker genom att klicka direkt på hexkartan.</p>
+
+    <div class="sc"><img src="img/spelare-vy.png" alt="Spelarens vy: hexkarta med egna blå enheter och fog of war i outforskade hexar"></div>
+
+    <div class="steps" style="margin-top:18px">
+      <div class="step">
+        <div class="step-num">A</div>
+        <div class="step-body">
+          <h4>Egna enheter — alltid synliga</h4>
+          <p>Spelarens blå enheter visas alltid som ikoner på kartan. Klicka på en enhet för att ge den en order.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">B</div>
+        <div class="step-body">
+          <h4>Fiendeenheter — bara i siktlinje</h4>
+          <p>Röda enheter är bara synliga om en av dina egna enheter har siktlinje till dem. Fiender i skog, bakom byggnader eller utanför LOS är dolda — du vet inte var de är.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">C</div>
+        <div class="step-body">
+          <h4>Dimma — outforskade hexar</h4>
+          <p>Hexar som ingen av dina enheter ser är täckta av dimma. Du kan inte se terräng eller enheter där.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">D</div>
+        <div class="step-body">
+          <h4>Händelselogg</h4>
+          <p>En logg visar vad som händer under rundan — egna och synliga fiendeenheter som sköt, effekter och statusförändringar.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="infobox note">
+      <span class="infobox-icon">ℹ</span>
+      <div class="infobox-text"><strong>Drönare och IR-spaning:</strong> Om scenariot innehåller drönare kan de avslöja dolda fiendeenheter i öppen terräng — men <em>inte</em> enheter som befinner sig i byggnader.</div>
+    </div>
+
+    <hr class="divider">
+    <div class="sub-heading">Terrängtyper och deras effekt</div>
+    <table class="tbl">
+      <thead><tr><th>Terräng</th><th>Rörelse</th><th>Skydd</th><th>Blockerar sikt</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Öppen mark</strong></td><td class="desc">Normal</td><td class="desc">Inget</td><td class="desc">Nej</td></tr>
+        <tr><td><strong>Väg</strong></td><td class="desc">Snabb</td><td class="desc">Inget</td><td class="desc">Nej</td></tr>
+        <tr><td><strong>Häck</strong></td><td class="desc">Långsam</td><td class="desc">Litet</td><td class="desc">Delvis</td></tr>
+        <tr><td><strong>Skog</strong></td><td class="desc">Långsam, ej fordon</td><td class="desc">Bra</td><td class="desc">Ja</td></tr>
+        <tr><td><strong>Stenbyggnad</strong></td><td class="desc">Långsam, ej fordon</td><td class="desc">Utmärkt</td><td class="desc">Ja</td></tr>
+        <tr><td><strong>Träbyggnad</strong></td><td class="desc">Långsam, ej fordon</td><td class="desc">Bra</td><td class="desc">Ja</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 06 Enhetsstatus ── -->
+  <section class="section" id="enheter">
+    <h2 class="section-title"><span class="section-num">07</span> Enhetsstatus</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Varje enhet på kartan visar sin aktuella status genom sin ikon och eventuella markeringar.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">▣</div>
+        <div class="step-body">
+          <h4>Full styrka</h4>
+          <p>Enheten är hel och kan verka normalt — röra sig, skjuta och ge understöd.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">▤</div>
+        <div class="step-body">
+          <h4>Reduced — Reducerad</h4>
+          <p>Enheten har tagit förluster. Rörelseförmåga och eldkraft kan vara nedsatt.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">☠</div>
+        <div class="step-body">
+          <h4>Eliminated — Utslagen</h4>
+          <p>Enheten är ur strid och kan inte längre agera. Den försvinner från kartan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="infobox warn">
+      <span class="infobox-icon">⚠</span>
+      <div class="infobox-text"><strong>Suppression:</strong> En enhet kan bli <strong>gul-suppressed</strong> (−1 på nästa slag) eller <strong>röd-suppressed</strong> (kan inte agera nästa runda) av fiendens eld. Suppression visas som färgad markering på ikonen.</div>
+    </div>
+  </section>
+
+  <!-- ── 07 Ge order ── -->
+  <section class="section" id="order">
+    <h2 class="section-title"><span class="section-num">08</span> Ge order till enheter <span class="pill pill-blue">Blue / Solo</span></h2>
+    <p style="color:var(--muted);margin-bottom:14px">Order ges alltid genom att klicka direkt på enheten <strong>på kartan</strong>. Det finns ingen separat enhetslista att klicka i.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Klicka på en enhet på kartan</h4>
+          <p>Klicka på en av dina egna enheter på hexkartan. En ordermeny visas med tillgängliga uppgifter för den valda enheten.</p>
+          <div class="sc"><img src="img/ordermeny.png" alt="Ordermenyn med Take, Defend, Scout, Support och tillgängliga resurser"></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Välj uppgift</h4>
+          <p>Klicka på den uppgift du vill tilldela. För <em>Ta - Seize</em> och <em>Spana - Reconnoitre</em> måste du sedan klicka på en mål-hex på kartan.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Bekräfta mål-hex (om aktuellt)</h4>
+          <p>Klicka på den hex du vill att enheten ska röra sig mot. En pil visar det valda målet.</p>
+          <div class="sc"><img src="img/eldlinje.png" alt="Enhet på kartan med siktlinje till mål-hex markerad"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-heading">Tillgängliga uppgifter</div>
+    <table class="tbl">
+      <thead><tr><th>Uppgift</th><th>Vad enheten gör</th><th>Kräver mål</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-take">Ta - Seize</span></td>
+          <td class="desc">Rör sig mot vald hex. Öppnar eld om fiende är inom räckvidd längs vägen.</td>
+          <td class="desc">Ja — klicka mål-hex</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-defend">Försvara - Defend</span></td>
+          <td class="desc">Stannar kvar och håller positionen. Öppnar eld på fiender inom räckvidd.</td>
+          <td class="desc">Nej</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-scout">Spana - Reconnoitre</span></td>
+          <td class="desc">Rör sig mot mål-hex utan att öppna eld. Utökar siktlinjen.</td>
+          <td class="desc">Ja — klicka mål-hex</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-support">Understödja - Support</span></td>
+          <td class="desc">Stannar och ger eldunderstöd till närstående egna enheter.</td>
+          <td class="desc">Nej</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text">Ge alla dina enheter order innan du (i solo-läge) eller GM kör rundan. Enheter utan order agerar inte.</div>
+    </div>
+  </section>
+
+  <!-- ── 08 Köra en runda ── -->
+  <section class="section" id="runda">
+    <h2 class="section-title"><span class="section-num">09</span> Köra en runda</h2>
+    <p style="color:var(--muted);margin-bottom:18px">Varje runda körs i fyra automatiska faser.</p>
+
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-num">Fas 1</div>
+        <div class="phase-name">Rörelse</div>
+        <div class="phase-desc">Alla enheter rör sig mot sina mål</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Fas 2</div>
+        <div class="phase-name">Eld</div>
+        <div class="phase-desc">Enheter inom räckvidd öppnar eld</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Fas 3</div>
+        <div class="phase-name">Närstrid</div>
+        <div class="phase-desc">Strider löses på delade hexar</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">Fas 4</div>
+        <div class="phase-name">Segercheck</div>
+        <div class="phase-desc">Kontroll om segervillkor är uppfyllda</div>
+      </div>
+    </div>
+
+    <div class="split" style="margin-top:20px">
+      <div class="split-box gm">
+        <h4>PvP — GM kör rundan</h4>
+        <ul>
+          <li>Spelarna ger sina order på kartan</li>
+          <li>GM kontrollerar att alla har gett order</li>
+          <li>GM klickar <strong>Nästa runda</strong></li>
+          <li>Faserna körs, händelseloggen uppdateras</li>
+          <li>GM bestämmer när nästa runda börjar</li>
+        </ul>
+      </div>
+      <div class="split-box solo">
+        <h4>Solo — spelaren kör rundan</h4>
+        <ul>
+          <li>Ge alla dina enheter order</li>
+          <li>Klicka <strong>Nästa runda</strong></li>
+          <li>Faserna körs automatiskt</li>
+          <li>Läs händelseloggen</li>
+          <li>Ge nya order och upprepa</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sc" style="margin-top:16px"><img src="img/logg.png" alt="Händelseloggen med stridshändelser och Nästa runda-knappen"></div>
+  </section>
+
+  <!-- ── 09 Strid ── -->
+  <section class="section" id="strid">
+    <h2 class="section-title"><span class="section-num">10</span> Strid och effekter</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Strid avgörs med ett tiosidat tärningsslag (1–10) plus modifikationer. Du behöver nå träfftröskeln för att träffa.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Modifikation</th><th>Effekt på träffslaget</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Eldkraft (fp)</strong></td><td class="desc">fp 5 = ±0, fp 6 = +1, fp 7 = +2 osv. Starkare enhet träffar lättare.</td></tr>
+        <tr><td><strong>Avstånd</strong></td><td class="desc">Kort (≤3 hex): +1 | Medel: ±0 | Långt: −1 | Utom räckvidd: ingen eld</td></tr>
+        <tr><td><strong>Försvararens terräng</strong></td><td class="desc">Skog/byggnad ger skyddsbonus — svårare att träffa.</td></tr>
+        <tr><td><strong>Suppression</strong></td><td class="desc">Gul-suppressed skytt: −1 på slag.</td></tr>
+        <tr><td><strong>Order</strong></td><td class="desc">Defend/Support ger initiativfördel (förhand).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-heading">Möjliga träffeffekter</div>
+    <table class="tbl">
+      <thead><tr><th>Effekt</th><th>Innebär</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Suppressed (gul)</strong></td><td class="desc">Enheten får −1 på nästa slag och begränsad rörelseförmåga.</td></tr>
+        <tr><td><strong>Suppressed (röd)</strong></td><td class="desc">Enheten kan inte agera nästa runda.</td></tr>
+        <tr><td><strong>Reduced</strong></td><td class="desc">Enheten tar förluster och degraderas till halv styrka.</td></tr>
+        <tr><td><strong>Eliminated</strong></td><td class="desc">Enheten är utslagen och tas bort från spelet.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="infobox note">
+      <span class="infobox-icon">ℹ</span>
+      <div class="infobox-text"><strong>Indirekt eld:</strong> Om du har tillgång till artilleri eller granatkastare syns de som resurser i ordermenyn. Klicka på resursen och sedan på den hex du vill bekämpa.</div>
+    </div>
+  </section>
+
+  <!-- ── 10 Vinna och förlora ── -->
+  <section class="section" id="vinna">
+    <h2 class="section-title"><span class="section-num">11</span> Vinna och förlora</h2>
+
+    <div class="infobox warn">
+      <span class="infobox-icon">⚠</span>
+      <div class="infobox-text"><strong>Solo vs PvP:</strong> Automatiska segervillkor gäller <strong>enbart i solo-läge</strong>. I ett PvP-spel avgör <strong>GM</strong> när och hur spelet är slut — baserat på scenariot och sin taktiska bedömning.</div>
+    </div>
+
+    <div class="split" style="margin-top:16px">
+      <div class="split-box solo">
+        <h4>Solo — automatiska villkor</h4>
+        <p style="margin-bottom:8px">Spelet kontrollerar segervillkoret automatiskt efter varje runda. Vanliga villkor:</p>
+        <ul>
+          <li><strong>Ta en hex</strong> — ha en enhet på angiven hex</li>
+          <li><strong>Håll en hex</strong> — håll hexen i N rundor</li>
+          <li><strong>Eliminera alla röda</strong> — alla röda utslagda</li>
+          <li><strong>Överlev N rundor</strong> — ha enheter kvar</li>
+        </ul>
+        <p style="margin-top:8px">Spelet meddelar automatiskt om du vinner eller förlorar.</p>
+      </div>
+      <div class="split-box gm">
+        <h4>PvP — GM bestämmer</h4>
+        <p style="margin-bottom:8px">Segervillkoren är riktmärken, inte hårda regler. GM kan:</p>
+        <ul>
+          <li><strong>Avblåsa</strong> om utfallet är klart</li>
+          <li><strong>Förlänga</strong> för att ge deltagarna mer tid</li>
+          <li><strong>Ändra förutsättningar</strong> — introducera förstärkning eller nytt uppdrag</li>
+          <li><strong>Hålla debriefing</strong> — genomgång av taktiska val</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+const sections = document.querySelectorAll('.section');
+const links = document.querySelectorAll('.nav-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

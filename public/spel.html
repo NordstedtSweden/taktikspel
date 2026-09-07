@@ -539,10 +539,10 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 
 <!-- Ordermeny -->
 <div id="orderMenu" class="orderMenu hidden">
-  <button data-order="take">🎯 Take (Ta)</button>
-  <button data-order="defend">🛡️ Defend (Försvara)</button>
-  <button data-order="scout">🔭 Scout (Spana)</button>
-  <button data-order="support">🤝 Support (Understödja)</button>
+  <button data-order="take">🎯 Ta - Seize</button>
+  <button data-order="defend">🛡️ Försvara - Defend</button>
+  <button data-order="scout">🔭 Spana - Reconnoitre</button>
+  <button data-order="support">🤝 Understödja - Support</button>
   <button data-order="none">✖ Rensa order</button>
   <div id="orderMenuResurser"></div>
 </div>
@@ -5688,7 +5688,7 @@ function openOrderMenuAt(x,y,unit){
       if (b.dataset.order === 'take') b.textContent = '🚁 Flyg till';
     } else {
       b.style.display = '';
-      if (b.dataset.order === 'take') b.textContent = '🎯 Take (Ta)';
+      if (b.dataset.order === 'take') b.textContent = '🎯 Ta - Seize';
     }
   });
 

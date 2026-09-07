@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="sv" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Handledning — Skapa ett scenario | Digital Tactics Trainer</title>
+<style>
+:root {
+  --bg:#0c1525; --surface:#111d30; --surface2:#162038; --border:#1e3254;
+  --ink:#dde8f8; --muted:#7a97c4; --accent:#5aabff; --blue:#4da6ff;
+  --red:#f06464; --green:#54d18c; --warn:#f2c94c; --purple:#b08fff;
+  --step-bg:#0a3060; --ph-bg:#0a1828; --ph-border:#1e3a5f;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#f0f4fa; --surface:#ffffff; --surface2:#e8eef8; --border:#c8d8ef;
+    --ink:#1a2540; --muted:#5a7aaa; --accent:#1a6fd4; --blue:#1a6fd4;
+    --red:#c0392b; --green:#1e8c5a; --warn:#b07d00; --purple:#7040cc;
+    --step-bg:#ddeeff; --ph-bg:#e8f0fb; --ph-border:#b0c8e8;
+  }
+}
+:root[data-theme="light"] {
+  --bg:#f0f4fa; --surface:#ffffff; --surface2:#e8eef8; --border:#c8d8ef;
+  --ink:#1a2540; --muted:#5a7aaa; --accent:#1a6fd4; --blue:#1a6fd4;
+  --red:#c0392b; --green:#1e8c5a; --warn:#b07d00; --purple:#7040cc;
+  --step-bg:#ddeeff; --ph-bg:#e8f0fb; --ph-border:#b0c8e8;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body { background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; line-height:1.7; }
+
+.layout { display:grid; grid-template-columns:240px 1fr; max-width:1100px; margin:0 auto; }
+.topbar { grid-column:1/-1; background:var(--surface); border-bottom:1px solid var(--border); padding:14px 32px; display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:20; }
+.topbar-badge { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+.topbar-title { font-size:15px; font-weight:700; }
+.topbar-sep { color:var(--border); }
+.topbar-part { font-size:12px; background:var(--step-bg); color:var(--accent); padding:2px 8px; border-radius:5px; font-weight:700; }
+.theme-btn { margin-left:auto; background:none; border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; padding:4px 10px; font-size:13px; }
+.theme-btn:hover { color:var(--ink); border-color:var(--muted); }
+
+.sidebar { position:sticky; top:53px; height:calc(100vh - 53px); overflow-y:auto; border-right:1px solid var(--border); padding:24px 16px; }
+.nav-section { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:18px 0 7px; }
+.nav-section:first-child { margin-top:0; }
+.nav-link { display:block; padding:5px 10px; border-radius:6px; font-size:13px; color:var(--muted); text-decoration:none; transition:color .15s,background .15s; }
+.nav-link:hover { color:var(--ink); background:var(--surface2); }
+.nav-link.active { color:var(--accent); background:var(--step-bg); }
+.nav-back { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); text-decoration:none; padding:6px 10px; border-radius:6px; border:1px solid var(--border); margin-bottom:16px; }
+.nav-back:hover { color:var(--ink); }
+
+main { padding:40px 48px 80px; min-width:0; }
+.chapter-eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:10px; }
+.chapter-title { font-size:2rem; font-weight:800; line-height:1.2; text-wrap:balance; margin-bottom:16px; }
+.chapter-lead { font-size:1.05rem; color:var(--muted); max-width:60ch; margin-bottom:40px; line-height:1.6; }
+
+.section { margin-bottom:52px; scroll-margin-top:72px; }
+.section-title { font-size:1.1rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.section-num { font-family:'Courier New',monospace; font-size:12px; color:var(--accent); background:var(--step-bg); padding:2px 8px; border-radius:4px; }
+
+/* Tab pill */
+.tab-pill { display:inline-flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:4px 12px; font-size:13px; font-weight:700; color:var(--ink); margin-bottom:14px; }
+.tab-pill.karta  { border-color:var(--muted); }
+.tab-pill.units  { border-color:var(--green); color:var(--green); background:#0a2a1a; }
+.tab-pill.scenario { border-color:var(--accent); color:var(--accent); background:var(--step-bg); }
+.tab-pill.ai     { border-color:var(--warn); color:var(--warn); background:#2a1e08; }
+:root[data-theme="light"] .tab-pill.units    { background:#e6f7ee; }
+:root[data-theme="light"] .tab-pill.scenario { background:#ddeeff; }
+:root[data-theme="light"] .tab-pill.ai       { background:#fdf4e3; }
+
+/* Steps */
+.steps { display:flex; flex-direction:column; gap:18px; }
+.step { display:grid; grid-template-columns:40px 1fr; gap:14px; align-items:start; }
+.step-num { width:40px; height:40px; border-radius:50%; background:var(--step-bg); border:2px solid var(--accent); color:var(--accent); font-family:'Courier New',monospace; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.step-body h4 { font-size:15px; font-weight:700; margin-bottom:5px; }
+.step-body p { font-size:14px; color:var(--muted); margin-bottom:8px; }
+.step-body p:last-child { margin-bottom:0; }
+
+/* Screenshot */
+.screenshot { background:var(--ph-bg); border:2px dashed var(--ph-border); border-radius:10px; padding:18px 22px; margin:12px 0; display:flex; flex-direction:column; align-items:center; gap:7px; text-align:center; }
+.screenshot-icon { font-size:26px; opacity:.5; }
+.screenshot-label { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ph-border); font-weight:700; }
+.screenshot-desc { font-size:13px; color:var(--muted); max-width:50ch; }
+
+/* Infobox */
+.infobox { border-radius:10px; padding:13px 16px; margin:12px 0; display:flex; gap:11px; align-items:flex-start; }
+.infobox.tip  { background:#0a2a1a; border-left:3px solid var(--green); }
+.infobox.note { background:#0a1e38; border-left:3px solid var(--accent); }
+.infobox.warn { background:#2a1e08; border-left:3px solid var(--warn); }
+.infobox-icon { font-size:15px; flex-shrink:0; margin-top:2px; }
+.infobox-text { font-size:13.5px; color:var(--muted); line-height:1.6; }
+.infobox-text strong { color:var(--ink); }
+:root[data-theme="light"] .infobox.tip  { background:#e6f7ee; }
+:root[data-theme="light"] .infobox.note { background:#e6f0fc; }
+:root[data-theme="light"] .infobox.warn { background:#fdf4e3; }
+
+/* Workflow strip */
+.workflow { display:flex; gap:0; margin:18px 0; overflow-x:auto; }
+.wf-step { flex:1; min-width:90px; background:var(--surface2); border:1px solid var(--border); padding:11px 12px; position:relative; font-size:12px; }
+.wf-step:not(:last-child)::after { content:'→'; position:absolute; right:-14px; top:50%; transform:translateY(-50%); color:var(--accent); font-size:17px; z-index:1; }
+.wf-step:first-child { border-radius:8px 0 0 8px; }
+.wf-step:last-child  { border-radius:0 8px 8px 0; }
+.wf-num  { font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+.wf-name { font-weight:700; color:var(--ink); font-size:13px; }
+.wf-desc { font-size:11px; color:var(--muted); margin-top:3px; }
+
+/* Tables */
+.tbl { width:100%; border-collapse:collapse; margin:10px 0; font-size:13.5px; }
+.tbl th { text-align:left; padding:7px 11px; background:var(--surface2); color:var(--muted); font-weight:600; font-size:11px; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--border); }
+.tbl td { padding:9px 11px; border-bottom:1px solid var(--border); vertical-align:top; }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:var(--surface2); }
+.tbl .desc { color:var(--muted); line-height:1.5; }
+
+/* Phase box */
+.phases-box { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:16px; margin:14px 0; }
+.phase-row { display:grid; grid-template-columns:130px 1fr; gap:12px; align-items:start; padding:10px 0; border-bottom:1px solid var(--border); }
+.phase-row:last-child { border-bottom:none; padding-bottom:0; }
+.phase-label { font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; }
+.phase-label.inled { color:var(--accent); }
+.phase-label.dar   { color:var(--muted); }
+.phase-label.slut  { color:#7a9fc0; }
+.phase-label.omf   { color:var(--warn); }
+.phase-body p { font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:4px; }
+.phase-body p:last-child { margin-bottom:0; }
+
+/* Prop grid */
+.prop-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0; }
+.prop-card { background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:13px 15px; }
+.prop-card h4 { font-size:13px; font-weight:700; margin-bottom:4px; }
+.prop-card p { font-size:13px; color:var(--muted); line-height:1.5; }
+.prop-lbl { font-size:10px; letter-spacing:.1em; text-transform:uppercase; background:var(--step-bg); color:var(--accent); padding:1px 6px; border-radius:4px; display:inline-block; margin-right:6px; }
+
+/* Cond/action example */
+.rule-example { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin:12px 0; }
+.rule-row { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:8px; }
+.rule-row:last-child { margin-bottom:0; }
+.chip { display:inline-block; padding:3px 9px; border-radius:6px; font-size:12px; font-weight:600; }
+.chip-if   { background:#0f2e50; color:var(--blue); }
+.chip-then { background:#1a2e10; color:var(--green); }
+.chip-when { background:#2a1e08; color:var(--warn); }
+.chip-text { color:var(--muted); font-size:13px; }
+
+code { font-family:'Courier New',monospace; font-size:.88em; background:var(--surface2); padding:1px 6px; border-radius:4px; color:var(--accent); }
+.divider { border:none; border-top:1px solid var(--border); margin:32px 0; }
+.sub-heading { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 0 10px; }
+
+@media print {
+  :root { --bg:#fff; --surface:#fff; --surface2:#f4f6fa; --border:#ccc; --ink:#111; --muted:#555;
+          --accent:#0050aa; --blue:#0050aa; --red:#aa1111; --green:#116622; --warn:#886600;
+          --step-bg:#e8f0fb; --ph-bg:#f4f6fa; --ph-border:#aaa; }
+  .topbar { position:static; } .sidebar,.theme-btn { display:none; }
+  .layout { grid-template-columns:1fr; } main { padding:24px 0; }
+  .workflow { flex-wrap:wrap; gap:6px; }
+  .wf-step { border-radius:6px !important; }
+  .wf-step:not(:last-child)::after { display:none; }
+  .prop-grid { grid-template-columns:1fr; }
+  .section, .phases-box, .rule-example { page-break-inside:avoid; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<header class="topbar">
+  <span class="topbar-badge">Digital Tactics Trainer</span>
+  <span class="topbar-sep">›</span>
+  <span class="topbar-title">Handledning — Skapa ett scenario</span>
+  <span class="topbar-part">Del 2</span>
+  <button class="theme-btn" onclick="toggleTheme()">☀ / ☾</button>
+</header>
+
+<nav class="sidebar">
+  <a class="nav-back" href="handledning-spel.html">← Del 1: Spela ett spel</a>
+  <div class="nav-section">Komma igång</div>
+  <a class="nav-link" href="#intro">Editorns fyra flikar</a>
+  <a class="nav-link" href="#login">Logga in</a>
+  <a class="nav-link" href="#workflow">Arbetsflöde</a>
+  <div class="nav-section">Flik: Karta</div>
+  <a class="nav-link" href="#karta">Rita karta och terräng</a>
+  <div class="nav-section">Flik: Units</div>
+  <a class="nav-link" href="#units">Enhetsbiblioteket</a>
+  <a class="nav-link" href="#egenskaper">Enhetsegenskaper</a>
+  <div class="nav-section">Flik: Scenario</div>
+  <a class="nav-link" href="#scenario-grunddata">Grunddata</a>
+  <a class="nav-link" href="#scenario-orbat">Sätta ihop OOB</a>
+  <a class="nav-link" href="#scenario-resurser">Resurser</a>
+  <a class="nav-link" href="#scenario-uppdrag">Uppdrag per sida</a>
+  <div class="nav-section">Flik: AI-regler</div>
+  <a class="nav-link" href="#solo-inst">Solo-inställningar</a>
+  <a class="nav-link" href="#faser">Faser per enhet</a>
+  <a class="nav-link" href="#omfall">Omfall (undantag)</a>
+  <div class="nav-section">Avsluta</div>
+  <a class="nav-link" href="#spara">Spara scenariot</a>
+</nav>
+
+<main>
+
+  <div class="chapter-eyebrow">Handledning · Del 2</div>
+  <h1 class="chapter-title">Skapa ett scenario</h1>
+  <p class="chapter-lead">Editorn är instruktörens verktyg. Du bygger karta, sätter upp enheter, skriver uppdragsbeskrivningen och programmerar hur röda motståndare ska agera — allt i fyra flikar.</p>
+
+  <!-- ── 01 Flikar ── -->
+  <section class="section" id="intro">
+    <h2 class="section-title"><span class="section-num">01</span> Editorns fyra flikar</h2>
+    <p style="color:var(--muted);margin-bottom:16px">Längst upp på sidan finns fyra flikar. Du jobbar i dem i ordning — från vänster till höger.</p>
+    <table class="tbl">
+      <thead><tr><th>Flik</th><th>Vad du gör här</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tab-pill karta">Karta</span></td><td class="desc">Välj kartbild, ställ in hexgrid och rita terrängtyper på varje hex.</td></tr>
+        <tr><td><span class="tab-pill units">Units</span></td><td class="desc">Bygg och redigera ett bibliotek av enhetstyper med namn, ikon och stridsdata. Dessa är mallar som du sedan väljer ur när du sätter ihop scenariot.</td></tr>
+        <tr><td><span class="tab-pill scenario">Scenario</span></td><td class="desc">Sätt ihop scenariots Order of Battle, resurser och uppdragsbeskrivning per sida.</td></tr>
+        <tr><td><span class="tab-pill ai">AI-regler</span></td><td class="desc">Aktivera solo-läge, ange segervillkor och programmera hur varje röd enhet ska bete sig.</td></tr>
+      </tbody>
+    </table>
+    <div class="infobox note">
+      <span class="infobox-icon">ℹ</span>
+      <div class="infobox-text"><strong>Solo-kompatibla scenarier:</strong> Flikarnas innehåll sparas ihop till ett spelpaket. För att scenariot ska dyka upp i solo-läget i spelet <em>måste</em> du markera det som solo-kompatibelt i fliken AI-regler — mer om det i avsnitt 08.</div>
+    </div>
+  </section>
+
+  <!-- ── 02 Logga in ── -->
+  <section class="section" id="login">
+    <h2 class="section-title"><span class="section-num">02</span> Logga in i editorn</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Öppna editorns adress</h4>
+          <p>Navigera till <code>/editor.html</code> på spelservern. Du möts av en inloggningsruta med lösenordsfält.</p>
+          <div class="screenshot">
+            <div class="screenshot-icon">📷</div>
+            <div class="screenshot-label">Skärmdump</div>
+            <div class="screenshot-desc">Visa inloggningsskärmen med lösenordsfält och inloggningsknapp</div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Ange editorlösenordet och klicka "Logga in"</h4>
+          <p>Editorlösenordet är detsamma som används för att spara scenarier på servern. Fråga din systemadministratör om du inte vet det.</p>
+        </div>
+      </div>
+    </div>
+    <div class="infobox warn">
+      <span class="infobox-icon">⚠</span>
+      <div class="infobox-text"><strong>Dela inte lösenordet</strong> med deltagarna — de ska inte ha tillgång till editorn.</div>
+    </div>
+  </section>
+
+  <!-- ── 03 Arbetsflöde ── -->
+  <section class="section" id="workflow">
+    <h2 class="section-title"><span class="section-num">03</span> Rekommenderat arbetsflöde</h2>
+    <div class="workflow">
+      <div class="wf-step">
+        <div class="wf-num">Flik 1</div>
+        <div class="wf-name">Karta</div>
+        <div class="wf-desc">Kartbild + terräng</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">Flik 2</div>
+        <div class="wf-name">Units</div>
+        <div class="wf-desc">Enhetsbibliotek</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">Flik 3</div>
+        <div class="wf-name">Scenario</div>
+        <div class="wf-desc">OOB + uppdrag</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">Flik 4</div>
+        <div class="wf-name">AI-regler</div>
+        <div class="wf-desc">Solo + röd AI</div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">Klart</div>
+        <div class="wf-name">Spara</div>
+        <div class="wf-desc">Publicera på server</div>
+      </div>
+    </div>
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text">Bygg alltid Unit-biblioteket innan du går till Scenario-fliken — du väljer enheter ur biblioteket när du sätter ihop OOB:en.</div>
+    </div>
+  </section>
+
+  <!-- ── 04 Karta ── -->
+  <section class="section" id="karta">
+    <h2 class="section-title"><span class="section-num">04</span> <span class="tab-pill karta">Karta</span> Rita karta och terräng</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Hämta kartbild från server</h4>
+          <p>Klicka på <strong>+ Hämta kartbild från server</strong>. Välj en bild ur listan — den laddas in som bakgrundsbild på hexkartan.</p>
+          <div class="screenshot">
+            <div class="screenshot-icon">📷</div>
+            <div class="screenshot-label">Skärmdump</div>
+            <div class="screenshot-desc">Visa Karta-fliken med kartbild inladdad och hexgrid ovanpå</div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Justera hexgridet</h4>
+          <p>Ange <strong>Hex-storlek</strong>, antal <strong>Rader</strong> och <strong>Kolumner</strong> tills hexrutnätet matchar kartbilden. Använd <strong>Grid X / Grid Y</strong> för att förflytta gridet och <strong>Grid rot</strong> om kartan är vriden. Kryssa i <strong>Visa koordinater</strong> för att se hex-adresserna på kartan.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Rita terrängtyper</h4>
+          <p>Välj terrängtyp i verktygspanelen till vänster och klicka sedan på hexar för att tilldela terräng. Terrängtypen styr rörelsekostnad, skydd och siktlinje i spelet. Du behöver inte rita öppen mark — det är standardvärdet.</p>
+        </div>
+      </div>
+    </div>
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text">Prioritera att rita terräng runt taktiskt viktiga platser: byar, broar, skogsbryn och höjder. Det är där deltagarnas beslut kommer att fattas.</div>
+    </div>
+  </section>
+
+  <!-- ── 05 Units ── -->
+  <section class="section" id="units">
+    <h2 class="section-title"><span class="section-num">05</span> <span class="tab-pill units">Units</span> Enhetsbiblioteket</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Units-fliken är ett bibliotek med enhetstyper — mallar du kan återanvända i flera scenarier. Här skapar du enheter med namn, ikon och stridsdata, men placerar dem inte på kartan (det görs i Scenario-fliken).</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Lägg till en ny enhet</h4>
+          <p>Klicka på <strong>+ Ny enhet</strong>. En ny enhet med standardvärden skapas och öppnas direkt för redigering.</p>
+          <div class="screenshot">
+            <div class="screenshot-icon">📷</div>
+            <div class="screenshot-label">Skärmdump</div>
+            <div class="screenshot-desc">Visa Units-fliken med enhetslistan till vänster och egenskapspanelen till höger</div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Fyll i namn, fraktion och typ</h4>
+          <p><strong>Id</strong> genereras automatiskt från namn och fraktion — du kan lämna det som det är. <strong>Fraktion</strong> är t.ex. <code>BLU</code> eller <code>RED</code>. <strong>Typ</strong> påverkar vilka terrängtyper enheten tillåts i (infanteri vs. fordon).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Välj ikon</h4>
+          <p>Klicka <strong>Välj ikon (full)</strong> för att se tillgängliga bilder på servern. Välj en ikon — den visas i förhandsgranskningen och på hexkartan under spelet.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Ange stridsdata och klicka "Spara enhet"</h4>
+          <p>Se nästa avsnitt för en genomgång av alla stridsdata-fält.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 06 Egenskaper ── -->
+  <section class="section" id="egenskaper">
+    <h2 class="section-title"><span class="section-num">06</span> Enhetsegenskaper — stridsdata</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Varje enhet har värden för <strong>full styrka</strong> och <strong>reduced styrka</strong>. Reduced-värdena används automatiskt när enheten tagit förluster.</p>
+    <div class="prop-grid">
+      <div class="prop-card">
+        <h4><span class="prop-lbl">FP</span> Eldkraft (1–10)</h4>
+        <p>Enhetens anfallsstyrka. FP 5 = ±0. Varje steg upp ger +1 på träffslaget. FP 8 ger alltså +3.</p>
+      </div>
+      <div class="prop-card">
+        <h4><span class="prop-lbl">Räckvidd</span> Range (hex)</h4>
+        <p>Max antal hexar enheten kan skjuta. Utanför räckvidd öppnas ingen eld alls.</p>
+      </div>
+      <div class="prop-card">
+        <h4><span class="prop-lbl">Rörelse</span> Move (pips)</h4>
+        <p>Antal rörelse-pips per runda. Terrängen kostar pips — skog kostar mer än öppen mark.</p>
+      </div>
+      <div class="prop-card">
+        <h4><span class="prop-lbl">Moral</span> Morale</h4>
+        <p>Tre värden: normal / gul-suppressed / röd-suppressed. Påverkar när enheten bryts och vilken effekt fiendens eld ger.</p>
+      </div>
+      <div class="prop-card">
+        <h4><span class="prop-lbl">OP Fire</span> Opfire-FP</h4>
+        <p>Eldkraft vid reaktionseld (opfire) — när enheten skjuter på fiendens rörelse. Ofta lägre än normal FP.</p>
+      </div>
+      <div class="prop-card">
+        <h4><span class="prop-lbl">Terräng</span> Tillåten terräng</h4>
+        <p>Matrisen visar vilka terrängtyper enheten kan röra sig i. Stäng av obefärd terräng för fordon.</p>
+      </div>
+    </div>
+
+    <div class="sub-heading">Eldkraft-referens</div>
+    <table class="tbl">
+      <thead><tr><th>FP</th><th>Modifier</th><th>Exempelenheter</th></tr></thead>
+      <tbody>
+        <tr><td><strong>3–4</strong></td><td class="desc">−1 till −2</td><td class="desc">Radioenhet, obeväpnad spejare</td></tr>
+        <tr><td><strong>5</strong></td><td class="desc">±0</td><td class="desc">Standard infanterisekt</td></tr>
+        <tr><td><strong>6–7</strong></td><td class="desc">+1 till +2</td><td class="desc">Infanteripluton med MG, pansarfordon</td></tr>
+        <tr><td><strong>8–9</strong></td><td class="desc">+3 till +4</td><td class="desc">Pansarvärnsgrupp, stridsvagn</td></tr>
+        <tr><td><strong>10</strong></td><td class="desc">+5</td><td class="desc">Tung pansarenhet — använd sparsamt</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 07 Scenario grunddata ── -->
+  <section class="section" id="scenario-grunddata">
+    <h2 class="section-title"><span class="section-num">07</span> <span class="tab-pill scenario">Scenario</span> Grunddata</h2>
+    <p style="color:var(--muted);margin-bottom:14px">I Scenario-flikens vänstra kolumn fyller du i scenariots metadata och kopplar ihop det med kartan.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Ange Titel och Beskrivning</h4>
+          <p><strong>Titel</strong> är scenariots namn — det visas i spellistan. <strong>Beskrivning</strong> är en kort sammanfattning av situationen (1–3 meningar).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Ange antal Rundor</h4>
+          <p>Hur många rundor scenariot maximalt pågår. I solo-läge förlorar blå om segervillkoret inte är uppfyllt när rundorna tar slut.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Fyll i Segervillkor (fritext)</h4>
+          <p>Det här fältet är en fritexter-beskrivning som <em>visas för spelarna</em> — t.ex. "Ta och håll hexen E9 i tre rundor; minimera förluster." Det maskinläsbara segervillkoret för solo-läget ställer du in separat i AI-regler-fliken.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Koppla kartan</h4>
+          <p>Klicka <strong>Uppdatera från Karteditor</strong> för att hämta in hexgridet från Karta-fliken. Du behöver göra detta varje gång du ändrar kartinställningarna.</p>
+          <div class="screenshot">
+            <div class="screenshot-icon">📷</div>
+            <div class="screenshot-label">Skärmdump</div>
+            <div class="screenshot-desc">Visa Scenario-flikens vänstra kolumn med grunddata-fälten ifyllda</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 08 Scenario OOB ── -->
+  <section class="section" id="scenario-orbat">
+    <h2 class="section-title"><span class="section-num">08</span> <span class="tab-pill scenario">Scenario</span> Sätta ihop Order of Battle</h2>
+    <p style="color:var(--muted);margin-bottom:14px">I den högra kolumnen av Scenario-fliken sätter du ihop vilka enheter som ingår i just detta scenario — du väljer ur enhetsbiblioteket du byggde i Units-fliken.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Välj enhet i sökfältet</h4>
+          <p>Börja skriva enhetens namn i fältet <strong>Välj enhet</strong> — en lista med matchande enheter ur biblioteket visas. Klicka för att välja.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Ange startstatus och startposition</h4>
+          <p><strong>Startstatus:</strong> <em>full</em> (hel styrka) eller <em>reduced</em> (redan försvagad). <strong>Fördefinierad starthex:</strong> t.ex. <code>C5</code> — om du lämnar blankt kan GM placera enheten manuellt i spelet. <strong>Side:</strong> välj Blue eller Red.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Klicka "+ Lägg till i scenario"</h4>
+          <p>Enheten dyker upp i antingen <strong>Blue enheter</strong>- eller <strong>Red enheter</strong>-listan beroende på vald sida. Upprepa för alla enheter.</p>
+          <div class="screenshot">
+            <div class="screenshot-icon">📷</div>
+            <div class="screenshot-label">Skärmdump</div>
+            <div class="screenshot-desc">Visa OOB-sektionen med enhetspickern och Blue/Red-poolerna ifyllda</div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Ta bort en fellagd enhet</h4>
+          <p>Klicka på papperskorgsikonen bredvid enheten i Blue- eller Red-listan.</p>
+        </div>
+      </div>
+    </div>
+    <div class="infobox note">
+      <span class="infobox-icon">ℹ</span>
+      <div class="infobox-text">En typisk övning med 3–5 blå och 4–8 röda enheter ger lagom komplexitet för 60–90 minuter. För många enheter gör spelet svåröverskådligt för deltagarna.</div>
+    </div>
+  </section>
+
+  <!-- ── 09 Resurser ── -->
+  <section class="section" id="scenario-resurser">
+    <h2 class="section-title"><span class="section-num">09</span> <span class="tab-pill scenario">Scenario</span> Resurser per sida</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Resurser är indirekta eldmedel — artilleri, granatkastare eller liknande. De tilldelas per sida och visas i spelgränssnittet som klickbara resurser.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Välj resurs och antal</h4>
+          <p>Sök i fältet <strong>Välj resurs</strong>, ange antal och välj sida (Blue eller Red).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Klicka "+ Lägg till resurs"</h4>
+          <p>Resursen visas i <strong>Blue resurser</strong>- eller <strong>Red resurser</strong>-listan. Om du inte lägger till några resurser kan sidorna inte använda indirekt eld i scenariot.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 10 Uppdrag ── -->
+  <section class="section" id="scenario-uppdrag">
+    <h2 class="section-title"><span class="section-num">10</span> <span class="tab-pill scenario">Scenario</span> Uppdrag per sida</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Längst ned i Scenario-flikens högra kolumn finns två textfält — ett för Blue och ett för Red. Det är den fullständiga uppdragsbeskrivningen varje sida ser i sin överlämning när spelet startar.</p>
+
+    <div class="prop-grid" style="margin-bottom:16px">
+      <div class="prop-card" style="border-top:3px solid var(--blue)">
+        <h4 style="color:var(--blue)">Blue order</h4>
+        <p>Skriv Blue-lagets uppdrag, situation och tillgängliga resurser här. Det är vad deltagarna på Blue sida ser i sin briefing.</p>
+      </div>
+      <div class="prop-card" style="border-top:3px solid var(--red)">
+        <h4 style="color:var(--red)">Red order</h4>
+        <p>Skriv Red-lagets uppdrag om du kör PvP. I solo-läge visas detta inte för spelarna men kan vara användbart för GM vid genomgång.</p>
+      </div>
+    </div>
+
+    <div class="rule-example">
+      <p style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px">Exempeltext — Blue order</p>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">
+        <strong style="color:var(--ink)">Situation:</strong> Röda styrkor har ockuperat byn Marken. Egna styrkor grupperar norr om byn.<br>
+        <strong style="color:var(--ink)">Uppgift:</strong> Ta kontroll över kyrkan (hex E6) senast efter runda 8.<br>
+        <strong style="color:var(--ink)">Resurser:</strong> 1 infanteripluton (3 grupper) + 1 prickskyttegrupp. Inga artilleriresurser.
+      </p>
+    </div>
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text">Håll texten kort och konkret — deltagarna ska kunna läsa den på under två minuter. Lägg tyngdpunkt på <em>uppgiften</em> och <em>resurserna</em>, inte på bakgrundshistoria.</div>
+    </div>
+  </section>
+
+  <!-- ── 11 Solo-inställningar ── -->
+  <section class="section" id="solo-inst">
+    <h2 class="section-title"><span class="section-num">11</span> <span class="tab-pill ai">AI-regler</span> Solo-inställningar</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Den vänstra kolumnen i AI-regler-fliken styr om och hur scenariot fungerar i solo-läge.</p>
+
+    <div class="infobox warn">
+      <span class="infobox-icon">⚠</span>
+      <div class="infobox-text"><strong>Viktig kryssruta:</strong> Scenariot syns <em>bara</em> i solo-läget om du kryssar i <strong>"Scenariot är solo-kompatibelt"</strong> längst upp i vänsterkolumnen. Glöm inte detta steg!</div>
+    </div>
+
+    <div class="sub-heading">Segervillkor (maskinläsbart)</div>
+    <p style="color:var(--muted);margin-bottom:10px">Välj segervillkorstyp i rullgardinen — det här är det automatiska villkoret som spelet kollar efter varje runda i solo-läge.</p>
+    <table class="tbl">
+      <thead><tr><th>Villkorstyp</th><th>Extra inställning</th><th>Innebär</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ta en hex</strong></td><td class="desc">Ange mål-hex, t.ex. <code>E6</code></td><td class="desc">Blå ska ha en enhet på hexen.</td></tr>
+        <tr><td><strong>Håll en hex i N rundor</strong></td><td class="desc">Mål-hex + antal rundor</td><td class="desc">Blå ska sitta på hexen oavbrutet.</td></tr>
+        <tr><td><strong>Eliminera specifik enhet</strong></td><td class="desc">Ange enhet-ID</td><td class="desc">Den namngivna röda enheten måste vara utslagen.</td></tr>
+        <tr><td><strong>Eliminera alla röda</strong></td><td class="desc">Inga extra val</td><td class="desc">Alla röda enheter utslagna.</td></tr>
+        <tr><td><strong>Överlev N rundor</strong></td><td class="desc">Antal rundor</td><td class="desc">Blå ska ha minst en enhet kvar.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-heading">Svårighetsgrad</div>
+    <p style="color:var(--muted);margin-bottom:10px">Styr hur konsekvent röd AI följer sina regler.</p>
+    <table class="tbl">
+      <thead><tr><th>Nivå</th><th>Vad det innebär</th><th>Passar för</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Lätt</strong></td><td class="desc">AI missar 35 % av reglerna och agerar slumpmässigt.</td><td class="desc">Nybörjare, första övningen</td></tr>
+        <tr><td><strong>Normal</strong></td><td class="desc">AI missar 15 % av reglerna.</td><td class="desc">Standardinställning för de flesta övningar</td></tr>
+        <tr><td><strong>Svår</strong></td><td class="desc">AI följer alltid reglerna exakt.</td><td class="desc">Erfarna deltagare, slutprov</td></tr>
+      </tbody>
+    </table>
+
+    <div class="screenshot">
+      <div class="screenshot-icon">📷</div>
+      <div class="screenshot-label">Skärmdump</div>
+      <div class="screenshot-desc">Visa vänsterkolumnen i AI-regler med solo-kryssrutan, segervillkors-dropdown och svårighetsgrad markerade</div>
+    </div>
+  </section>
+
+  <!-- ── 12 Faser ── -->
+  <section class="section" id="faser">
+    <h2 class="section-title"><span class="section-num">12</span> <span class="tab-pill ai">AI-regler</span> Programmera enheter — Faser</h2>
+    <p style="color:var(--muted);margin-bottom:14px">I den högra kolumnen av AI-regler-fliken programmerar du hur varje röd enhet beter sig i solo-läge. Välj enhet i rullgardinen och arbetar sedan med <strong>Enkel vy</strong>.</p>
+
+    <p style="color:var(--muted);margin-bottom:16px">Varje enhet har ett <strong>fasschema</strong> — en tidslinje med tre på varandra följande beteenden: <em>Inledningsvis</em>, <em>Därefter</em> och <em>Slutligen</em>. Du anger vilken order enheten ska utföra i varje fas och (valfritt) hur länge fasen varar.</p>
+
+    <div class="phases-box">
+      <div class="phase-row">
+        <div class="phase-label inled">Inledningsvis</div>
+        <div class="phase-body">
+          <p>Enhetens startbeteende — t.ex. "Försvara - Defend" de tre första rundorna medan de väntar på blå framryckning.</p>
+          <p>Ange <strong>t.o.m. runda</strong> för att begränsa hur länge fasen pågår. Lämnar du det blankt håller fasen tills scenariot är slut.</p>
+        </div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-label dar">Därefter</div>
+        <div class="phase-body">
+          <p>Beteendet som tar vid när Inledningsvis-fasen tar slut — t.ex. "Ta - Seize → hex C4" för att röra sig fram.</p>
+        </div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-label slut">Slutligen</div>
+        <div class="phase-body">
+          <p>Slutfasen — t.ex. "Försvara - Defend" vid den erövrade positionen när enheten är på plats.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-heading">Tillgängliga order i faserna</div>
+    <table class="tbl">
+      <thead><tr><th>Order</th><th>Kräver mål-hex</th><th>Vad enheten gör</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ta - Seize →</strong></td><td class="desc">Ja</td><td class="desc">Rör sig mot angiven hex, öppnar eld längs vägen.</td></tr>
+        <tr><td><strong>Försvara - Defend</strong></td><td class="desc">Nej</td><td class="desc">Stannar och håller positionen, öppnar eld på fiender inom räckvidd.</td></tr>
+        <tr><td><strong>Dra tillbaka - Fallback</strong></td><td class="desc">Ja</td><td class="desc">Rör sig mot angiven hex, prioriterar att röra sig bort från fienden.</td></tr>
+        <tr><td><strong>Spana - Reconnoitre →</strong></td><td class="desc">Ja</td><td class="desc">Rör sig mot hex utan att öppna eld — renodlad spaning.</td></tr>
+        <tr><td><strong>Avvakta - Hold</strong></td><td class="desc">Nej</td><td class="desc">Enheten stannar och gör ingenting — t.ex. i väntan på omfall.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="steps" style="margin-top:20px">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Välj röd enhet i rullgardinen</h4>
+          <p>Se till att <strong>Red</strong>-knappen är aktiv (blå = Blue-enheter, röd = Red-enheter). Välj enheten du vill programmera.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Klicka "Enkel vy" om den inte redan är aktiv</h4>
+          <p>Faserna och omfallen visas nu under enhetsväljarens.</p>
+          <div class="screenshot">
+            <div class="screenshot-icon">📷</div>
+            <div class="screenshot-label">Skärmdump</div>
+            <div class="screenshot-desc">Visa AI-regler-fliken med vald röd enhet och faserna Inledningsvis / Därefter / Slutligen synliga</div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Välj order för Inledningsvis-fasen</h4>
+          <p>Välj order i rullgardinen. Om ordern kräver mål-hex: klicka i mål-hex-fältet och klicka sedan på kartan för att välja hex, eller skriv adressen direkt (t.ex. <code>C5</code>). Ange "t.o.m. runda" om fasen ska ha en tidsgräns.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Fyll i Därefter och Slutligen</h4>
+          <p>Upprepa för de två återstående faserna. Du kan lämna en fas tom (<em>— ingen order —</em>) om du inte vill att enheten byter beteende.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="infobox tip">
+      <span class="infobox-icon">✓</span>
+      <div class="infobox-text"><strong>Enkelt exempel:</strong> En defensiv bevakning vid bron — Inledningsvis: <em>Försvara</em> (t.o.m. runda 5) → Därefter: <em>Dra tillbaka → hex A2</em> → Slutligen: <em>Försvara</em>.</div>
+    </div>
+  </section>
+
+  <!-- ── 13 Omfall ── -->
+  <section class="section" id="omfall">
+    <h2 class="section-title"><span class="section-num">13</span> <span class="tab-pill ai">AI-regler</span> Omfall — undantag som bryter faslogiken</h2>
+    <p style="color:var(--muted);margin-bottom:14px">Nedanför faserna finns tre <strong>Omfall</strong>. De kollas <em>före</em> faslogiken varje runda — om ett omfall matchar tar det över oavsett vilken fas enheten är i. Använd dem för att hantera oväntade situationer.</p>
+
+    <div class="phases-box">
+      <div class="phase-row">
+        <div class="phase-label omf">Omfall 1–3</div>
+        <div class="phase-body">
+          <p>Varje omfall har ett <strong>villkor</strong> (rullgardin) och en <strong>order</strong> att utföra om villkoret är sant.</p>
+          <p>Lämna villkoret på <em>— inaktivt —</em> om du inte behöver alla tre omfall.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-heading">Tillgängliga omfallsvillkor</div>
+    <table class="tbl">
+      <thead><tr><th>Villkor</th><th>Extra värde</th><th>Utlöses när…</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Fiende inom X hexar</strong></td><td class="desc">Ange avstånd, t.ex. <code>4</code></td><td class="desc">En blå enhet befinner sig inom angivet avstånd.</td></tr>
+        <tr><td><strong>Fiende passerar linje</strong></td><td class="desc">Ange rad/kol, t.ex. <code>D</code></td><td class="desc">En blå enhet passerar en rad- eller kolumngräns på kartan.</td></tr>
+        <tr><td><strong>Fiende vid hex X</strong></td><td class="desc">Ange hex, t.ex. <code>E6</code></td><td class="desc">En blå enhet befinner sig på angiven hex.</td></tr>
+        <tr><td><strong>Från och med runda X</strong></td><td class="desc">Ange rundan, t.ex. <code>5</code></td><td class="desc">Rundan har nåtts — kan användas som en extra "fas".</td></tr>
+        <tr><td><strong>Enheten reduceras</strong></td><td class="desc">Inget extra värde</td><td class="desc">Denna röda enhet har tagit förluster och blivit reduced.</td></tr>
+        <tr><td><strong>Enhet X eliminerad</strong></td><td class="desc">Ange enhet-ID</td><td class="desc">Den angivna enheten (röd eller blå) är utslagen.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="rule-example" style="margin-top:16px">
+      <p style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px">Exempelprogram — försvarare vid bron</p>
+      <div class="rule-row">
+        <span style="color:var(--muted);font-size:12px;min-width:90px">Inledningsvis</span>
+        <span class="chip chip-then">Försvara - Defend</span>
+        <span class="chip-text">t.o.m. runda 6</span>
+      </div>
+      <div class="rule-row">
+        <span style="color:var(--muted);font-size:12px;min-width:90px">Därefter</span>
+        <span class="chip chip-then">Dra tillbaka →</span>
+        <span class="chip-text">hex A1</span>
+      </div>
+      <div class="rule-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <span style="color:var(--warn);font-size:12px;min-width:90px">Omfall 1</span>
+        <span class="chip chip-if">Fiende inom 3 hex</span>
+        <span class="chip-text">→</span>
+        <span class="chip chip-then">Försvara - Defend</span>
+      </div>
+      <div class="rule-row">
+        <span style="color:var(--warn);font-size:12px;min-width:90px">Omfall 2</span>
+        <span class="chip chip-if">Enheten reduceras</span>
+        <span class="chip-text">→</span>
+        <span class="chip chip-then">Dra tillbaka → A1</span>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">Enheten försvarar normalt men faller tillbaka om den tar förluster eller om fienden tränger sig nära — oavsett vilken fas den är i.</p>
+    </div>
+
+    <div class="infobox warn">
+      <span class="infobox-icon">⚠</span>
+      <div class="infobox-text"><strong>Kom ihåg att spara per enhet:</strong> Fyll i faserna och omfallen för <em>en</em> enhet, byt sedan enhet i rullgardinen — programmet sparas automatiskt per enhet när du byter. Klicka slutligen <strong>Publicera på server</strong> för att spara hela scenariot.</div>
+    </div>
+  </section>
+
+  <!-- ── 14 Spara ── -->
+  <section class="section" id="spara">
+    <h2 class="section-title"><span class="section-num">14</span> Spara och publicera scenariot</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Ange ett filnamn</h4>
+          <p>I fältet <strong>Scenario filnamn</strong> i Scenario-fliken skriver du ett tydligt filnamn, t.ex. <code>övning-marken-v1.json</code>. Undvik mellanslag och svenska tecken i filnamnet.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Klicka "Publicera på server"</h4>
+          <p>Hela scenariot — karta, enheter, AI-regler och solo-inställningar — laddas upp och är omedelbart tillgängligt för deltagare att ladda i spelet.</p>
+          <div class="screenshot">
+            <div class="screenshot-icon">📷</div>
+            <div class="screenshot-label">Skärmdump</div>
+            <div class="screenshot-desc">Visa Scenario-flikens övre del med filnamnsfältet och Publicera-knappen</div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Testa scenariot i solo-läge</h4>
+          <p>Öppna spelet i ett nytt fönster, välj solo-läge och ladda scenariot. Kör igenom 3–4 rundor och kontrollera att: röda enheter rör sig som planerat, omfallen fungerar, segervillkoret detekteras rätt.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Justera och publicera på nytt</h4>
+          <p>Gå tillbaka till editorn, justera det som inte fungerade och publicera med samma filnamn — det befintliga scenariot skrivs över.</p>
+        </div>
+      </div>
+    </div>
+    <div class="infobox warn">
+      <span class="infobox-icon">⚠</span>
+      <div class="infobox-text"><strong>Överskrivning:</strong> Det finns ingen ångra-funktion. Spara med ett nytt versionsnummer (<code>v1</code>, <code>v2</code>) under testfasen — publicera utan versionsnummer först när scenariot är klart för deltagarna.</div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+const sections = document.querySelectorAll('.section');
+const links = document.querySelectorAll('.nav-link');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
