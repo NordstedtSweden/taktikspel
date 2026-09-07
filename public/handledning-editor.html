@@ -141,6 +141,8 @@ main { padding:40px 48px 80px; min-width:0; }
 
 code { font-family:'Courier New',monospace; font-size:.88em; background:var(--surface2); padding:1px 6px; border-radius:4px; color:var(--accent); }
 .divider { border:none; border-top:1px solid var(--border); margin:32px 0; }
+.sc { margin:13px 0; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.sc img { width:100%; display:block; }
 .sub-heading { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 0 10px; }
 
 @media print {
@@ -226,11 +228,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
         <div class="step-body">
           <h4>Öppna editorns adress</h4>
           <p>Navigera till <code>/editor.html</code> på spelservern. Du möts av en inloggningsruta med lösenordsfält.</p>
-          <div class="screenshot">
-            <div class="screenshot-icon">📷</div>
-            <div class="screenshot-label">Skärmdump</div>
-            <div class="screenshot-desc">Visa inloggningsskärmen med lösenordsfält och inloggningsknapp</div>
-          </div>
+          <div class="sc"><img src="img/editor-login.png" alt="Editorns inloggningsskärm med lösenordsfält och Logga in-knapp"></div>
         </div>
       </div>
       <div class="step">
@@ -292,11 +290,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
         <div class="step-body">
           <h4>Hämta kartbild från server</h4>
           <p>Klicka på <strong>+ Hämta kartbild från server</strong>. Välj en bild ur listan — den laddas in som bakgrundsbild på hexkartan.</p>
-          <div class="screenshot">
-            <div class="screenshot-icon">📷</div>
-            <div class="screenshot-label">Skärmdump</div>
-            <div class="screenshot-desc">Visa Karta-fliken med kartbild inladdad och hexgrid ovanpå</div>
-          </div>
+          <div class="sc"><img src="img/editor-karta.png" alt="Karta-fliken med kartbild och hexgrid, terrängpensel och Multi-board till höger"></div>
         </div>
       </div>
       <div class="step">
@@ -330,11 +324,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
         <div class="step-body">
           <h4>Lägg till en ny enhet</h4>
           <p>Klicka på <strong>+ Ny enhet</strong>. En ny enhet med standardvärden skapas och öppnas direkt för redigering.</p>
-          <div class="screenshot">
-            <div class="screenshot-icon">📷</div>
-            <div class="screenshot-label">Skärmdump</div>
-            <div class="screenshot-desc">Visa Units-fliken med enhetslistan till vänster och egenskapspanelen till höger</div>
-          </div>
+          <div class="sc"><img src="img/editor-units.png" alt="Units-fliken med enhetslista till vänster och grunddata/stats-formulär till höger"></div>
         </div>
       </div>
       <div class="step">
@@ -436,11 +426,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
         <div class="step-body">
           <h4>Koppla kartan</h4>
           <p>Klicka <strong>Uppdatera från Karteditor</strong> för att hämta in hexgridet från Karta-fliken. Du behöver göra detta varje gång du ändrar kartinställningarna.</p>
-          <div class="screenshot">
-            <div class="screenshot-icon">📷</div>
-            <div class="screenshot-label">Skärmdump</div>
-            <div class="screenshot-desc">Visa Scenario-flikens vänstra kolumn med grunddata-fälten ifyllda</div>
-          </div>
+          <div class="sc"><img src="img/editor-scenario.png" alt="Scenario-fliken med vänsterpanel (titel, segervillkor, karta) och OOB + uppdrag i huvudpanelen"></div>
         </div>
       </div>
     </div>
@@ -470,11 +456,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
         <div class="step-body">
           <h4>Klicka "+ Lägg till i scenario"</h4>
           <p>Enheten dyker upp i antingen <strong>Blue enheter</strong>- eller <strong>Red enheter</strong>-listan beroende på vald sida. Upprepa för alla enheter.</p>
-          <div class="screenshot">
-            <div class="screenshot-icon">📷</div>
-            <div class="screenshot-label">Skärmdump</div>
-            <div class="screenshot-desc">Visa OOB-sektionen med enhetspickern och Blue/Red-poolerna ifyllda</div>
-          </div>
+          <div class="sc"><img src="img/editor-oob.png" alt="OOB-sektionen med Blue och Red enhetspooler samt resurslistan per sida"></div>
         </div>
       </div>
       <div class="step">
@@ -577,11 +559,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
       </tbody>
     </table>
 
-    <div class="screenshot">
-      <div class="screenshot-icon">📷</div>
-      <div class="screenshot-label">Skärmdump</div>
-      <div class="screenshot-desc">Visa vänsterkolumnen i AI-regler med solo-kryssrutan, segervillkors-dropdown och svårighetsgrad markerade</div>
-    </div>
+    <div class="sc"><img src="img/editor-solo.png" alt="AI-regler vänsterkolumn: solo-kompatibel-kryssruta, segervillkor och svårighetsgrad"></div>
   </section>
 
   <!-- ── 12 Faser ── -->
@@ -638,11 +616,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
         <div class="step-body">
           <h4>Klicka "Enkel vy" om den inte redan är aktiv</h4>
           <p>Faserna och omfallen visas nu under enhetsväljarens.</p>
-          <div class="screenshot">
-            <div class="screenshot-icon">📷</div>
-            <div class="screenshot-label">Skärmdump</div>
-            <div class="screenshot-desc">Visa AI-regler-fliken med vald röd enhet och faserna Inledningsvis / Därefter / Slutligen synliga</div>
-          </div>
+          <div class="sc"><img src="img/editor-faser.png" alt="AI-regler per enhet: Enkel vy med faserna Inledningsvis/Därefter/Slutligen och Omfall 1–3"></div>
         </div>
       </div>
       <div class="step">
@@ -744,11 +718,7 @@ code { font-family:'Courier New',monospace; font-size:.88em; background:var(--su
         <div class="step-body">
           <h4>Klicka "Publicera på server"</h4>
           <p>Hela scenariot — karta, enheter, AI-regler och solo-inställningar — laddas upp och är omedelbart tillgängligt för deltagare att ladda i spelet.</p>
-          <div class="screenshot">
-            <div class="screenshot-icon">📷</div>
-            <div class="screenshot-label">Skärmdump</div>
-            <div class="screenshot-desc">Visa Scenario-flikens övre del med filnamnsfältet och Publicera-knappen</div>
-          </div>
+          <div class="sc"><img src="img/editor-publicera.png" alt="Scenario-flikens vänsterpanel med filnamnsfält och Publicera på server-knappen"></div>
         </div>
       </div>
       <div class="step">
