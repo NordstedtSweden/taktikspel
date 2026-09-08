@@ -289,7 +289,15 @@
       "R6": "open",
       "R9": "open",
       "K8": "orchard",
-      "L8": "orchard"
+      "L8": "orchard",
+      "Q2": "river",
+      "R2": "river",
+      "R1": "river",
+      "S29": "river",
+      "T29": "river",
+      "T30": "river",
+      "S30": "river",
+      "T31": "river"
     },
     "boards": [
       {
@@ -1282,6 +1290,78 @@
             "effektPeriferi": "suppressed"
           }
         }
+      },
+      {
+        "id": "Red_Larmmina",
+        "name": "Red_Larmmina",
+        "faction": "Red",
+        "type": "larmminor",
+        "size": "squad",
+        "tags": [],
+        "display": {
+          "icon_front": "",
+          "icon_reduced": ""
+        },
+        "stats": {
+          "full": {
+            "move": 5,
+            "range_hex": 6,
+            "fp_normal": 5,
+            "fp_opfire": 3,
+            "morale": {
+              "normal": 7,
+              "yellow": 6,
+              "red": 5
+            }
+          },
+          "reduced": {
+            "move": 4,
+            "range_hex": 6,
+            "fp_normal": 4,
+            "fp_opfire": 2,
+            "morale": {
+              "normal": 6,
+              "yellow": 5,
+              "red": 4
+            }
+          },
+          "los_height": 1,
+          "road_bonus": 1
+        },
+        "movement": {
+          "allowedTerrain": [
+            "open",
+            "field",
+            "orchard",
+            "woods",
+            "wood_building",
+            "stone_building",
+            "road",
+            "trail",
+            "marsh",
+            "hedge",
+            "bocage",
+            "hill",
+            "rough",
+            "crater",
+            "smoke"
+          ],
+          "mpOverrides": {}
+        },
+        "transport": {
+          "role": "none",
+          "capacity": 0,
+          "allowedTypes": [],
+          "tow": {
+            "can": false,
+            "types": []
+          }
+        },
+        "typeExt": {
+          "larmminor": {
+            "triggerRadie": 0
+          }
+        }
       }
     ]
   },
@@ -1291,10 +1371,10 @@
     "rounds": 6,
     "initiative": "Blue",
     "setupMin": 0,
-    "vc": "",
+    "vc": "Blå sida vinner om de har minst 1 grupp på objektet och röd inte kan påverka övergångarna.",
     "order": {
-      "blue": "",
-      "red": ""
+      "blue": "Enligt KompO 001",
+      "red": "Enligt KompO 002"
     },
     "boards": [
       {
@@ -1592,7 +1672,15 @@
         "R6": "open",
         "R9": "open",
         "K8": "orchard",
-        "L8": "orchard"
+        "L8": "orchard",
+        "Q2": "river",
+        "R2": "river",
+        "R1": "river",
+        "S29": "river",
+        "T29": "river",
+        "T30": "river",
+        "S30": "river",
+        "T31": "river"
       }
     },
     "setup": {
@@ -1649,7 +1737,12 @@
     },
     "resurser": {
       "blue": [],
-      "red": []
+      "red": [
+        {
+          "id": "Red_Larmmina",
+          "count": 3
+        }
+      ]
     },
     "aiRules": {},
     "aiRulesBlue": {},
