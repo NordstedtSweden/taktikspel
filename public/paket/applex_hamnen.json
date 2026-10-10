@@ -7,8 +7,8 @@
     "gridAngle": 0,
     "gridOffX": 80,
     "gridOffY": 80,
-    "rows": 49,
-    "cols": 67,
+    "rows": 45,
+    "cols": 60,
     "terrain": {
       "U22": "river",
       "V22": "river",
