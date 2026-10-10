@@ -8,7 +8,7 @@
     "gridOffX": 80,
     "gridOffY": 80,
     "rows": 49,
-    "cols": 46,
+    "cols": 67,
     "terrain": {
       "U22": "river",
       "V22": "river",
@@ -1071,6 +1071,12 @@
         "name": "Halmstad Hamn.png",
         "x": -20,
         "y": 40,
+        "rot": 0
+      },
+      {
+        "name": "Halmstad Hamn.png",
+        "x": 0,
+        "y": 0,
         "rot": 0
       }
     ]
@@ -2754,6 +2760,13 @@
         "y": 40,
         "rot": 0,
         "index": 0
+      },
+      {
+        "name": "Halmstad Hamn.png",
+        "x": 0,
+        "y": 0,
+        "rot": 0,
+        "index": 1
       }
     ],
     "map": {
