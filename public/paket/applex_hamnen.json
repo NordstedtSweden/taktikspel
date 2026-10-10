@@ -2105,10 +2105,10 @@
         },
         "stats": {
           "full": {
-            "move": 6,
+            "move": 7,
             "range_hex": 7,
-            "fp_normal": 8,
-            "fp_opfire": 6,
+            "fp_normal": 9,
+            "fp_opfire": 8,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -2116,10 +2116,10 @@
             }
           },
           "reduced": {
-            "move": 6,
+            "move": 7,
             "range_hex": 7,
-            "fp_normal": 8,
-            "fp_opfire": 6,
+            "fp_normal": 9,
+            "fp_opfire": 7,
             "morale": {
               "normal": 6,
               "yellow": 5,
@@ -2184,8 +2184,8 @@
           "full": {
             "move": 7,
             "range_hex": 7,
-            "fp_normal": 8,
-            "fp_opfire": 5,
+            "fp_normal": 9,
+            "fp_opfire": 7,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -2195,8 +2195,8 @@
           "reduced": {
             "move": 7,
             "range_hex": 7,
-            "fp_normal": 7,
-            "fp_opfire": 5,
+            "fp_normal": 9,
+            "fp_opfire": 7,
             "morale": {
               "normal": 6,
               "yellow": 5,
@@ -2261,8 +2261,8 @@
           "full": {
             "move": 7,
             "range_hex": 7,
-            "fp_normal": 8,
-            "fp_opfire": 6,
+            "fp_normal": 9,
+            "fp_opfire": 7,
             "morale": {
               "normal": 7,
               "yellow": 6,
@@ -2272,8 +2272,8 @@
           "reduced": {
             "move": 7,
             "range_hex": 7,
-            "fp_normal": 7,
-            "fp_opfire": 5,
+            "fp_normal": 8,
+            "fp_opfire": 7,
             "morale": {
               "normal": 6,
               "yellow": 5,
