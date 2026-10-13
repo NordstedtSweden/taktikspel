@@ -20,7 +20,8 @@
   nav button[aria-selected="true"]{background:var(--bla);color:#071020;border-color:var(--bla)}
   main{max-width:1200px;margin:0 auto;padding:8px 16px 32px;
     display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-  .bg{background:var(--panel);border:1px solid var(--kant);border-radius:16px;padding:16px}
+  .bg{background:var(--panel);border:1px solid var(--kant);border-top:8px solid var(--spel);border-radius:16px;padding:16px}
+  .bg h2 .prick{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--spel);margin-right:8px;vertical-align:-1px}
   .bg h2{margin:0 0 2px;font-size:18px}
   .bg .info{color:var(--dim);font-size:13px;margin:0 0 14px}
   .roll{display:block;text-decoration:none;color:var(--text);border-radius:12px;padding:12px 14px;margin-bottom:10px;
@@ -41,7 +42,7 @@
 
 <header>
   <h1>Kompanispel – välj din roll</h1>
-  <p class="under">Välj din pluton, leta upp din basgrupp och tryck på din befattning.</p>
+  <p class="under">Välj din pluton, leta upp ditt spel (Blå, Gul eller Grön) och tryck på din befattning.</p>
 </header>
 <nav id="flikar" role="tablist"></nav>
 <main id="innehall"></main>
@@ -58,43 +59,46 @@
 const KONFIG = {
   spelUrl: 'spel.html',            // relativt om sidan ligger i taktikspel/public
   plutoner: 6,
-  basgrupper: 3,
-  // 'pluton'  = fienden spelar mot nästa basgrupp i samma pluton (1.1 → 1.2 → 1.3 → 1.1)
-  // 'kompani' = fienden spelar mot nästa basgrupp i hela kompaniet (… 1.3 → 2.1 … 3.3 → 1.1)
-  fiendeRotation: 'pluton',
-  // Teams-länk (stridsledningsnät) per basgrupp. Klistra in "Anslut"-länken från mötet.
+  // Spelen inom varje pluton. Spelkoden blir pluton.nummer (Blå = 1.1, Gul = 1.2, Grön = 1.3)
+  spel: [
+    { namn: 'Blå',  farg: '#4a90e2' },
+    { namn: 'Gul',  farg: '#f2c94c' },
+    { namn: 'Grön', farg: '#4caf50' }
+  ],
+  // Teams-länk (stridsledningsnät) per spel. Klistra in "Anslut"-länken från mötet.
   // Fler/färre plutoner: ändra 'plutoner' ovan och lägg till/ta bort rader här.
   // Samma länk får återanvändas för plutoner som inte spelar samtidigt.
   teams: {
-    '1.1': 'https://teams.microsoft.com/meet/3945744412526133?p=vEkOWuNu2c5bMvqGAN', '1.2': 'https://teams.microsoft.com/meet/3329929403555723?p=x9BlvMLhjldQJQI1yF', '1.3': 'https://teams.microsoft.com/meet/3633402577755880?p=i6nysoLoPKuYp1B4a8',
-    '2.1': 'https://teams.microsoft.com/meet/3911939594900993?p=FDaYcYdU0erKSwuPLz', '2.2': 'https://teams.microsoft.com/meet/3801567810654162?p=XTo5euDl4WLMFA0iQb', '2.3': 'https://teams.microsoft.com/meet/3428422746751080?p=vYxskr4OTXFXd2GucT',
-    '3.1': 'https://teams.microsoft.com/meet/3169858583947312?p=cH8chAbziWM4e3uhEZ', '3.2': 'https://teams.microsoft.com/meet/3474590978426960?p=X2cGMhcPopC4crVOqM', '3.3': 'https://teams.microsoft.com/meet/3480371876396678?p=rB0zO9SNA6tcqISoZ2',
-    '4.1': '', '4.2': '', '4.3': '',
-    '5.1': '', '5.2': '', '5.3': '',
-    '6.1': '', '6.2': '', '6.3': ''
+    // 1. pluton
+    '1.1': 'https://teams.microsoft.com/meet/3945744412526133?p=vEkOWuNu2c5bMvqGAN',   // Blå
+    '1.2': 'https://teams.microsoft.com/meet/3329929403555723?p=x9BlvMLhjldQJQI1yF',   // Gul
+    '1.3': 'https://teams.microsoft.com/meet/3633402577755880?p=i6nysoLoPKuYp1B4a8',   // Grön
+    // 2. pluton
+    '2.1': 'https://teams.microsoft.com/meet/3911939594900993?p=FDaYcYdU0erKSwuPLz',   // Blå
+    '2.2': 'https://teams.microsoft.com/meet/3801567810654162?p=XTo5euDl4WLMFA0iQb',   // Gul
+    '2.3': 'https://teams.microsoft.com/meet/3428422746751080?p=vYxskr4OTXFXd2GucT',   // Grön
+    // 3. pluton
+    '3.1': 'https://teams.microsoft.com/meet/3169858583947312?p=cH8chAbziWM4e3uhEZ',   // Blå
+    '3.2': 'https://teams.microsoft.com/meet/3474590978426960?p=X2cGMhcPopC4crVOqM',   // Gul
+    '3.3': 'https://teams.microsoft.com/meet/3480371876396678?p=rB0zO9SNA6tcqISoZ2',   // Grön
+    // 4. pluton – samma möten som 1. pluton
+    '4.1': 'https://teams.microsoft.com/meet/3945744412526133?p=vEkOWuNu2c5bMvqGAN',   // Blå
+    '4.2': 'https://teams.microsoft.com/meet/3329929403555723?p=x9BlvMLhjldQJQI1yF',   // Gul
+    '4.3': 'https://teams.microsoft.com/meet/3633402577755880?p=i6nysoLoPKuYp1B4a8',   // Grön
+    // 5. pluton – samma möten som 2. pluton
+    '5.1': 'https://teams.microsoft.com/meet/3911939594900993?p=FDaYcYdU0erKSwuPLz',   // Blå
+    '5.2': 'https://teams.microsoft.com/meet/3801567810654162?p=XTo5euDl4WLMFA0iQb',   // Gul
+    '5.3': 'https://teams.microsoft.com/meet/3428422746751080?p=vYxskr4OTXFXd2GucT',   // Grön
+    // 6. pluton – samma möten som 3. pluton
+    '6.1': 'https://teams.microsoft.com/meet/3169858583947312?p=cH8chAbziWM4e3uhEZ',   // Blå
+    '6.2': 'https://teams.microsoft.com/meet/3474590978426960?p=X2cGMhcPopC4crVOqM',   // Gul
+    '6.3': 'https://teams.microsoft.com/meet/3480371876396678?p=rB0zO9SNA6tcqISoZ2'    // Grön
   }
 };
 /* ========================================================= */
 
 const kod = (p, b) => `${p}.${b}`;
 const spelLank = (k, roll) => `${KONFIG.spelUrl}?kod=${encodeURIComponent(k)}&role=${roll}`;
-
-// Vilket spel ska basgrupp (p,b):s fiendecell spela i?
-function fiendeMal(p, b) {
-  if (KONFIG.fiendeRotation === 'kompani') {
-    const i = (p - 1) * KONFIG.basgrupper + (b - 1);
-    const n = (i + 1) % (KONFIG.plutoner * KONFIG.basgrupper);
-    return kod(Math.floor(n / KONFIG.basgrupper) + 1, (n % KONFIG.basgrupper) + 1);
-  }
-  return kod(p, (b % KONFIG.basgrupper) + 1);
-}
-// Omvänt: vem är fiende i spel (p,b)?
-function fiendeFran(p, b) {
-  for (let pp = 1; pp <= KONFIG.plutoner; pp++)
-    for (let bb = 1; bb <= KONFIG.basgrupper; bb++)
-      if (fiendeMal(pp, bb) === kod(p, b)) return kod(pp, bb);
-  return '?';
-}
 
 function rollKnapp(klass, titel, text, href) {
   const a = document.createElement('a');
@@ -111,20 +115,21 @@ function visaPluton(p) {
 
   const main = document.getElementById('innehall');
   main.innerHTML = '';
-  for (let b = 1; b <= KONFIG.basgrupper; b++) {
-    const k = kod(p, b), teams = KONFIG.teams[k], mal = fiendeMal(p, b);
+  KONFIG.spel.forEach((spel, i) => {
+    const k = kod(p, i + 1), teams = KONFIG.teams[k];
     const kort = document.createElement('section');
     kort.className = 'bg';
-    kort.innerHTML = `<h2>${p}. pluton – ${b}. basgrupp</h2>
-      <p class="info">Spel ${k} · er fiende kommer från basgrupp ${fiendeFran(p, b)}</p>`;
+    kort.style.setProperty('--spel', spel.farg);
+    kort.innerHTML = `<h2><span class="prick"></span>${p}. pluton – Spel ${spel.namn}</h2>
+      <p class="info">Spelkod ${k}</p>`;
     kort.append(
-      rollKnapp('t', 'Kompanichef', `Teams – stridsledningsnät ${k}. Leder via analog karta.`, teams),
-      rollKnapp('t', 'Plutonchef',  `Teams – stridsledningsnät ${k}. Muntlig order till gruppchef.`, teams),
-      rollKnapp('b', 'Gruppchef',   `Taktikspel BLÅ – spel ${k}`, spelLank(k, 'blue')),
-      rollKnapp('r', 'Fiende',      `Taktikspel RÖD – spel ${mal} (annan basgrupp)`, spelLank(mal, 'red'))
+      rollKnapp('t', 'Kompanichef', `Teams – stridsledningsnät ${spel.namn} ${k}. Leder via analog karta.`, teams),
+      rollKnapp('t', 'Plutonchef',  `Teams – stridsledningsnät ${spel.namn} ${k}. Muntlig order till gruppchef.`, teams),
+      rollKnapp('b', 'Gruppchef',   `Taktikspel – blå sida i Spel ${spel.namn} (${k})`, spelLank(k, 'blue')),
+      rollKnapp('r', 'Fiende',      `Taktikspel – röd sida i Spel ${spel.namn} (${k})`, spelLank(k, 'red'))
     );
     main.append(kort);
-  }
+  });
 }
 
 // Flikar + GM-länkar
@@ -137,12 +142,13 @@ for (let p = 1; p <= KONFIG.plutoner; p++) {
   btn.setAttribute('role', 'tab');
   btn.onclick = () => visaPluton(p);
   flikar.append(btn);
-  for (let b = 1; b <= KONFIG.basgrupper; b++) {
+  KONFIG.spel.forEach((spel, i) => {
     const a = document.createElement('a');
-    a.href = spelLank(kod(p, b), 'gm'); a.target = '_blank'; a.rel = 'noopener';
-    a.textContent = `GM spel ${kod(p, b)}`;
+    a.href = spelLank(kod(p, i + 1), 'gm'); a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = `GM ${kod(p, i + 1)} ${spel.namn}`;
+    a.style.borderLeft = `4px solid ${spel.farg}`;
     gm.append(a);
-  }
+  });
 }
 
 // Startpluton: ?pluton=2 i länken (t.ex. från Moodle), annars senast valda, annars 1
