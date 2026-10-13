@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kompanispel – Uppkoppling</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#111a33; --kant:#243052; --text:#e8eefc; --dim:#9fb1d4;
+    --bla:#6cb2ff; --rod:#ff6b6b; --teams:#8b8cf0; --ok:#4caf50;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  header{padding:20px 16px 8px;max-width:1200px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:24px}
+  .under{color:var(--dim);font-size:14px;margin:0}
+  nav{display:flex;gap:8px;padding:12px 16px;max-width:1200px;margin:0 auto;flex-wrap:wrap}
+  nav button{background:var(--panel);color:var(--text);border:1px solid var(--kant);border-radius:10px;
+    padding:10px 18px;font-size:16px;font-weight:600;cursor:pointer}
+  nav button[aria-selected="true"]{background:var(--bla);color:#071020;border-color:var(--bla)}
+  main{max-width:1200px;margin:0 auto;padding:8px 16px 32px;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .bg{background:var(--panel);border:1px solid var(--kant);border-radius:16px;padding:16px}
+  .bg h2{margin:0 0 2px;font-size:18px}
+  .bg .info{color:var(--dim);font-size:13px;margin:0 0 14px}
+  .roll{display:block;text-decoration:none;color:var(--text);border-radius:12px;padding:12px 14px;margin-bottom:10px;
+    border:1px solid var(--kant);background:#0e1730;border-left:6px solid var(--c);transition:transform .08s, background .15s}
+  .roll:hover{background:#15214a;transform:translateY(-1px)}
+  .roll b{display:block;font-size:17px}
+  .roll span{display:block;font-size:13px;color:var(--dim);margin-top:2px}
+  .roll.saknas{opacity:.45;pointer-events:none}
+  .t{--c:var(--teams)} .b{--c:var(--bla)} .r{--c:var(--rod)}
+  details{max-width:1200px;margin:0 auto 32px;padding:0 16px;color:var(--dim)}
+  details summary{cursor:pointer;font-size:14px}
+  .gm{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .gm a{color:var(--text);background:var(--panel);border:1px solid var(--kant);border-radius:8px;padding:8px 12px;text-decoration:none;font-size:14px}
+  .gm a:hover{border-color:var(--ok)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Kompanispel – välj din roll</h1>
+  <p class="under">Välj din pluton, leta upp din basgrupp och tryck på din befattning.</p>
+</header>
+<nav id="flikar" role="tablist"></nav>
+<main id="innehall"></main>
+
+<details>
+  <summary>Spelledare (lärare) – öppna alla spel som GM</summary>
+  <div class="gm" id="gmLankar"></div>
+</details>
+
+<script>
+/* =========================================================
+   KONFIGURATION – det enda du behöver ändra
+   ========================================================= */
+const KONFIG = {
+  spelUrl: 'spel.html',            // relativt om sidan ligger i taktikspel/public
+  plutoner: 6,
+  basgrupper: 3,
+  // 'pluton'  = fienden spelar mot nästa basgrupp i samma pluton (1.1 → 1.2 → 1.3 → 1.1)
+  // 'kompani' = fienden spelar mot nästa basgrupp i hela kompaniet (… 1.3 → 2.1 … 3.3 → 1.1)
+  fiendeRotation: 'pluton',
+  // Teams-länk (stridsledningsnät) per basgrupp. Klistra in "Anslut"-länken från mötet.
+  // Fler/färre plutoner: ändra 'plutoner' ovan och lägg till/ta bort rader här.
+  // Samma länk får återanvändas för plutoner som inte spelar samtidigt.
+  teams: {
+    '1.1': 'https://teams.microsoft.com/meet/3945744412526133?p=vEkOWuNu2c5bMvqGAN', '1.2': 'https://teams.microsoft.com/meet/3329929403555723?p=x9BlvMLhjldQJQI1yF', '1.3': 'https://teams.microsoft.com/meet/3633402577755880?p=i6nysoLoPKuYp1B4a8',
+    '2.1': 'https://teams.microsoft.com/meet/3911939594900993?p=FDaYcYdU0erKSwuPLz', '2.2': 'https://teams.microsoft.com/meet/3801567810654162?p=XTo5euDl4WLMFA0iQb', '2.3': 'https://teams.microsoft.com/meet/3428422746751080?p=vYxskr4OTXFXd2GucT',
+    '3.1': 'https://teams.microsoft.com/meet/3169858583947312?p=cH8chAbziWM4e3uhEZ', '3.2': 'https://teams.microsoft.com/meet/3474590978426960?p=X2cGMhcPopC4crVOqM', '3.3': 'https://teams.microsoft.com/meet/3480371876396678?p=rB0zO9SNA6tcqISoZ2',
+    '4.1': '', '4.2': '', '4.3': '',
+    '5.1': '', '5.2': '', '5.3': '',
+    '6.1': '', '6.2': '', '6.3': ''
+  }
+};
+/* ========================================================= */
+
+const kod = (p, b) => `${p}.${b}`;
+const spelLank = (k, roll) => `${KONFIG.spelUrl}?kod=${encodeURIComponent(k)}&role=${roll}`;
+
+// Vilket spel ska basgrupp (p,b):s fiendecell spela i?
+function fiendeMal(p, b) {
+  if (KONFIG.fiendeRotation === 'kompani') {
+    const i = (p - 1) * KONFIG.basgrupper + (b - 1);
+    const n = (i + 1) % (KONFIG.plutoner * KONFIG.basgrupper);
+    return kod(Math.floor(n / KONFIG.basgrupper) + 1, (n % KONFIG.basgrupper) + 1);
+  }
+  return kod(p, (b % KONFIG.basgrupper) + 1);
+}
+// Omvänt: vem är fiende i spel (p,b)?
+function fiendeFran(p, b) {
+  for (let pp = 1; pp <= KONFIG.plutoner; pp++)
+    for (let bb = 1; bb <= KONFIG.basgrupper; bb++)
+      if (fiendeMal(pp, bb) === kod(p, b)) return kod(pp, bb);
+  return '?';
+}
+
+function rollKnapp(klass, titel, text, href) {
+  const a = document.createElement('a');
+  a.className = 'roll ' + klass + (href ? '' : ' saknas');
+  if (href) { a.href = href; a.target = '_blank'; a.rel = 'noopener'; }
+  a.innerHTML = `<b>${titel}</b><span>${href ? text : 'Länk saknas – kontakta lärare'}</span>`;
+  return a;
+}
+
+function visaPluton(p) {
+  document.querySelectorAll('#flikar button').forEach(btn =>
+    btn.setAttribute('aria-selected', btn.dataset.p == p));
+  try { localStorage.setItem('kompanispel-pluton', p); } catch (e) {}
+
+  const main = document.getElementById('innehall');
+  main.innerHTML = '';
+  for (let b = 1; b <= KONFIG.basgrupper; b++) {
+    const k = kod(p, b), teams = KONFIG.teams[k], mal = fiendeMal(p, b);
+    const kort = document.createElement('section');
+    kort.className = 'bg';
+    kort.innerHTML = `<h2>${p}. pluton – ${b}. basgrupp</h2>
+      <p class="info">Spel ${k} · er fiende kommer från basgrupp ${fiendeFran(p, b)}</p>`;
+    kort.append(
+      rollKnapp('t', 'Kompanichef', `Teams – stridsledningsnät ${k}. Leder via analog karta.`, teams),
+      rollKnapp('t', 'Plutonchef',  `Teams – stridsledningsnät ${k}. Muntlig order till gruppchef.`, teams),
+      rollKnapp('b', 'Gruppchef',   `Taktikspel BLÅ – spel ${k}`, spelLank(k, 'blue')),
+      rollKnapp('r', 'Fiende',      `Taktikspel RÖD – spel ${mal} (annan basgrupp)`, spelLank(mal, 'red'))
+    );
+    main.append(kort);
+  }
+}
+
+// Flikar + GM-länkar
+const flikar = document.getElementById('flikar');
+const gm = document.getElementById('gmLankar');
+for (let p = 1; p <= KONFIG.plutoner; p++) {
+  const btn = document.createElement('button');
+  btn.textContent = `${p}. pluton`;
+  btn.dataset.p = p;
+  btn.setAttribute('role', 'tab');
+  btn.onclick = () => visaPluton(p);
+  flikar.append(btn);
+  for (let b = 1; b <= KONFIG.basgrupper; b++) {
+    const a = document.createElement('a');
+    a.href = spelLank(kod(p, b), 'gm'); a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = `GM spel ${kod(p, b)}`;
+    gm.append(a);
+  }
+}
+
+// Startpluton: ?pluton=2 i länken (t.ex. från Moodle), annars senast valda, annars 1
+let start = parseInt(new URLSearchParams(location.search).get('pluton'), 10);
+if (!(start >= 1 && start <= KONFIG.plutoner)) {
+  try { start = parseInt(localStorage.getItem('kompanispel-pluton'), 10); } catch (e) {}
+}
+visaPluton(start >= 1 && start <= KONFIG.plutoner ? start : 1);
+</script>
+</body>
+</html>

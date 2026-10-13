@@ -2744,6 +2744,19 @@ document.getElementById('anslutBtn').onclick = function() {
 
   document.getElementById('anslutStatus').textContent = '';
 };
+// === AUTO-ANSLUT VIA LÄNK ==================================
+// spel.html?kod=1.1&role=blue  → hoppar över anslutningsskärmen
+function autoAnslutFranURL() {
+  const p    = new URLSearchParams(location.search);
+  const kod  = (p.get('kod')  || '').trim().toUpperCase();
+  const roll = (p.get('role') || '').trim().toLowerCase();
+  if (!kod || !['gm', 'blue', 'red'].includes(roll)) return;
+  document.getElementById('anslutKod').value  = kod;
+  document.getElementById('anslutRoll').value = roll;
+  document.getElementById('anslutBtn').click();
+}
+if (document.readyState === 'complete') autoAnslutFranURL();
+else window.addEventListener('load', autoAnslutFranURL);
 
 // Falskt gameChannel-objekt
 const gameChannel = {
