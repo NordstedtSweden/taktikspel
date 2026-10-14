@@ -5650,7 +5650,7 @@ document.getElementById('orderMenuGmMove').onclick = () => {
   showHint(`Klicka på målhex för att flytta ${unit.id} (${unit.side.toUpperCase()})…`);
 };
 window.addEventListener('click',e=>{ if(!orderMenu.contains(e.target)) orderMenu.classList.add('hidden'); });
-orderMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
+orderMenu.querySelectorAll('button[data-order]').forEach(b => b.onclick = () => {
   const ord = b.dataset.order;
 
   if (!orderTargetUnit) {
