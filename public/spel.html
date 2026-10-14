@@ -545,6 +545,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   <button data-order="scout">🔭 Spana - Reconnoitre</button>
   <button data-order="support">🤝 Understödja - Support</button>
   <button data-order="none">✖ Rensa order</button>
+  <button id="orderMenuGmMove" style="display:none;color:#f2c94c;border-top:2px solid var(--line)">📍 Flytta enhet — GM</button>
   <div id="orderMenuResurser"></div>
 </div>
 
@@ -5640,6 +5641,14 @@ wrap.addEventListener('drop', ev => {
 /* ===== Ordermeny + målval ===== */
 const ORDER_ICONS={none:'',take:'🎯',defend:'🛡️',scout:'🔭',support:'🤝'};
 const orderMenu=$('orderMenu'); let orderTargetUnit=null;
+let pendingGmMove = null; // { unit } — GM snabbflytt av redan placerad enhet
+document.getElementById('orderMenuGmMove').onclick = () => {
+  const unit = orderTargetUnit;
+  orderMenu.classList.add('hidden');
+  if (!unit) return;
+  pendingGmMove = unit;
+  showHint(`Klicka på målhex för att flytta ${unit.id} (${unit.side.toUpperCase()})…`);
+};
 window.addEventListener('click',e=>{ if(!orderMenu.contains(e.target)) orderMenu.classList.add('hidden'); });
 orderMenu.querySelectorAll('button').forEach(b => b.onclick = () => {
   const ord = b.dataset.order;
@@ -5743,12 +5752,18 @@ function openOrderMenuAt(x,y,unit){
     }
   }
 
+  const gmMoveBtn = document.getElementById('orderMenuGmMove');
+  if (gmMoveBtn) {
+    const roleNow = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
+    gmMoveBtn.style.display = (roleNow === 'gm') ? '' : 'none';
+  }
+
   orderMenu.style.left=x+'px'; orderMenu.style.top=y+'px'; orderMenu.classList.remove('hidden');
 }
 function showHint(t){
   const h=$('hint'); const sp=$('hintText'); if(sp) sp.textContent=t; else h.textContent=t; h.classList.remove('hidden');
   const avbrytBtn=$('hintAvbryt');
-  if(avbrytBtn) avbrytBtn.style.display=(pendingResurs||(typeof pendingTarget!=='undefined'&&pendingTarget)||(typeof pendingPlace!=='undefined'&&pendingPlace))?'':'none';
+  if(avbrytBtn) avbrytBtn.style.display=(pendingResurs||(typeof pendingTarget!=='undefined'&&pendingTarget)||(typeof pendingPlace!=='undefined'&&pendingPlace)||(typeof pendingGmMove!=='undefined'&&pendingGmMove))?'':'none';
 }
 function hideHint(){ $('hint').classList.add('hidden'); }
 
@@ -5759,6 +5774,7 @@ function avbrytPendingAction() {
     if (pendingPlace.el) pendingPlace.el.classList.remove('pending-place');
     pendingPlace = null;
   }
+  if (typeof pendingGmMove !== 'undefined') pendingGmMove = null;
   // Rensa gul markering på resurskort i panelen
   document.querySelectorAll('.uitem.pending-place').forEach(el => el.classList.remove('pending-place'));
   hideHint();
@@ -6789,7 +6805,7 @@ window.addEventListener('mousemove',e=>{
 });
 window.addEventListener('mouseup',()=>cam.pan=false);
 window.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && (pendingResurs || pendingTarget || pendingPlace)) {
+  if (e.key === 'Escape' && (pendingResurs || pendingTarget || pendingPlace || pendingGmMove)) {
     avbrytPendingAction();
   }
 });
@@ -6861,6 +6877,29 @@ cv.addEventListener('touchend', e => {
 
 cv.addEventListener('click', e => {
   if (REPLAY_AKTIV) return;
+
+  // 0a0) GM snabbflytt av redan placerad enhet
+  if (pendingGmMove) {
+    const m = mousePosOnCanvas(e);
+    const ws = screenToWorld(m.x, m.y);
+    const p = invRot(ws.x, ws.y, MAP.gridOffX, MAP.gridOffY, MAP.gridAngle);
+    const hit = nearestHex(p.x, p.y);
+    if (hit) {
+      const newHex = hexKey(hit.ri, hit.ci);
+      const unit = pendingGmMove;
+      const blockad = PLACED.some(u => u !== unit && u.side === unit.side && u.hex === newHex && !u.eliminated);
+      if (blockad) {
+        showHint(`${newHex} är redan ockuperad av en ${unit.side.toUpperCase()}-enhet. Välj annan hex.`);
+      } else {
+        unit.hex = newHex;
+        pendingGmMove = null;
+        hideHint();
+        drawAll(); renderOrders();
+        if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+      }
+    }
+    return;
+  }
 
   // 0a) Enhetplacering via klick (GM)
   if (pendingPlace) {
