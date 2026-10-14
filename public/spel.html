@@ -329,6 +329,7 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
       </select>
     </label>
     <button class="btn pri gm-only" id="loadPaketBtn">Ladda spelpaket…</button>
+    <span id="spelkodBadge" style="display:none;background:#0a2a4a;border:1px solid #4da6ff;border-radius:6px;padding:3px 10px;font-size:13px;color:#4da6ff;font-weight:700;letter-spacing:0.06em;white-space:nowrap">KOD:&nbsp;<span id="spelkodText">—</span></span>
 <input type="file" id="paketFile" accept="application/json" style="display:none">
 
 <!-- Uppdragsmodal -->
@@ -1648,6 +1649,10 @@ const loadPaketBtn = $('loadPaketBtn');
 if (loadPaketBtn) {
   loadPaketBtn.style.display = (effektivRoll === 'gm') ? '' : 'none';
 }
+const spelkodBadge = document.getElementById('spelkodBadge');
+if (spelkodBadge) {
+  spelkodBadge.style.display = (effektivRoll === 'gm' && window.spelKod) ? '' : 'none';
+}
 if (window.spelRoll === 'blue' || window.spelRoll === 'red') {
   const loadPaketBtn = $('loadPaketBtn');
   if (loadPaketBtn) loadPaketBtn.style.display = 'none';
@@ -2711,6 +2716,10 @@ document.getElementById('anslutBtn').onclick = function() {
   
   window.spelKod = kod;
   window.spelRoll = roll;
+
+  // Uppdatera spelkod-badge för GM
+  const spelkodText = document.getElementById('spelkodText');
+  if (spelkodText) spelkodText.textContent = kod;
 
   // Synka roll med spelets dropdown
   const rollSel = document.getElementById('roleSel');
