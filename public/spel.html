@@ -545,6 +545,9 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
   <button data-order="scout">🔭 Spana - Reconnoitre</button>
   <button data-order="support">🤝 Understödja - Support</button>
   <button data-order="none">✖ Rensa order</button>
+  <button id="orderMenuFollowBehind" data-follow="behind" style="display:none;color:#54d18c;border-top:2px solid var(--line)">⬇ Följ — Bakom</button>
+  <button id="orderMenuFollowRight"  data-follow="right"  style="display:none;color:#54d18c">↘ Följ — Till höger</button>
+  <button id="orderMenuFollowLeft"   data-follow="left"   style="display:none;color:#54d18c">↙ Följ — Till vänster</button>
   <button id="orderMenuGmMove" style="display:none;color:#f2c94c;border-top:2px solid var(--line)">📍 Flytta enhet — GM</button>
   <div id="orderMenuResurser"></div>
 </div>
@@ -5639,9 +5642,23 @@ wrap.addEventListener('drop', ev => {
 });
 
 /* ===== Ordermeny + målval ===== */
-const ORDER_ICONS={none:'',take:'🎯',defend:'🛡️',scout:'🔭',support:'🤝'};
+const ORDER_ICONS={none:'',take:'🎯',defend:'🛡️',scout:'🔭',support:'🤝',follow:'↳'};
 const orderMenu=$('orderMenu'); let orderTargetUnit=null;
-let pendingGmMove = null; // { unit } — GM snabbflytt av redan placerad enhet
+let pendingGmMove  = null; // GM snabbflytt av redan placerad enhet
+let pendingFollow  = null; // { unitRef, followPos } — väntar på klick på ledenhet
+['behind','right','left'].forEach(pos => {
+  const label = pos === 'behind' ? 'bakom' : pos === 'right' ? 'till höger' : 'till vänster';
+  const key   = pos.charAt(0).toUpperCase() + pos.slice(1);
+  const btn   = document.getElementById('orderMenuFollow' + key);
+  if (!btn) return;
+  btn.onclick = () => {
+    const unit = orderTargetUnit;
+    orderMenu.classList.add('hidden');
+    if (!unit) return;
+    pendingFollow = { unitRef: unit, followPos: pos };
+    showHint(`Klicka på den enhet som ${unit.id} ska följa (${label})…`);
+  };
+});
 document.getElementById('orderMenuGmMove').onclick = () => {
   const unit = orderTargetUnit;
   orderMenu.classList.add('hidden');
@@ -5752,18 +5769,22 @@ function openOrderMenuAt(x,y,unit){
     }
   }
 
+  const roleNow2 = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
   const gmMoveBtn = document.getElementById('orderMenuGmMove');
-  if (gmMoveBtn) {
-    const roleNow = typeof getCurrentRole === 'function' ? getCurrentRole() : 'gm';
-    gmMoveBtn.style.display = (roleNow === 'gm') ? '' : 'none';
-  }
+  if (gmMoveBtn) gmMoveBtn.style.display = (roleNow2 === 'gm') ? '' : 'none';
+  // Follow-knappar: alla roller som kan styra denna enhet (ej drönare)
+  const canFollow = !unit?.isDrone && (roleNow2 === 'gm' || roleNow2 === unit?.side);
+  ['Behind','Right','Left'].forEach(s => {
+    const fb = document.getElementById('orderMenuFollow' + s);
+    if (fb) fb.style.display = canFollow ? '' : 'none';
+  });
 
   orderMenu.style.left=x+'px'; orderMenu.style.top=y+'px'; orderMenu.classList.remove('hidden');
 }
 function showHint(t){
   const h=$('hint'); const sp=$('hintText'); if(sp) sp.textContent=t; else h.textContent=t; h.classList.remove('hidden');
   const avbrytBtn=$('hintAvbryt');
-  if(avbrytBtn) avbrytBtn.style.display=(pendingResurs||(typeof pendingTarget!=='undefined'&&pendingTarget)||(typeof pendingPlace!=='undefined'&&pendingPlace)||(typeof pendingGmMove!=='undefined'&&pendingGmMove))?'':'none';
+  if(avbrytBtn) avbrytBtn.style.display=(pendingResurs||(typeof pendingTarget!=='undefined'&&pendingTarget)||(typeof pendingPlace!=='undefined'&&pendingPlace)||(typeof pendingGmMove!=='undefined'&&pendingGmMove)||(typeof pendingFollow!=='undefined'&&pendingFollow))?'':'none';
 }
 function hideHint(){ $('hint').classList.add('hidden'); }
 
@@ -5774,7 +5795,8 @@ function avbrytPendingAction() {
     if (pendingPlace.el) pendingPlace.el.classList.remove('pending-place');
     pendingPlace = null;
   }
-  if (typeof pendingGmMove !== 'undefined') pendingGmMove = null;
+  if (typeof pendingGmMove  !== 'undefined') pendingGmMove  = null;
+  if (typeof pendingFollow  !== 'undefined') pendingFollow  = null;
   // Rensa gul markering på resurskort i panelen
   document.querySelectorAll('.uitem.pending-place').forEach(el => el.classList.remove('pending-place'));
   hideHint();
@@ -6043,6 +6065,23 @@ if (icon){
         }
 
         e.stopPropagation();
+
+        // Väntar på att välja ledenhet för follow-order
+        if (pendingFollow) {
+          const fu = pendingFollow.unitRef;
+          if (p !== fu) {
+            fu.order       = 'follow';
+            fu.orderTarget = p.id;
+            fu.followLeadId = p.id;
+            fu.followPos   = pendingFollow.followPos;
+            pendingFollow = null;
+            hideHint();
+            if (typeof drawAll      === 'function') drawAll();
+            if (typeof renderOrders === 'function') renderOrders();
+            if (typeof broadcastStateFromGM === 'function') broadcastStateFromGM();
+          }
+          return;
+        }
 
         // Om vi väntar på att välja understödd enhet — hantera det här
         if (pendingTarget && pendingTarget.type === 'support') {
@@ -6328,14 +6367,24 @@ function renderBangBadge(node, p) {
 function drawOrderArrow(p, color){
   const from=hexCenterWorld(p.hex);
   const isSupport = (p.order||'').toLowerCase() === 'support';
+  const isFollow  = (p.order||'').toLowerCase() === 'follow';
 
-  // För support-order är orderTarget ett enhets-ID — hitta enhetens aktuella hex
   let målHex = p.orderTarget;
   let visningsnamn = p.orderTarget;
+
   if (isSupport && typeof PLACED !== 'undefined') {
     const stöd = PLACED.find(u => u.uid === p.orderTarget || u.id === p.orderTarget || u.name === p.orderTarget);
     if (stöd) { målHex = stöd._losHex || stöd.hex; visningsnamn = stöd.id || stöd.name; }
   }
+  if (isFollow && typeof PLACED !== 'undefined') {
+    const lead = PLACED.find(u => u.id === p.orderTarget || u.uid === p.orderTarget);
+    if (lead) {
+      målHex = lead._losHex || lead.hex;
+      const posLabel = p.followPos === 'behind' ? '⬇' : p.followPos === 'right' ? '↘' : '↙';
+      visningsnamn = posLabel + ' ' + (lead.id || lead.name);
+    }
+  }
+
   const to=hexCenterWorld(målHex);
   if(!from || !to) return;
   ctx.save();
@@ -6345,14 +6394,23 @@ function drawOrderArrow(p, color){
   ctx.globalAlpha=0.9; ctx.lineWidth=2;
 
   if (isSupport) {
-    // Blå streckad linje utan pilspets för understöd
     ctx.strokeStyle = '#4da6ff';
     ctx.setLineDash([8, 5]);
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
     ctx.setLineDash([]);
-    // Liten cirkel vid den understödda enheten
     ctx.beginPath(); ctx.arc(B.x, B.y, 6, 0, Math.PI*2);
     ctx.strokeStyle='#4da6ff'; ctx.stroke();
+  } else if (isFollow) {
+    // Grön streckad linje med cirkel vid ledenhetens position
+    ctx.strokeStyle = '#54d18c';
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(B.x, B.y, 7, 0, Math.PI*2);
+    ctx.strokeStyle='#54d18c'; ctx.stroke();
+    ctx.fillStyle='#000000aa'; ctx.fillRect(B.x+10, B.y-16, 70, 18);
+    ctx.fillStyle='#54d18c'; ctx.font='12px Segoe UI';
+    ctx.fillText(visningsnamn, B.x+12, B.y-3);
   } else {
     ctx.strokeStyle = color;
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
@@ -6436,7 +6494,11 @@ function renderOrders(){
   vis.forEach(p=>{
     const d=document.createElement('div'); d.className='uitem';
     const icon=ORDER_ICONS[p.order||'none']||'';
-    const tgt = p.orderTarget ? ` → ${p.orderTarget}` : '';
+    let tgt = p.orderTarget ? ` → ${p.orderTarget}` : '';
+    if ((p.order||'') === 'follow' && p.followLeadId) {
+      const posLabel = p.followPos === 'behind' ? '⬇ bakom' : p.followPos === 'right' ? '↘ höger' : '↙ vänster';
+      tgt = ` ↳ ${posLabel} ${p.followLeadId}`;
+    }
     d.innerHTML=`<b>${p.side.toUpperCase()} ${p.id}</b> ${icon?`<span class="badge">${icon}</span>`:''}
                  <div class="s">${p.hex} • ${p.state}${p.order?(' • '+p.order):''}${tgt}</div>`;
     box.appendChild(d);
@@ -8120,6 +8182,90 @@ function stateRank(u){
   return r;
 }
 
+/* ---------- Follow-order: riktningsberäkning ---------- */
+// Returnerar den granne till leadToHex som bäst matchar önskad relativ position.
+// Koordinatsystem: screen x höger, y nedåt → CW 90° = (-y, x)
+function getFollowTargetHex(leadFromHex, leadToHex, followPos) {
+  const neighbors = hexNeighbors(leadToHex);
+  if (!neighbors.length) return leadToHex;
+
+  const pFrom = hexCenterWorld(leadFromHex);
+  const pTo   = hexCenterWorld(leadToHex);
+  if (!pFrom || !pTo) return neighbors[0] || leadToHex;
+
+  const fdx = pTo.x - pFrom.x, fdy = pTo.y - pFrom.y;
+  const fLen = Math.hypot(fdx, fdy);
+  if (fLen < 0.1) return neighbors[0]; // ingen riktning — välj godtycklig granne
+
+  const nx = fdx / fLen, ny = fdy / fLen;
+  let dirX, dirY;
+  if      (followPos === 'behind') { dirX = -nx;  dirY = -ny;  }
+  else if (followPos === 'right')  { dirX = -ny;  dirY =  nx;  } // 90° CW i screen-coords
+  else                             { dirX =  ny;  dirY = -nx;  } // 90° CCW (vänster)
+
+  let best = null, bestScore = -Infinity;
+  for (const h of neighbors) {
+    const ph = hexCenterWorld(h);
+    if (!ph) continue;
+    const hx = ph.x - pTo.x, hy = ph.y - pTo.y;
+    const hLen = Math.hypot(hx, hy);
+    if (hLen < 0.01) continue;
+    const score = (hx / hLen) * dirX + (hy / hLen) * dirY;
+    if (score > bestScore) { bestScore = score; best = h; }
+  }
+  return best || leadToHex;
+}
+
+// Beräknar _followEffectiveTarget för alla follow-enheter i rätt kedjeordning.
+// Måste anropas INNAN startMovementPhase.
+function resolveFollowTargets() {
+  if (!Array.isArray(PLACED)) return;
+  const followUnits = PLACED.filter(u => (u.order||'') === 'follow' && !u.eliminated && u.followLeadId);
+  if (!followUnits.length) return;
+
+  // Enheterna utan follow-order är direkt "lösta"
+  const resolved = new Set();
+  for (const u of PLACED) {
+    if ((u.order||'') !== 'follow' || u.eliminated) resolved.add(u.id);
+  }
+
+  // Iterativa pass — hanterar kedjor (kollonn: A följer B som följer C)
+  let progress = true;
+  for (let pass = 0; pass < 20 && progress; pass++) {
+    progress = false;
+    for (const u of followUnits) {
+      if (resolved.has(u.id)) continue;
+      const lead = PLACED.find(l => l.id === u.followLeadId);
+      if (!lead || lead.eliminated) { u._followEffectiveTarget = null; resolved.add(u.id); continue; }
+      if (!resolved.has(lead.id)) continue; // vänta tills ledenhetens mål är känt
+
+      let leadFromHex, leadToHex;
+      if ((lead.order||'') === 'follow' && lead._followEffectiveTarget) {
+        // Ledenhet är också en follow-enhet — använd dess beräknade mål
+        leadFromHex = lead.hex;
+        leadToHex   = lead._followEffectiveTarget;
+      } else {
+        leadToHex   = lead.orderTarget || lead.hex;
+        leadFromHex = lead._lastMoveFromHex || lead.hex;
+      }
+
+      // Om ledenheten inte rör sig: använd senaste rörelsehex för riktning
+      if (!leadToHex || leadToHex === lead.hex) {
+        leadToHex   = lead.hex;
+        leadFromHex = lead._lastMoveFromHex || lead.hex;
+      }
+
+      if (!leadFromHex || leadFromHex === leadToHex) {
+        u._followEffectiveTarget = leadToHex; // ingen känd riktning — följ till ledenhetens hex
+      } else {
+        u._followEffectiveTarget = getFollowTargetHex(leadFromHex, leadToHex, u.followPos || 'behind');
+      }
+      resolved.add(u.id);
+      progress = true;
+    }
+  }
+}
+
 /* ---------- START: Ny rörelsefas ---------- */
 window.ROUND_MOVE_DURATION_MS = window.ROUND_MOVE_DURATION_MS || 10000;
 
@@ -8138,7 +8284,9 @@ function startMovementPhase(){
     u._minaTriggrad  = null;
     u._väntandeMina  = null;
     u._opfLastHex    = null;
-    if (!u.orderTarget) continue;
+    const isFollowOrder = (u.order || '').toLowerCase() === 'follow';
+    const effectiveTarget = isFollowOrder ? u._followEffectiveTarget : u.orderTarget;
+    if (!effectiveTarget) continue;
     // Support-order: enheten stannar kvar och understödjer — ingen rörelse
     if ((u.order || '').toLowerCase() === 'support') continue;
 
@@ -8154,7 +8302,7 @@ function startMovementPhase(){
     }
 
     // Om målhexen är blockerad av en vänlig enhet → sikta mot närmaste lediga anslutande hex
-    let effectivMål = u.orderTarget;
+    let effectivMål = effectiveTarget;
     if (blockerade.has(effectivMål)) {
       const grannar = (typeof hexNeighbors === 'function' ? hexNeighbors(effectivMål) : [])
         .filter(h => !blockerade.has(h));
@@ -8432,6 +8580,7 @@ if (stepChanged || liveChanged) {
       if (!u._opfireStop) {
         if (u._hexAfterMove) {
           const _frånHex = u.hex;
+          u._lastMoveFromHex = _frånHex; // spara för follow-riktningsberäkning
           u.hex = u._hexAfterMove;
           if (_frånHex && _frånHex !== u._hexAfterMove) {
             registreraHändelse({ typ: 'rörelse', enhetId: u.id, sida: u.side, namn: u.name || u.id, frånHex: _frånHex, tillHex: u._hexAfterMove });
@@ -8548,6 +8697,7 @@ if (stepChanged || liveChanged) {
     const isSoloNow = typeof soloMode !== 'undefined' && soloMode;
 
     if ((roleNow === 'gm' || isSoloNow) && typeof startMovementPhase === 'function') {
+      if (typeof resolveFollowTargets === 'function') resolveFollowTargets();
       startMovementPhase();
     }
 
